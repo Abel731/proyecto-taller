@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Formulario Agregar
+{% endblock %}
+
+{% block contenido %}
+<div class="container mt-4">
+  <h3>Registro de Ciudades</h3>
+
+  <div class="row">
+      <!-- columna de la mascota -->
+      <div class="col col-md-6">
+
+          <!-- Formulario -->
+          <form action="{{ url_for('ciudad.guardarCiudad') }}" method="post">
+              <div class="card">
+                  <div class="card-header bg-primary text-white">Información del registro</div>
+                  <div class="card-body">
+                      <div class="form-group">
+                          <label for="txtDescripcion">Descripción:</label>
+                          <input type="text" class="form-control" placeholder="Ingrese alguna ciudad" name="txtDescripcion" id="txtDescripcion">
+                      </div>
+
+                      {# Esta bloque busca el mensaje de error #}
+                      {% with messages = get_flashed_messages(with_categories=true) %}
+                      {% if messages %}
+                      {% for category, message in messages %}
+                          <div class="alert alert-{{ category }}">
+                              <strong>Mensaje al usuario!</strong> {{ message }}
+                          </div>
+                          {% endfor %}
+                      {% endif %}
+                      {% endwith %}
+
+                  </div>
+                  <div class="card-footer">
+                      <button type="submit" class="btn btn-primary" name="btnGuardar" id="btnGuardar">Guardar</button>
+                  </div>
+              </div>
+          </form>
+          <!--  -->
+
+      </div>
+      <!--  -->
+  </div>
+
+  <div class="row mt-4 d-none" id="rowAlerta">
+      <div class="col col-md-12">
+          <div class="alert alert-success">
+              <strong>Registro Exitoso!</strong>
+              <div class="row" id="mostrarAlerta"></div>
+          </div>
+      </div>
+  </div>
+</div>
+{% endblock %}

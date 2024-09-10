@@ -5,6 +5,60 @@ Ciudades
 {% endblock %}
 
 {% block contenido %}
-<h1>Hola en el index de ciudad</h1>
+<div class="container mt-4">
+    <h3>Listar Ciudades</h3>
 
+    <!-- Boton agregar -->
+    <div class="row mb-2">
+      <div class="col col-md-4">
+        <a href="{{ url_for ('ciudad.ciudadAgregar') }}" class="btn btn-primary">Agregar</a>
+      </div>
+    </div>
+    <!--  -->
+
+    <!-- Tabla -->
+    <div class="row">
+        <!-- columna de la mascota -->
+        <div class="col col-md-12">
+
+            <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Descripción</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in lista_ciudades %}
+                  <tr>
+                    <td>{{ item['descripcion'] }}</td>
+                    <td>
+                      <div class="row">
+                        <div class="col col-md-2">
+                          <a href="" class="btn btn-primary">Editar</a>
+                        </div>
+                        <div class="col col-md-2">
+                          <a href="" class="btn btn-danger">Eliminar</a>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+        <!--  -->
+    </div>
+    <!--  -->
+
+    <div class="row mt-4 d-none" id="rowAlerta">
+        <div class="col col-md-12">
+            <div class="alert alert-success">
+                <strong>Registro Exitoso!</strong>
+                <div class="row" id="mostrarAlerta"></div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

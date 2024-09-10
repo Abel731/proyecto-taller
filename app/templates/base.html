@@ -3,15 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
     <title>
         {% block titulo %}
         {% endblock %}
     </title>
 </head>
 <body>
-    
+    <nav class="navbar navbar-expand-sm navbar-dark bg-dark">
+
+        <!-- Links -->
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="#">Módulo 1</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Módulo 2</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Módulo 3</a>
+          </li>
+
+            <!-- Dropdown -->
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
+              Referencialess
+            </a>
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="{{ url_for('ciudad.ciudadIndex') }}">Ciudad</a>
+              <a class="dropdown-item" href="#">Link 2</a>
+              <a class="dropdown-item" href="#">Link 3</a>
+            </div>
+          </li>
+
+        </ul>
+      
+      </nav>
     {% block contenido %}
     {% endblock %}
 
+    <script src="{{ url_for('static', filename='js/jquery.slim.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
 </body>
 </html>
