@@ -16,3 +16,10 @@ CREATE TABLE nacionalidades (
     id SERIAL PRIMARY KEY,
     descripcion VARCHAR(60) UNIQUE
 );
+
+CREATE TABLE productos (
+    id SERIAL PRIMARY KEY,         
+    descripcion VARCHAR(255) UNIQUE, 
+    cantidad INTEGER NOT NULL,      
+    precio_unitario DECIMAL(10, 2) NOT NULL 
+);
