@@ -3,7 +3,6 @@ from app.dao.referenciales.persona.PersonaDao import PersonaDao
 
 perapi = Blueprint('perapi', __name__)
 
-# Trae todas las personas
 @perapi.route('/personas', methods=['GET'])
 def getPersonas():
     personadao = PersonaDao()
@@ -50,16 +49,13 @@ def getPersona(id_persona):
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-# Agrega una nueva persona
 @perapi.route('/personas', methods=['POST'])
 def addPersona():
     data = request.get_json()
     personadao = PersonaDao()
 
-    # Validar que el JSON no esté vacío y tenga las propiedades necesarias
     campos_requeridos = ['nombres', 'apellidos', 'nro_cedula', 'fecha_nacimiento', 'direccion']
 
-    # Verificar si faltan campos o son vacíos
     for campo in campos_requeridos:
         if campo not in data or data[campo] is None or len(data[campo].strip()) == 0:
             return jsonify({
@@ -69,22 +65,22 @@ def addPersona():
 
     try:
         id_persona = personadao.guardarPersona(
-            data['nombres'].strip(),
-            data['apellidos'].strip(),
+            data['nombres'].strip().upper(),
+            data['apellidos'].strip().upper(),
             data['nro_cedula'],
             data['fecha_nacimiento'],
-            data['direccion'].strip()
+            data['direccion'].strip().upper() 
         )
         
         return jsonify({
             'success': True,
             'data': {
                 'id_persona': id_persona,
-                'nombres': data['nombres'],
-                'apellidos': data['apellidos'],
+                'nombres': data['nombres'].upper(),
+                'apellidos': data['apellidos'].upper(),
                 'nro_cedula': data['nro_cedula'],
                 'fecha_nacimiento': data['fecha_nacimiento'],
-                'direccion': data['direccion']
+                'direccion': data['direccion'].upper() 
             },
             'error': None
         }), 201
@@ -101,10 +97,8 @@ def updatePersona(id_persona):
     data = request.get_json()
     personadao = PersonaDao()
 
-    # Validar que el JSON no esté vacío y tenga las propiedades necesarias
     campos_requeridos = ['nombres', 'apellidos', 'nro_cedula', 'fecha_nacimiento', 'direccion']
 
-    # Verificar si faltan campos o son vacíos
     for campo in campos_requeridos:
         if campo not in data or data[campo] is None or len(data[campo].strip()) == 0:
             return jsonify({
@@ -115,21 +109,21 @@ def updatePersona(id_persona):
     try:
         if personadao.updatePersona(
             id_persona,
-            data['nombres'].strip(),
-            data['apellidos'].strip(),
+            data['nombres'].strip().upper(),
+            data['apellidos'].strip().upper(),
             data['nro_cedula'],
             data['fecha_nacimiento'],
-            data['direccion'].strip()
+            data['direccion'].strip().upper() 
         ):
             return jsonify({
                 'success': True,
                 'data': {
                     'id_persona': id_persona,
-                    'nombres': data['nombres'],
-                    'apellidos': data['apellidos'],
+                    'nombres': data['nombres'].upper(),
+                    'apellidos': data['apellidos'].upper(),
                     'nro_cedula': data['nro_cedula'],
                     'fecha_nacimiento': data['fecha_nacimiento'],
-                    'direccion': data['direccion']
+                    'direccion': data['direccion'].upper()  
                 },
                 'error': None
             }), 200
