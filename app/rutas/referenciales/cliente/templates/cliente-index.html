@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Clientes
+{% endblock %}
+
+{% block contenido %}
+<div class="container mt-4">
+    <h3>Listar Clientes</h3>
+
+    <!-- tarjeta -->
+    <div class="card">
+      <div class="card-header">
+        <button type="button" class="btn btn-primary" id="btnAgregar">Agregar</button>
+      </div>
+      <div class="card-body">
+        <table class="table table-striped" id="tbl">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Apellido</th>
+              <th>Nro. Cédula</th>
+              <th>Dirección</th>
+              <th>Teléfono</th>
+              <th>Fecha Registro</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <!-- /tarjeta -->
+
+    <!-- El formulario -->
+    <div class="modal" id="modalFormulario">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h4 class="modal-title" id="modalTitle"></h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <!-- Modal body -->
+          <div class="modal-body">
+            <div class="form-group">
+              <input type="hidden" id="txtIdCliente">
+              <label for="txtNombre">Nombre:</label>
+              <input type="text" class="form-control" placeholder="Ingrese el nombre" id="txtNombre">
+            </div>
+            <div class="form-group">
+              <label for="txtApellido">Apellido:</label>
+              <input type="text" class="form-control" placeholder="Ingrese el apellido" id="txtApellido">
+            </div>
+            <div class="form-group">
+              <label for="txtCedula">Nro. Cédula:</label>
+              <input type="number" class="form-control" placeholder="Ingrese el número de cédula" id="txtCedula">
+            </div>
+            <div class="form-group">
+              <label for="txtDireccion">Dirección:</label>
+              <input type="text" class="form-control" placeholder="Ingrese la dirección" id="txtDireccion">
+            </div>
+            <div class="form-group">
+              <label for="txtTelefono">Teléfono:</label>
+              <input type="text" class="form-control" placeholder="Ingrese el teléfono" id="txtTelefono">
+            </div>
+            <div class="form-group">
+              <label for="txtFechaRegistro">Fecha de Registro:</label>
+              <input type="date" class="form-control" id="txtFechaRegistro">
+            </div>
+          </div>
+
+          <!-- Modal footer -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="btnGuardar">Guardar</button>
+            <button type="button" class="btn btn-danger" data-dismiss="modal">Cerrar</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="row mt-4 d-none" id="rowAlerta">
+        <div class="col col-md-12">
+            <div class="alert alert-success">
+                <strong>Registro Exitoso!</strong>
+                <div class="row" id="mostrarAlerta"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+      },
+      ajax: '/api/v1/clientes',  
+      columns: [
+        { data: 'id_cliente' },
+        { data: 'nombre' },
+        { data: 'apellido' },
+        { data: 'cedula' },
+        { data: 'direccion' },
+        { data: 'telefono' },
+        { data: 'fecha_registro' },
+        { data: function(row) {
+            return `<button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id_cliente}">Editar</button>
+                    <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id_cliente}">Eliminar</button>`;
+          }
+        }
+      ]
+    });
+  }
+
+  const agregar = () => {
+    $('#btnAgregar').on('click', function(){
+      $('#modalTitle').text("Agregar un Cliente");
+      $('#txtIdCliente').val("");
+      $('#txtNombre').val("");
+      $('#txtApellido').val("");
+      $('#txtCedula').val("");
+      $('#txtDireccion').val("");
+      $('#txtTelefono').val("");
+      $('#txtFechaRegistro').val("");
+      $('#modalFormulario').modal();
+    });
+  }
+
+  const guardar = () => {
+    $('#btnGuardar').on('click', function() {
+      const idCliente = $('#txtIdCliente').val();
+      const nuevoNombre = $('#txtNombre').val();
+      const nuevoApellido = $('#txtApellido').val();
+      const nuevaCedula = $('#txtCedula').val();
+      const nuevaDireccion = $('#txtDireccion').val();
+      const nuevoTelefono = $('#txtTelefono').val();
+      const nuevaFechaRegistro = $('#txtFechaRegistro').val();
+      const tabla = $('#tbl').DataTable();
+
+      const clienteData = {
+        nombre: nuevoNombre,
+        apellido: nuevoApellido,
+        cedula: nuevaCedula,
+        direccion: nuevaDireccion,
+        telefono: nuevoTelefono,
+        fecha_registro: nuevaFechaRegistro
+      };
+
+      if(idCliente) {
+        fetch(`/api/v1/clientes/${idCliente}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          }, body: JSON.stringify(clienteData)
+        })
+        .then(resp => resp.json())
+        .then(data => {
+          if(data && !data.error && data.success) {
+            tabla.ajax.reload();
+            Swal.fire("Actualizado", "El cliente ha sido actualizado correctamente.", "success");
+          } else {
+            Swal.fire(data.error);
+          }
+        }).catch(err => {
+          console.error(err);
+          Swal.fire("Error", "Ocurrió un error al actualizar el cliente.", "error");
+        });
+      } else {
+        fetch(`/api/v1/clientes`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }, body: JSON.stringify(clienteData)
+        })
+        .then(resp => resp.json())
+        .then(data => {
+          if(data && !data.error && data.success) {
+            tabla.ajax.reload();
+            Swal.fire("Guardado", "El cliente ha sido agregado correctamente.", "success");
+          } else {
+            Swal.fire(data.error);
+          }
+        }).catch(err => {
+          console.error(err);
+          Swal.fire("Error", "Ocurrió un error al guardar el cliente.", "error");
+        });
+      }
+      $('#modalFormulario').modal("hide");
+    });
+  }
+
+  const editar = () => {
+    $('#tbl').on('click', 'button[name="btn_editar"]', function(){
+      Swal.fire({
+        title: "¿Deseas editar este registro?",
+        showCancelButton: true,
+        confirmButtonText: "Si",
+        cancelButtonText: `No`
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $('#modalTitle').text("Editar un Cliente");
+
+          const idCliente = $(this).data('id');
+          $('#txtIdCliente').val(idCliente);
+
+          fetch(`/api/v1/clientes/${idCliente}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+          .then(resp => resp.json())
+          .then(data => {
+            $('#txtNombre').val(data.data.nombre);
+            $('#txtApellido').val(data.data.apellido);
+            $('#txtCedula').val(data.data.cedula);
+            $('#txtDireccion').val(data.data.direccion);
+            $('#txtTelefono').val(data.data.telefono);
+            $('#txtFechaRegistro').val(data.data.fecha_registro);
+            $('#modalFormulario').modal();
+          });
+        }
+      });
+    });
+  }
+
+  const eliminar = () => {
+    $('#tbl').on('click', 'button[name="btn_eliminar"]', function(){
+      const idCliente = $(this).data('id');
+      Swal.fire({
+        title: "¿Deseas eliminar este registro?",
+        showCancelButton: true,
+        confirmButtonText: "Si",
+        cancelButtonText: `No`
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/api/v1/clientes/${idCliente}`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+          .then(resp => resp.json())
+          .then(data => {
+            if(data && !data.error && data.success) {
+              const fila = $(this).closest('tr');
+              const tabla = $('#tbl').DataTable();
+              tabla.row(fila).remove().draw();
+              Swal.fire("Eliminado", "El cliente ha sido eliminado correctamente.", "success");
+            } else {
+              Swal.fire(data.error);
+            }
+          }).catch(err => {
+            console.error(err);
+            Swal.fire("Error", "Ocurrió un error al eliminar el cliente.", "error");
+          });
+        }
+      });
+    });
+  }
+
+  $(document).ready(() => {
+    initDatatable();
+    agregar();
+    guardar();
+    editar();
+    eliminar();
+  });
+</script>
+{% endblock %}
