@@ -13,6 +13,7 @@ from app.rutas.referenciales.persona.persona_routes import permod
 from app.rutas.referenciales.proveedor.proveedor_routes import provmod
 from app.rutas.referenciales.cliente.cliente_routes import climod
 from app.rutas.referenciales.sucursal.sucursal_routes import sucmod
+from app.rutas.referenciales.deposito.deposito_routes import depomod
 # registrar referenciales 
 modulo0 = '/referenciales'
 app.register_blueprint(ciumod, url_prefix=f'{modulo0}/ciudad')
@@ -23,6 +24,7 @@ app.register_blueprint(permod, url_prefix=f'{modulo0}/persona')
 app.register_blueprint(provmod, url_prefix=f'{modulo0}/proveedor')
 app.register_blueprint(climod, url_prefix=f'{modulo0}/cliente')
 app.register_blueprint(sucmod, url_prefix=f'{modulo0}/sucursal')
+app.register_blueprint(depomod, url_prefix=f'{modulo0}/deposito')
 # importar APIS v1
 from app.rutas.referenciales.ciudad.ciudad_api import ciuapi
 from app.rutas.referenciales.pais.pais_api import paiapi
@@ -32,6 +34,7 @@ from app.rutas.referenciales.persona.persona_api import perapi
 from app.rutas.referenciales.proveedor.proveedor_api import provapi
 from app.rutas.referenciales.cliente.cliente_api import cliapi
 from app.rutas.referenciales.sucursal.sucursal_api import sucapi
+from app.rutas.referenciales.deposito.deposito_api import depoapi
 # registrar APIS
 version1 = '/api/v1'
 app.register_blueprint(ciuapi, url_prefix=version1)
@@ -42,3 +45,4 @@ app.register_blueprint(perapi, url_prefix=version1)
 app.register_blueprint(provapi, url_prefix=version1)
 app.register_blueprint(cliapi, url_prefix=version1)
 app.register_blueprint(sucapi, url_prefix=version1)
+app.register_blueprint(depoapi, url_prefix=version1)
