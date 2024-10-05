@@ -19,6 +19,7 @@ from app.rutas.referenciales.estado_civil.estado_civil_routes import estmod
 from app.rutas.referenciales.sexo.sexo_routes import sexomod
 from app.rutas.referenciales.marca.marca_routes import marcmod
 from app.rutas.referenciales.emisora.emisora_routes import emismod
+from app.rutas.referenciales.tipo_producto.tipo_producto_routes import tipprodmod
 # registrar referenciales 
 modulo0 = '/referenciales'
 app.register_blueprint(ciumod, url_prefix=f'{modulo0}/ciudad')
@@ -35,6 +36,8 @@ app.register_blueprint(estmod, url_prefix=f'{modulo0}/estado_civil')
 app.register_blueprint(sexomod, url_prefix=f'{modulo0}/sexo')
 app.register_blueprint(marcmod, url_prefix=f'{modulo0}/marca')
 app.register_blueprint(emismod, url_prefix=f'{modulo0}/emisora')
+app.register_blueprint(tipprodmod, url_prefix=f'{modulo0}/tipo_producto')
+
 # importar APIS v1
 from app.rutas.referenciales.ciudad.ciudad_api import ciuapi
 from app.rutas.referenciales.pais.pais_api import paiapi
@@ -50,6 +53,7 @@ from app.rutas.referenciales.estado_civil.estado_civil_api import estadocivilapi
 from app.rutas.referenciales.sexo.sexo_api import sexoapi
 from app.rutas.referenciales.marca.marca_api import marcaapi
 from app.rutas.referenciales.emisora.emisora_api import emisoraapi
+from app.rutas.referenciales.tipo_producto.tipo_producto_api import tipo_producto_api
 # registrar APIS
 version1 = '/api/v1'
 app.register_blueprint(ciuapi, url_prefix=version1)
@@ -66,3 +70,4 @@ app.register_blueprint(estadocivilapi, url_prefix=version1)
 app.register_blueprint(sexoapi, url_prefix=version1)
 app.register_blueprint(marcaapi, url_prefix=version1)
 app.register_blueprint(emisoraapi, url_prefix=version1)
+app.register_blueprint(tipo_producto_api, url_prefix=version1)
