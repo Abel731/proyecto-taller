@@ -42,7 +42,7 @@ Ciudades
           <!-- Modal body -->
           <div class="modal-body">
             <div class="form-group">
-              <input type="hidden" id="txtIdCiudad">
+              <input type="hidden" id="txtCiudadId">
               <label for="txtDescripcion">Descripción:</label>
               <input type="text" class="form-control" placeholder="Ingrese alguna ciudad" id="txtDescripcion">
             </div>
@@ -81,8 +81,8 @@ Ciudades
       columns: [
         { data: 'descripcion' },
         { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id}">Editar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id}">Eliminar</button>`
+            return `<button type="button" name="btn_editar" class="btn btn-primary" data-ciudad_id="${row.ciudad_id}">Editar</button>
+                    <button type="button" name="btn_eliminar" class="btn btn-danger" data-ciudad_id="${row.ciudad_id}">Eliminar</button>`  // Usamos data-ciudad_id
           }
         }
       ]
@@ -94,7 +94,7 @@ Ciudades
       // Setear un título a modal
       $('#modalTitle').text("Agregar una Ciudad");
       // inicia ventana modal
-      $('#txtIdCiudad').val("");
+      $('#txtCiudadId').val("");
       $('#txtDescripcion').val("");
       $('#modalFormulario').modal();
     });
@@ -102,13 +102,13 @@ Ciudades
 
   const guardar = () => {
     $('#btnGuardar').on('click', function() {
-      const idCiudad = $('#txtIdCiudad').val();
+      const ciudadId = $('#txtCiudadId').val();
       const nuevaDescripcion = $('#txtDescripcion').val();
       const tabla = $('#tbl').DataTable();
 
-      if(idCiudad) {
+      if(ciudadId) {
         // update
-        fetch(`/api/v1/ciudades/${idCiudad}`, {
+        fetch(`/api/v1/ciudades/${ciudadId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
@@ -138,7 +138,7 @@ Ciudades
         .then(data => {
           if(data && !data.error && data.success) {
             tabla.ajax.reload();
-            Swal.fire("Actualizado", "La ciudad ha sido agregada correctamente.", "success");
+            Swal.fire("Agregado", "La ciudad ha sido agregada correctamente.", "success");
           } else {
             Swal.fire(data.error);
           }
@@ -162,14 +162,13 @@ Ciudades
         cancelButtonText: `No`
       }).then((result) => {
         if (result.isConfirmed) {
-          //Swal.fire("Saved!", "", "success");
           $('#modalTitle').text("Editar una Ciudad");
 
-          const idCiudad = $(this).data('id');
-          $('#txtIdCiudad').val(idCiudad);
+          const ciudadId = $(this).data('ciudad_id');  // Usamos ciudad_id
+          $('#txtCiudadId').val(ciudadId);
 
-          // Necesitamos obtener la descripción del backend
-          fetch(`/api/v1/ciudades/${idCiudad}`, {
+          // Obtener la descripción del backend
+          fetch(`/api/v1/ciudades/${ciudadId}`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json'
@@ -186,8 +185,9 @@ Ciudades
   }
 
   const eliminar = () => {
-    $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
-      const idCiudad = $(this).data('id');
+    $('#tbl').on('click', 'button[name="btn_eliminar"]', function() {
+      const ciudadId = $(this).data('ciudad_id');  // Usamos ciudad_id
+      const fila = $(this).closest('tr');  // Obtener fila antes del fetch
       // Mostrar mensaje de confirmación usando sweetalert
       Swal.fire({
         title: "¿Deseas eliminar este registro?",
@@ -196,7 +196,7 @@ Ciudades
         cancelButtonText: `No`
       }).then((result) => {
         if (result.isConfirmed) {
-          fetch(`/api/v1/ciudades/${idCiudad}`, {
+          fetch(`/api/v1/ciudades/${ciudadId}`, {
             method: 'DELETE',
             headers: {
               'Content-Type': 'application/json'
@@ -204,12 +204,11 @@ Ciudades
           })
           .then(resp => resp.json())
           .then(data => {
-            if(data && !data.error && data.success) {
-              // Para borrar la fila del datatable(cliente)
-              const fila =$(this).closest('tr');
+            if (data && !data.error && data.success) {
+              // Para borrar la fila del datatable (cliente)
               const tabla = $('#tbl').DataTable();
-              tabla.row(fila).remove().draw();
-              Swal.fire("Eliminado", "", data.success);
+              tabla.row(fila).remove().draw();  // Corregir eliminación de la fila
+              Swal.fire("Eliminado", "", "success");
             } else {
               Swal.fire(data.error);
             }
@@ -218,7 +217,6 @@ Ciudades
           });
         }
       });
-
     });
   }
 

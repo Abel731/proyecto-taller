@@ -6,7 +6,7 @@ class CiudadDao:
     def getCiudades(self):
 
         ciudadSQL = """
-        SELECT id, descripcion
+        SELECT ciudad_id, descripcion
         FROM ciudades
         """
         # objeto conexion
@@ -21,7 +21,7 @@ class CiudadDao:
             lista_ordenada = []
             for item in lista_ciudades:
                 lista_ordenada.append({
-                    "id": item[0],
+                    "ciudad_id": item[0],
                     "descripcion": item[1]
                 })
             return lista_ordenada
@@ -31,23 +31,23 @@ class CiudadDao:
             cur.close()
             con.close()
 
-    def getCiudadById(self, id):
+    def getCiudadById(self, ciudad_id):
 
         ciudadSQL = """
-        SELECT id, descripcion
-        FROM ciudades WHERE id=%s
+        SELECT ciudad_id, descripcion
+        FROM ciudades WHERE ciudad_id=%s
         """
         # objeto conexion
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
         try:
-            cur.execute(ciudadSQL, (id,))
+            cur.execute(ciudadSQL, (ciudad_id,))
             # trae datos de la bd
             ciudadEncontrada = cur.fetchone()
             # retorno los datos
             return {
-                    "id": ciudadEncontrada[0],
+                    "ciudad_id": ciudadEncontrada[0],
                     "descripcion": ciudadEncontrada[1]
                 }
         except con.Error as e:
@@ -85,12 +85,12 @@ class CiudadDao:
 
         return False
 
-    def updateCiudad(self, id, descripcion):
+    def updateCiudad(self, ciudad_id, descripcion):
 
         updateCiudadSQL = """
         UPDATE ciudades
         SET descripcion=%s
-        WHERE id=%s
+        WHERE ciudad_id=%s
         """
 
         conexion = Conexion()
@@ -99,7 +99,7 @@ class CiudadDao:
 
         # Ejecucion exitosa
         try:
-            cur.execute(updateCiudadSQL, (descripcion, id,))
+            cur.execute(updateCiudadSQL, (descripcion, ciudad_id,))
             # se confirma la insercion
             con.commit()
 
@@ -116,11 +116,11 @@ class CiudadDao:
 
         return False
 
-    def deleteCiudad(self, id):
+    def deleteCiudad(self, ciudad_id):
 
         updateCiudadSQL = """
         DELETE FROM ciudades
-        WHERE id=%s
+        WHERE ciudad_id=%s
         """
 
         conexion = Conexion()
@@ -129,7 +129,7 @@ class CiudadDao:
 
         # Ejecucion exitosa
         try:
-            cur.execute(updateCiudadSQL, (id,))
+            cur.execute(updateCiudadSQL, (ciudad_id,))
             # se confirma la insercion
             con.commit()
 

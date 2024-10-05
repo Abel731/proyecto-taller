@@ -1,5 +1,5 @@
 CREATE TABLE ciudades (
-    id SERIAL PRIMARY KEY, -- Clave primaria autoincremental
+    ciudad_id SERIAL PRIMARY KEY, -- Clave primaria autoincremental
     descripcion VARCHAR(60) unique -- Columna de descripción
 );
 
@@ -69,4 +69,34 @@ CREATE TABLE depositos (
     telefono INTEGER,
     capacidad INTEGER,
     FOREIGN KEY (id_sucursal) REFERENCES sucursales(id_sucursal) ON DELETE SET null
+);
+
+CREATE TABLE cargos (
+    id SERIAL PRIMARY KEY, -- Clave primaria autoincremental
+    descripcion VARCHAR(60) unique -- Columna de descripción
+);
+
+CREATE TABLE estado_civil (
+    id SERIAL PRIMARY KEY,
+    descripcion VARCHAR(60) NOT NULL
+);
+
+CREATE TABLE sexo (
+    id SERIAL PRIMARY KEY,
+    descripcion VARCHAR(60) NOT NULL
+);
+
+CREATE TABLE marcas (
+    id SERIAL PRIMARY KEY,
+    descripcion VARCHAR(60) NOT NULL
+);
+
+CREATE TABLE emisoras (
+    id SERIAL PRIMARY KEY,
+    descripcion VARCHAR(60) NOT NULL
+);
+
+CREATE TABLE tipo_producto (
+    id SERIAL PRIMARY KEY,
+    descripcion VARCHAR(60) NOT NULL
 );
