@@ -17,6 +17,7 @@ from app.rutas.referenciales.deposito.deposito_routes import depomod
 from app.rutas.referenciales.cargo.cargo_routes import carmod
 from app.rutas.referenciales.estado_civil.estado_civil_routes import estmod
 from app.rutas.referenciales.sexo.sexo_routes import sexomod
+from app.rutas.referenciales.marca.marca_routes import marcmod
 # registrar referenciales 
 modulo0 = '/referenciales'
 app.register_blueprint(ciumod, url_prefix=f'{modulo0}/ciudad')
@@ -31,6 +32,7 @@ app.register_blueprint(depomod, url_prefix=f'{modulo0}/deposito')
 app.register_blueprint(carmod, url_prefix=f'{modulo0}/cargo')
 app.register_blueprint(estmod, url_prefix=f'{modulo0}/estado_civil')
 app.register_blueprint(sexomod, url_prefix=f'{modulo0}/sexo')
+app.register_blueprint(marcmod, url_prefix=f'{modulo0}/marca')
 # importar APIS v1
 from app.rutas.referenciales.ciudad.ciudad_api import ciuapi
 from app.rutas.referenciales.pais.pais_api import paiapi
@@ -44,6 +46,7 @@ from app.rutas.referenciales.deposito.deposito_api import depoapi
 from app.rutas.referenciales.cargo.cargo_api import carapi
 from app.rutas.referenciales.estado_civil.estado_civil_api import estadocivilapi
 from app.rutas.referenciales.sexo.sexo_api import sexoapi
+from app.rutas.referenciales.marca.marca_api import marcaapi
 # registrar APIS
 version1 = '/api/v1'
 app.register_blueprint(ciuapi, url_prefix=version1)
@@ -58,3 +61,4 @@ app.register_blueprint(depoapi, url_prefix=version1)
 app.register_blueprint(carapi, url_prefix=version1)
 app.register_blueprint(estadocivilapi, url_prefix=version1)
 app.register_blueprint(sexoapi, url_prefix=version1)
+app.register_blueprint(marcaapi, url_prefix=version1)
