@@ -87,11 +87,13 @@ Presupuesto proveedor
 
 CREATE TABLE presupuesto_prov(
     id_presupuesto SERIAL PRIMARY KEY
+    , id_proveedor INTEGER NOT NULL
     , id_pedido_compra INTEGER NOT NULL
     , id_empleado INTEGER NOT NULL
     , id_sucursal INTEGER NOT NULL
     , id_estpreprov INTEGER NOT NULL
     , fecha_presupuesto DATE NOT NULL
+    , FOREIGN KEY(id_proveedor) REFERENCES proveedores(id_proveedor) ON DELETE RESTRICT ON UPDATE CASCADE
     , FOREIGN KEY(id_pedido_compra) REFERENCES pedido_de_compra(id_pedido_compra) ON DELETE RESTRICT ON UPDATE CASCADE
     , FOREIGN KEY(id_empleado) REFERENCES empleados(id_empleado) ON DELETE RESTRICT ON UPDATE CASCADE
     , FOREIGN KEY(id_sucursal) REFERENCES sucursales(id_sucursal) ON DELETE RESTRICT ON UPDATE CASCADE
@@ -104,9 +106,9 @@ CREATE TABLE presupuesto_prov_detalle(
     , id_producto INTEGER NOT NULL
     , cantidad INTEGER NOT NULL
     , precio_unitario DECIMAL (10,2)
-    , PRIMARY KEY(id_pedido_compra, id_producto)
-    , FOREIGN KEY(id_pedido_compra) REFERENCES pedido_de_compra(id_pedido_compra) ON DELETE RESTRICT ON UPDATE CASCADE
-    , FOREIGN KEY(id_producto) REFERENCES productos(id_producto) ON DELETE RESTRICT ON UPDATE CASCADE
+    , PRIMARY KEY(id_presupuesto, id_producto)
+    , FOREIGN KEY(id_presupuesto) REFERENCES presupuesto_prov(id_presupuesto) ON DELETE RESTRICT ON UPDATE CASCADE
+    , FOREIGN KEY(id_producto) REFERENCES producto_prov(id_producto) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 CREATE TABLE estado_de_presupuesto_prov(
@@ -120,4 +122,11 @@ CREATE TABLE proveedores(
     , razon_social VARCHAR(70) NOT NULL
     , direccion VARCHAR(70) NOT NULL
     , telefono VARCHAR(20) NOT NULL   
+);
+
+CREATE TABLE producto_prov (
+    id_producto SERIAL PRIMARY KEY
+    , Cantidad INTEGER NOT NULL
+    , precio_unitario DECIMAL (10,2)
+    , iva DECIMAL (10,2)
 );
