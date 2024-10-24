@@ -77,7 +77,47 @@ CREATE TABLE pedido_de_compra_detalle(
     , id_producto INTEGER NOT NULL
     , cantidad INTEGER NOT NULL
     , PRIMARY KEY(id_pedido_compra, id_producto)
-    , FOREIGN KEY(id_pedido_compra) REFERENCES pedido_de_compra(id_pedido_compra)
-    , FOREIGN KEY(id_producto) REFERENCES productos(id_producto)
+    , FOREIGN KEY(id_pedido_compra) REFERENCES pedido_de_compra(id_pedido_compra) ON DELETE RESTRICT ON UPDATE CASCADE
+    , FOREIGN KEY(id_producto) REFERENCES productos(id_producto) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
+/*
+Presupuesto proveedor
+*/
+
+CREATE TABLE presupuesto_prov(
+    id_presupuesto SERIAL PRIMARY KEY
+    , id_pedido_compra INTEGER NOT NULL
+    , id_empleado INTEGER NOT NULL
+    , id_sucursal INTEGER NOT NULL
+    , id_estpreprov INTEGER NOT NULL
+    , fecha_presupuesto DATE NOT NULL
+    , FOREIGN KEY(id_pedido_compra) REFERENCES pedido_de_compra(id_pedido_compra) ON DELETE RESTRICT ON UPDATE CASCADE
+    , FOREIGN KEY(id_empleado) REFERENCES empleados(id_empleado) ON DELETE RESTRICT ON UPDATE CASCADE
+    , FOREIGN KEY(id_sucursal) REFERENCES sucursales(id_sucursal) ON DELETE RESTRICT ON UPDATE CASCADE
+    , FOREIGN KEY(id_estpreprov) REFERENCES estado_de_presupuesto_prov(id_estpreprov) ON DELETE RESTRICT ON UPDATE CASCADE
+      
+);
+
+CREATE TABLE presupuesto_prov_detalle(
+    id_presupuesto INTEGER NOT NULL
+    , id_producto INTEGER NOT NULL
+    , cantidad INTEGER NOT NULL
+    , precio_unitario DECIMAL (10,2)
+    , PRIMARY KEY(id_pedido_compra, id_producto)
+    , FOREIGN KEY(id_pedido_compra) REFERENCES pedido_de_compra(id_pedido_compra) ON DELETE RESTRICT ON UPDATE CASCADE
+    , FOREIGN KEY(id_producto) REFERENCES productos(id_producto) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE estado_de_presupuesto_prov(
+    id_estpreprov SERIAL PRIMARY KEY
+    , descripcion VARCHAR UNIQUE NOT NULL
+);
+
+CREATE TABLE proveedores(
+    id_proveedor INTEGER NOT NULL
+    , ruc VARCHAR(20) UNIQUE NOT NULL
+    , razon_social VARCHAR(70) NOT NULL
+    , direccion VARCHAR(70) NOT NULL
+    , telefono VARCHAR(20) NOT NULL   
+);
