@@ -124,9 +124,3 @@ CREATE TABLE proveedores(
     , telefono VARCHAR(20) NOT NULL   
 );
 
-CREATE TABLE producto_prov (
-    id_producto SERIAL PRIMARY KEY
-    , Cantidad INTEGER NOT NULL
-    , precio_unitario DECIMAL (10,2)
-    , iva DECIMAL (10,2)
-);
