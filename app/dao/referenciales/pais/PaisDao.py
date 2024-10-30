@@ -6,7 +6,7 @@ class PaisDao:
     def getPaises(self):
 
         paisSQL = """
-        SELECT id, descripcion 
+        SELECT id_pais, descripcion 
         FROM paises
         """
 
@@ -17,30 +17,30 @@ class PaisDao:
         try:
             cur.execute(paisSQL)
             lista_paises = cur.fetchall()
-            return [ { "id": item[0], "descripcion": item[1] } for item in lista_paises]
+            return [ { "id_pais": item[0], "descripcion": item[1] } for item in lista_paises]
         except con.Error as e:
              app.logger.info(e)
         finally:
             cur.close()
             con.close()
 
-    def getPaisById(self, id):
+    def getPaisById(self, id_pais):
 
         paisSQL = """
-        SELECT id, descripcion
-        FROM paises WHERE id=%s
+        SELECT id_pais, descripcion
+        FROM paises WHERE id_pais=%s
         """
         # objeto conexion
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
         try:
-            cur.execute(paisSQL, (id,))
+            cur.execute(paisSQL, (id_pais,))
             # trae datos de la bd
             paisEncontrado = cur.fetchone()
             # retorno los datos
             return {
-                    "id": paisEncontrado[0],
+                    "id_pais": paisEncontrado[0],
                     "descripcion": paisEncontrado[1]
                 }
         except con.Error as e:
@@ -73,12 +73,12 @@ class PaisDao:
             con.close()
             return False        
         
-    def updatePais(self, id, descripcion):
+    def updatePais(self, id_pais, descripcion):
 
             updatePaisSQL = """
             UPDATE paises
             SET descripcion=%s
-            WHERE id=%s
+            WHERE id_pais=%s
             """
 
             conexion = Conexion()
@@ -87,7 +87,7 @@ class PaisDao:
 
             # Ejecucion exitosa
             try:
-                cur.execute(updatePaisSQL, (descripcion, id,))
+                cur.execute(updatePaisSQL, (descripcion, id_pais,))
                 # se confirma la insercion
                 con.commit()
 
@@ -104,11 +104,11 @@ class PaisDao:
 
             return False       
     
-    def deletePais(self, id):
+    def deletePais(self, id_pais):
 
             updatePaisSQL = """
             DELETE FROM paises
-            WHERE id=%s
+            WHERE id_pais=%s
             """
 
             conexion = Conexion()
@@ -117,7 +117,7 @@ class PaisDao:
 
             # Ejecucion exitosa
             try:
-                cur.execute(updatePaisSQL, (id,))
+                cur.execute(updatePaisSQL, (id_pais,))
                 # se confirma la insercion
                 con.commit()
 

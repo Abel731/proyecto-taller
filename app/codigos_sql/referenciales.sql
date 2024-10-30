@@ -1,5 +1,5 @@
 CREATE TABLE ciudades (
-    id_ciudad SERIAL PRIMARY KEY, -- Clave primaria autoincremental
+    ciudad_id SERIAL PRIMARY KEY, -- Clave primaria autoincremental
     descripcion VARCHAR(60) unique -- Columna de descripción
 );
 
