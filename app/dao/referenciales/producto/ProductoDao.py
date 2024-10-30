@@ -3,32 +3,65 @@ from app.conexion.Conexion import Conexion
 
 class ProductoDao:
 
-    def getProductos(self):
+    def get_productos(self):
 
-        productoSQL = """
-        SELECT id, descripcion, cantidad, precio_unitario
-        FROM productos
+        sucursal_sql = """
+        SELECT
+            id_producto
+            , nombre
+            , cantidad
+            , precio_unitario
+        FROM
+            public.productos
         """
         # objeto conexion
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
         try:
-            cur.execute(productoSQL)
-            # trae datos de la bd
-            lista_productos = cur.fetchall()
-            # retorno los datos
-            lista_ordenada = []
-            for item in lista_productos:
-                lista_ordenada.append({
-                    "id": item[0],
-                    "descripcion": item[1],
-                    "cantidad": item[2],
-                    "precio_unitario": item[3]
-                })
-            return lista_ordenada
-        except con.Error as e:
-            app.logger.info(e)
+            cur.execute(sucursal_sql)
+            productos = cur.fetchall() # trae datos de la bd
+
+            # Transformar los datos en una lista de diccionarios
+            return [{'id_producto': item[0], 'nombre': item[1]\
+                , 'cantidad': item[2], 'precio_unitario': item[3]} for item in productos]
+
+        except Exception as e:
+            app.logger.error(f"Error al obtener todas las productos: {str(e)}")
+            return []
+
+        finally:
+            cur.close()
+            con.close()
+
+    def get_sucursal_depositos(self, id_sucursal: int):
+
+        sucursal_sql = """
+        SELECT
+            sd.id_deposito
+            , d.descripcion nombre_deposito
+        FROM
+            sucursal_depositos sd
+        LEFT JOIN depositos d
+            ON sd.id_deposito = d.id_deposito
+        WHERE
+            sd.id_sucursal = %s AND sd.estado = true
+        """
+        # objeto conexion
+        conexion = Conexion()
+        con = conexion.getConexion()
+        cur = con.cursor()
+        try:
+            cur.execute(sucursal_sql, (id_sucursal,))
+            sucursales = cur.fetchall() # trae datos de la bd
+
+            # Transformar los datos en una lista de diccionarios
+            return [{'id_deposito': sucursal[0], 'nombre_deposito': sucursal[1]} for sucursal in sucursales]
+
+        except Exception as e:
+            app.logger.error(f"Error al obtener las sucursales con depositos: {str(e)}")
+            return []
+
         finally:
             cur.close()
             con.close()

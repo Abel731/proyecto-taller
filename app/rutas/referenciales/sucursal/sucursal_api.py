@@ -3,24 +3,23 @@ from app.dao.referenciales.sucursal.SurcursalDao import SucursalDao
 
 sucapi = Blueprint('sucapi', __name__)
 
-@sucapi.route('/sucursales', methods=['GET'])
-def getSucursales():
-    sucursaldao = SucursalDao()
+@sucapi.route('/sucursal-depositos/<int:id_sucursal>', methods=['GET'])
+def get_sucursal_depositos(id_sucursal):
+    dao = SucursalDao()
 
     try:
-        sucursales = sucursaldao.getSucursales()
-
+        pedidos = dao.get_sucursal_depositos(id_sucursal)
         return jsonify({
             'success': True,
-            'data': sucursales,
-            'error': None
+            'data': pedidos,
+            'error': False
         }), 200
 
     except Exception as e:
-        app.logger.error(f"Error al obtener todas las sucursales: {str(e)}")
+        app.logger.error(f"Error al obtener los pedidos: {str(e)}")
         return jsonify({
             'success': False,
-            'error': 'Ocurrió un error interno. Consulte con el administrador.'
+            'error': 'Ocurrió un error interno. Consulte con el administrador'
         }), 500
 
 @sucapi.route('/sucursales/<int:id_sucursal>', methods=['GET'])

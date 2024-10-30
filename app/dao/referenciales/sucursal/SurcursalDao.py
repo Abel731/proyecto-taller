@@ -3,31 +3,68 @@ from app.conexion.Conexion import Conexion
 
 class SucursalDao:
 
-    def getSucursales(self):
-        sucursalSQL = """
-        SELECT id_sucursal, nombre, direccion, telefono
-        FROM sucursales
+    def get_sucursales(self):
+
+        sucursal_sql = """
+        SELECT
+            s.id_sucursal,
+            s.descripcion AS nombre_sucursal
+        FROM
+            sucursales s
+        WHERE
+            EXISTS (
+                SELECT 1
+                FROM sucursal_depositos sd
+                WHERE sd.id_sucursal = s.id_sucursal
+            )
         """
         # objeto conexion
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
         try:
-            cur.execute(sucursalSQL)
-            # trae datos de la bd
-            lista_sucursales = cur.fetchall()
-            # retorno los datos
-            lista_ordenada = []
-            for item in lista_sucursales:
-                lista_ordenada.append({
-                    "id_sucursal": item[0],
-                    "nombre": item[1],
-                    "direccion": item[2],
-                    "telefono": item[3]  
-                })
-            return lista_ordenada
-        except con.Error as e:
-            app.logger.info(e)
+            cur.execute(sucursal_sql)
+            sucursales = cur.fetchall() # trae datos de la bd
+
+            # Transformar los datos en una lista de diccionarios
+            return [{'id': sucursal[0], 'descripcion': sucursal[1]} for sucursal in sucursales]
+
+        except Exception as e:
+            app.logger.error(f"Error al obtener todas las sucursales: {str(e)}")
+            return []
+
+        finally:
+            cur.close()
+            con.close()
+
+    def get_sucursal_depositos(self, id_sucursal: int):
+
+        sucursal_sql = """
+        SELECT
+            sd.id_deposito
+            , d.descripcion nombre_deposito
+        FROM
+            sucursal_depositos sd
+        LEFT JOIN depositos d
+            ON sd.id_deposito = d.id_deposito
+        WHERE
+            sd.id_sucursal = %s AND sd.estado = true
+        """
+        # objeto conexion
+        conexion = Conexion()
+        con = conexion.getConexion()
+        cur = con.cursor()
+        try:
+            cur.execute(sucursal_sql, (id_sucursal,))
+            sucursales = cur.fetchall() # trae datos de la bd
+
+            # Transformar los datos en una lista de diccionarios
+            return [{'id_deposito': sucursal[0], 'nombre_deposito': sucursal[1]} for sucursal in sucursales]
+
+        except Exception as e:
+            app.logger.error(f"Error al obtener las sucursales con depositos: {str(e)}")
+            return []
+
         finally:
             cur.close()
             con.close()
