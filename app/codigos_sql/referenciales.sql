@@ -16,6 +16,36 @@ CREATE TABLE nacionalidades (
     descripcion VARCHAR(60) UNIQUE-- Columna de descripción
 );
 
+CREATE TABLE cargos (
+    id_cargo SERIAL PRIMARY KEY, 
+    descripcion VARCHAR(60) unique 
+);
+
+CREATE TABLE estado_civil (
+    id_ec SERIAL PRIMARY KEY,
+    descripcion VARCHAR(60) NOT NULL
+);
+
+CREATE TABLE sexo (
+    id_sexo SERIAL PRIMARY KEY,
+    descripcion VARCHAR(60) NOT NULL
+);
+
+CREATE TABLE marcas (
+    id_marcas SERIAL PRIMARY KEY,
+    descripcion VARCHAR(60) NOT NULL
+);
+
+CREATE TABLE emisoras (
+    id SERIAL PRIMARY KEY,
+    descripcion VARCHAR(60) NOT NULL
+);
+
+CREATE TABLE tipo_producto (
+    id SERIAL PRIMARY KEY,
+    descripcion VARCHAR(60) NOT NULL
+);
+
 CREATE TABLE proveedores(
     id_proveedor PRIMARY KEY
     , ruc VARCHAR(20) UNIQUE NOT NULL
@@ -31,32 +61,3 @@ CREATE TABLE clientes (
     FOREIGN KEY (id_cliente) REFERENCES personas(id_persona) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
-CREATE TABLE cargos (
-    id_cargo SERIAL PRIMARY KEY, 
-    descripcion VARCHAR(60) unique 
-);
-
-CREATE TABLE estado_civil (
-    id SERIAL PRIMARY KEY,
-    descripcion VARCHAR(60) NOT NULL
-);
-
-CREATE TABLE sexo (
-    id SERIAL PRIMARY KEY,
-    descripcion VARCHAR(60) NOT NULL
-);
-
-CREATE TABLE marcas (
-    id SERIAL PRIMARY KEY,
-    descripcion VARCHAR(60) NOT NULL
-);
-
-CREATE TABLE emisoras (
-    id SERIAL PRIMARY KEY,
-    descripcion VARCHAR(60) NOT NULL
-);
-
-CREATE TABLE tipo_producto (
-    id SERIAL PRIMARY KEY,
-    descripcion VARCHAR(60) NOT NULL
-);

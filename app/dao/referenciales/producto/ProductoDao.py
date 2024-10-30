@@ -66,24 +66,24 @@ class ProductoDao:
             cur.close()
             con.close()
 
-    def getProductoById(self, id):
+    def getProductoById(self, id_producto):
 
         productoSQL = """
-        SELECT id, descripcion, cantidad, precio_unitario
-        FROM productos WHERE id=%s
+        SELECT id_producto, nombre, cantidad, precio_unitario
+        FROM productos WHERE id_producto=%s
         """
         # objeto conexion
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
         try:
-            cur.execute(productoSQL, (id,))
+            cur.execute(productoSQL, (id_producto,))
             # trae datos de la bd
             productoEncontrado = cur.fetchone()
             # retorno los datos
             return {
-                    "id": productoEncontrado[0],
-                    "descripcion": productoEncontrado[1],
+                    "id_producto": productoEncontrado[0],
+                    "nombre": productoEncontrado[1],
                     "cantidad": productoEncontrado[2],
                     "precio_unitario": productoEncontrado[3]
                 }
@@ -93,10 +93,10 @@ class ProductoDao:
             cur.close()
             con.close()
 
-    def guardarProducto(self, descripcion, cantidad, precio_unitario):
+    def guardarProducto(self, nombre, cantidad, precio_unitario):
 
         insertProductoSQL = """
-        INSERT INTO productos(descripcion, cantidad, precio_unitario) 
+        INSERT INTO productos(nombre, cantidad, precio_unitario) 
         VALUES(%s, %s, %s)
         """
 
@@ -106,7 +106,7 @@ class ProductoDao:
 
         # Ejecucion exitosa
         try:
-            cur.execute(insertProductoSQL, (descripcion, cantidad, precio_unitario))
+            cur.execute(insertProductoSQL, (nombre, cantidad, precio_unitario))
             # se confirma la insercion
             con.commit()
 
@@ -123,12 +123,12 @@ class ProductoDao:
 
         return False
 
-    def updateProducto(self, id, descripcion, cantidad, precio_unitario):
+    def updateProducto(self, id_producto, nombre, cantidad, precio_unitario):
 
         updateProductoSQL = """
         UPDATE productos
-        SET descripcion=%s, cantidad=%s, precio_unitario=%s
-        WHERE id=%s
+        SET nombre=%s, cantidad=%s, precio_unitario=%s
+        WHERE id_producto=%s
         """
 
         conexion = Conexion()
@@ -137,7 +137,7 @@ class ProductoDao:
 
         # Ejecucion exitosa
         try:
-            cur.execute(updateProductoSQL, (descripcion, cantidad, precio_unitario, id))
+            cur.execute(updateProductoSQL, (nombre, cantidad, precio_unitario, id_producto))
             # se confirma la insercion
             con.commit()
 
@@ -154,11 +154,11 @@ class ProductoDao:
 
         return False
 
-    def deleteProducto(self, id):
+    def deleteProducto(self, id_producto):
 
         deleteProductoSQL = """
         DELETE FROM productos
-        WHERE id=%s
+        WHERE id_producto=%s
         """
 
         conexion = Conexion()
@@ -167,7 +167,7 @@ class ProductoDao:
 
         # Ejecucion exitosa
         try:
-            cur.execute(deleteProductoSQL, (id,))
+            cur.execute(deleteProductoSQL, (id_producto,))
             # se confirma la eliminacion
             con.commit()
 

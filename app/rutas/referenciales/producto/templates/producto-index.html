@@ -17,7 +17,7 @@ Productos
         <table class="table table-striped" id="tbl">
           <thead>
             <tr>
-              <th>Descripción</th>
+              <th>Nombre</th>
               <th>Cantidad</th>
               <th>Precio Unitario</th>
               <th>Acciones</th>
@@ -46,8 +46,8 @@ Productos
             <div class="form-group">
               <input type="hidden" id="txtIdProducto">
               
-              <label for="txtDescripcion">Descripción:</label>
-              <input type="text" class="form-control" placeholder="Ingrese la descripción del producto" id="txtDescripcion">
+              <label for="txtNombre">nombre:</label>
+              <input type="text" class="form-control" placeholder="Ingrese el nombre del producto" id="txtNombre">
 
               <!-- Barra deslizante para cantidad -->
               <label for="cantidadSlider">Cantidad (0-25 unidades):</label>
@@ -90,12 +90,12 @@ Productos
       },
       ajax:'/api/v1/productos',
       columns: [
-        { data: 'descripcion' },
+        { data: 'nombre' },
         { data: 'cantidad' },  
         { data: 'precio_unitario' }, 
         { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id}">Editar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id}">Eliminar</button>`
+            return `<button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id_producto}">Editar</button>
+                    <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id_producto}">Eliminar</button>`
           }
         }
       ]
@@ -108,7 +108,7 @@ Productos
       $('#modalTitle').text("Agregar un Producto");
       // Iniciar ventana modal
       $('#txtIdProducto').val("");
-      $('#txtDescripcion').val("");
+      $('#txtNombre').val("");
       $('#cantidadSlider').val(0);
       $('#cantidadDisplay').text(0);
       $('#txtPrecioUnitario').val("");
@@ -119,13 +119,13 @@ Productos
   const guardar = () => {
     $('#btnGuardar').on('click', function() {
       const idProducto = $('#txtIdProducto').val();
-      const nuevaDescripcion = $('#txtDescripcion').val();
-      const cantidad = $('#cantidadSlider').val();  // Obtener valor del slider
+      const nuevoNombre = $('#txtNombre').val();
+      const cantidad = $('#cantidadSlider').val();  
       const precioUnitario = $('#txtPrecioUnitario').val();
       const tabla = $('#tbl').DataTable();
 
       const productoData = {
-        descripcion: nuevaDescripcion,
+        nombre: nuevoNombre,
         cantidad: cantidad,
         precio_unitario: precioUnitario
       };
@@ -199,7 +199,7 @@ Productos
           })
           .then(resp => resp.json())
           .then(data => {
-            $('#txtDescripcion').val(data.data.descripcion);
+            $('#txtNombre').val(data.data.nombre);
             $('#cantidadSlider').val(data.data.cantidad);
             $('#cantidadDisplay').text(data.data.cantidad);
             $('#txtPrecioUnitario').val(data.data.precio_unitario);

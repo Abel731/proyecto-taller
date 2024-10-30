@@ -9,7 +9,7 @@ def getProductos():
     prodao = ProductoDao()
 
     try:
-        productos = prodao.getProductos()
+        productos = prodao.get_productos()
 
         return jsonify({
             'success': True,
@@ -57,7 +57,7 @@ def addProducto():
     prodao = ProductoDao()
 
     # Validar que el JSON no esté vacío y tenga las propiedades necesarias
-    campos_requeridos = ['descripcion', 'cantidad', 'precio_unitario']
+    campos_requeridos = ['nombre', 'cantidad', 'precio_unitario']
 
     # Verificar si faltan campos o son vacíos
     for campo in campos_requeridos:
@@ -68,15 +68,15 @@ def addProducto():
             }), 400
 
     try:
-        descripcion = data['descripcion'].upper()
+        nombre = data['nombre'].upper()
         cantidad = data['cantidad']
         precio_unitario = data['precio_unitario']
         
-        producto_id = prodao.guardarProducto(descripcion, cantidad, precio_unitario)
+        producto_id = prodao.guardarProducto(nombre, cantidad, precio_unitario)
         if producto_id is not None:
             return jsonify({
                 'success': True,
-                'data': {'id': producto_id, 'descripcion': descripcion, 'cantidad': cantidad, 'precio_unitario': precio_unitario},
+                'data': {'id': producto_id, 'nombre': nombre, 'cantidad': cantidad, 'precio_unitario': precio_unitario},
                 'error': None
             }), 201
         else:
@@ -94,7 +94,7 @@ def updateProducto(producto_id):
     prodao = ProductoDao()
 
     # Validar que el JSON no esté vacío y tenga las propiedades necesarias
-    campos_requeridos = ['descripcion', 'cantidad', 'precio_unitario']
+    campos_requeridos = ['nombre', 'cantidad', 'precio_unitario']
 
     # Verificar si faltan campos o son vacíos
     for campo in campos_requeridos:
@@ -104,15 +104,15 @@ def updateProducto(producto_id):
                 'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
             }), 400
 
-    descripcion = data['descripcion']
+    nombre = data['nombre']
     cantidad = data['cantidad']
     precio_unitario = data['precio_unitario']
     
     try:
-        if prodao.updateProducto(producto_id, descripcion.upper(), cantidad, precio_unitario):
+        if prodao.updateProducto(producto_id, nombre.upper(), cantidad, precio_unitario):
             return jsonify({
                 'success': True,
-                'data': {'id': producto_id, 'descripcion': descripcion, 'cantidad': cantidad, 'precio_unitario': precio_unitario},
+                'data': {'id': producto_id, 'nombre': nombre, 'cantidad': cantidad, 'precio_unitario': precio_unitario},
                 'error': None
             }), 200
         else:
