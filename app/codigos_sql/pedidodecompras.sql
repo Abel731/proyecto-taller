@@ -11,10 +11,18 @@ CREATE TABLE sucursales(
 CREATE TABLE depositos(
     id_deposito SERIAL PRIMARY KEY,
     descripcion VARCHAR(60) UNIQUE NOT NULL,
-	id_sucursal INTEGER NOT NULL,
-	FOREIGN KEY(id_sucursal) REFERENCES
-	sucursales(id_sucursal)
-	ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE sucursal_depositos(
+    id_sucursal INTEGER NOT NULL,
+    id_deposito INTEGER NOT NULL,
+    observaciones VARCHAR(60),
+    estado BOOLEAN NOT NULL,
+    PRIMARY KEY(id_sucursal, id_deposito),
+    FOREIGN KEY(id_sucursal) REFERENCES sucursales(id_sucursal)
+    ON DELETE RESTRICT ON UPDATE CASCADE,
+    FOREIGN KEY(id_deposito) REFERENCES depositos(id_deposito)
+    ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 CREATE TABLE productos(
