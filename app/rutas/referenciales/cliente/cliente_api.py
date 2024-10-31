@@ -54,7 +54,7 @@ def addCliente():
     data = request.get_json()
     clientedao = ClienteDao()
 
-    campos_requeridos = ['nombre', 'apellido', 'cedula', 'direccion', 'telefono', 'fecha_registro']
+    campos_requeridos = ['direccion', 'telefono']
 
     for campo in campos_requeridos:
         if campo not in data or data[campo] is None or len(data[campo].strip()) == 0:
@@ -63,37 +63,20 @@ def addCliente():
                 'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
             }), 400
 
-    # Validar el formato de fecha_registro
     try:
-        fecha_registro = data['fecha_registro']
-    except ValueError:
-        return jsonify({
-            'success': False,
-            'error': 'El formato de fecha_registro es inválido.'
-        }), 400
-
-    try:
-        # Asegúrate de que estás pasando `fecha_registro` al método `guardarCliente`
+        # Guardar el cliente sin pasar id_cliente
         id_cliente = clientedao.guardarCliente(
-            data.get('id_persona'),  # Opcional si hay relación con `id_persona`
-            data['nombre'].strip().upper(),
-            data['apellido'].strip().upper(),
-            data['cedula'],
-            data['direccion'].strip().upper(),
-            data['telefono'],
-            fecha_registro
+            data['direccion'].strip().upper(),  # Dirección
+            data['telefono']  # Teléfono
         )
+
 
         return jsonify({
             'success': True,
             'data': {
                 'id_cliente': id_cliente,
-                'nombre': data['nombre'].upper(),
-                'apellido': data['apellido'].upper(),
-                'cedula': data['cedula'],
                 'direccion': data['direccion'].upper(),
-                'telefono': data['telefono'],
-                'fecha_registro': fecha_registro
+                'telefono': data['telefono']
             },
             'error': None
         }), 201
@@ -104,7 +87,7 @@ def addCliente():
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
-
+    
 @cliapi.route('/clientes/<int:id_cliente>', methods=['PUT'])
 def updateCliente(id_cliente):
     data = request.get_json()

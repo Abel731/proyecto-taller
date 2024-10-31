@@ -54,7 +54,7 @@ def addPersona():
     data = request.get_json()
     personadao = PersonaDao()
 
-    campos_requeridos = ['nombres', 'apellidos', 'nro_cedula', 'fecha_nacimiento', 'direccion']
+    campos_requeridos = ['nombres', 'apellidos', 'nro_cedula', 'fechanac', 'creacion_fecha', 'creacion_hora', 'creacion_usuario']
 
     for campo in campos_requeridos:
         if campo not in data or data[campo] is None or len(data[campo].strip()) == 0:
@@ -68,8 +68,10 @@ def addPersona():
             data['nombres'].strip().upper(),
             data['apellidos'].strip().upper(),
             data['nro_cedula'],
-            data['fecha_nacimiento'],
-            data['direccion'].strip().upper() 
+            data['fechanac'],
+            data['creacion_fecha'],
+            data['creacion_hora'],
+            data['creacion_usuario']
         )
         
         return jsonify({
@@ -79,8 +81,10 @@ def addPersona():
                 'nombres': data['nombres'].upper(),
                 'apellidos': data['apellidos'].upper(),
                 'nro_cedula': data['nro_cedula'],
-                'fecha_nacimiento': data['fecha_nacimiento'],
-                'direccion': data['direccion'].upper() 
+                'fechanac': data['fechanac'],
+                'creacion_fecha': data['creacion_fecha'],
+                'creacion_hora': data['creacion_hora'],
+                'creacion_usuario': data['creacion_usuario']
             },
             'error': None
         }), 201
@@ -97,7 +101,7 @@ def updatePersona(id_persona):
     data = request.get_json()
     personadao = PersonaDao()
 
-    campos_requeridos = ['nombres', 'apellidos', 'nro_cedula', 'fecha_nacimiento', 'direccion']
+    campos_requeridos = ['nombres', 'apellidos', 'nro_cedula', 'fechanac', 'creacion_fecha', 'creacion_hora', 'creacion_usuario']
 
     for campo in campos_requeridos:
         if campo not in data or data[campo] is None or len(data[campo].strip()) == 0:
@@ -112,18 +116,22 @@ def updatePersona(id_persona):
             data['nombres'].strip().upper(),
             data['apellidos'].strip().upper(),
             data['nro_cedula'],
-            data['fecha_nacimiento'],
-            data['direccion'].strip().upper() 
+            data['fechanac'],
+            data['creacion_fecha'],
+            data['creacion_hora'],
+            data['creacion_usuario']
         ):
             return jsonify({
                 'success': True,
                 'data': {
                     'id_persona': id_persona,
-                    'nombres': data['nombres'].upper(),
-                    'apellidos': data['apellidos'].upper(),
-                    'nro_cedula': data['nro_cedula'],
-                    'fecha_nacimiento': data['fecha_nacimiento'],
-                    'direccion': data['direccion'].upper()  
+                'nombres': data['nombres'].upper(),
+                'apellidos': data['apellidos'].upper(),
+                'nro_cedula': data['nro_cedula'],
+                'fechanac': data['fechanac'],
+                'creacion_fecha': data['creacion_fecha'],
+                'creacion_hora': data['creacion_hora'],
+                'creacion_usuario': data['creacion_usuario']
                 },
                 'error': None
             }), 200

@@ -1,11 +1,12 @@
 from flask import current_app as app
 from app.conexion.Conexion import Conexion
+from datetime import datetime, time
 
 class PersonaDao:
 
     def getPersonas(self):
         personaSQL = """
-        SELECT id_persona, nombres, apellidos, nro_cedula, fecha_nacimiento, direccion
+        SELECT id_persona, nombres, apellidos, ci, fechanac, creacion_fecha, creacion_hora, creacion_usuario
         FROM personas
         """
         # objeto conexion
@@ -23,9 +24,11 @@ class PersonaDao:
                     "id_persona": item[0],
                     "nombres": item[1],
                     "apellidos": item[2],
-                    "nro_cedula": item[3],
-                    "fecha_nacimiento": item[4],
-                    "direccion": item[5]
+                    "ci": item[3],
+                    "fechanac": item[4].strftime('%Y-%m-%d') if isinstance(item[4], datetime) else item[4],
+                    "creacion_fecha": item[5],
+                    "creacion_hora": item[6].strftime('%H:%M:%S') if isinstance(item[6], time) else item[6],
+                    "creacion_usuario": item[7]
                 })
             return lista_ordenada
         except con.Error as e:
@@ -36,7 +39,7 @@ class PersonaDao:
 
     def getPersonaById(self, id_persona):
         personaSQL = """
-        SELECT id_persona, nombres, apellidos, nro_cedula, fecha_nacimiento, direccion
+        SELECT id_persona, nombres, apellidos, ci, fechanac, creacion_fecha, creacion_hora, creacion_usuario
         FROM personas WHERE id_persona=%s
         """
         # objeto conexion
@@ -53,9 +56,11 @@ class PersonaDao:
                     "id_persona": personaEncontrada[0],
                     "nombres": personaEncontrada[1],
                     "apellidos": personaEncontrada[2],
-                    "nro_cedula": personaEncontrada[3],
-                    "fecha_nacimiento": personaEncontrada[4],
-                    "direccion": personaEncontrada[5]
+                    "ci": personaEncontrada[3],
+                    "fechanac": personaEncontrada[4].strftime('%Y-%m-%d') if isinstance(personaEncontrada[4], datetime) else personaEncontrada[4],
+                    "creacion_fecha": personaEncontrada[5],
+                    "creacion_hora": personaEncontrada[6].strftime('%H:%M:%S') if isinstance(personaEncontrada[6], time) else personaEncontrada[6],
+                    "creacion_usuario": personaEncontrada[7]
                 }
             return None
         except con.Error as e:
@@ -64,10 +69,10 @@ class PersonaDao:
             cur.close()
             con.close()
 
-    def guardarPersona(self, nombres, apellidos, nro_cedula, fecha_nacimiento, direccion):
+    def guardarPersona(self, nombres, apellidos, ci, fechanac, creacion_fecha, creacion_hora, creacion_usuario):
         insertPersonaSQL = """
-        INSERT INTO personas(nombres, apellidos, nro_cedula, fecha_nacimiento, direccion)
-        VALUES (%s, %s, %s, %s, %s)
+        INSERT INTO personas(nombres, apellidos, ci, fechanac, creacion_fecha, creacion_hora, creacion_usuario)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
 
         conexion = Conexion()
@@ -76,7 +81,7 @@ class PersonaDao:
 
         # Ejecucion exitosa
         try:
-            cur.execute(insertPersonaSQL, (nombres, apellidos, nro_cedula, fecha_nacimiento, direccion))
+            cur.execute(insertPersonaSQL, (nombres, apellidos, ci, fechanac, creacion_fecha, creacion_hora, creacion_usuario))
             # se confirma la insercion
             con.commit()
             return True
@@ -88,10 +93,10 @@ class PersonaDao:
 
         return False
 
-    def updatePersona(self, id_persona, nombres, apellidos, nro_cedula, fecha_nacimiento, direccion):
+    def updatePersona(self, id_persona, nombres, apellidos, ci, fechanac, creacion_fecha, creacion_hora, creacion_usuario):
         updatePersonaSQL = """
         UPDATE personas
-        SET nombres=%s, apellidos=%s, nro_cedula=%s, fecha_nacimiento=%s, direccion=%s
+        SET nombres=%s, apellidos=%s, ci=%s, fechanac=%s, creacion_fecha=%s, creacion_hora=%s, creacion_usuario=%s
         WHERE id_persona=%s
         """
 
@@ -101,7 +106,7 @@ class PersonaDao:
 
         # Ejecucion exitosa
         try:
-            cur.execute(updatePersonaSQL, (nombres, apellidos, nro_cedula, fecha_nacimiento, direccion, id_persona))
+            cur.execute(updatePersonaSQL, (nombres, apellidos, ci, fechanac, creacion_fecha, creacion_hora, creacion_usuario, id_persona))
             # se confirma la insercion
             con.commit()
             return True

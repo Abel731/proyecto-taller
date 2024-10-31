@@ -17,13 +17,9 @@ Clientes
         <table class="table table-striped" id="tbl">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Nombre</th>
-              <th>Apellido</th>
-              <th>Nro. Cédula</th>
+              <th>Cliente</th>
               <th>Dirección</th>
               <th>Teléfono</th>
-              <th>Fecha Registro</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -46,18 +42,23 @@ Clientes
 
           <!-- Modal body -->
           <div class="modal-body">
-            <div class="form-group">
+            <!-- <div class="form-group">
               <input type="hidden" id="txtIdCliente">
-              <label for="txtNombre">Nombre:</label>
-              <input type="text" class="form-control" placeholder="Ingrese el nombre" id="txtNombre">
-            </div>
-            <div class="form-group">
-              <label for="txtApellido">Apellido:</label>
-              <input type="text" class="form-control" placeholder="Ingrese el apellido" id="txtApellido">
-            </div>
-            <div class="form-group">
-              <label for="txtCedula">Nro. Cédula:</label>
-              <input type="number" class="form-control" placeholder="Ingrese el número de cédula" id="txtCedula">
+              <label for="txtCliente">Cliente:</label>
+              <input type="text" class="form-control" placeholder="Ingrese el nombre" id="txtCliente">
+            </div> -->
+            <div class="form-group row mt-3">
+              <label for="cbo_cliente" class="col-md-2 col-form-label">Clientes:</label>
+              <div class="col-md-6">
+                  <select id="cbo_cliente" class="custom-select">
+                    <option value="">clientes</option>
+                      {% for item in clientes %}
+                        <option value="{{ item['id_perosna'] }}">
+                          {{ item['cliente'] }} - CEDULA: {{ item['ci'] }}
+                        </option>
+                      {% endfor %}
+                  </select>
+              </div>
             </div>
             <div class="form-group">
               <label for="txtDireccion">Dirección:</label>
@@ -66,10 +67,6 @@ Clientes
             <div class="form-group">
               <label for="txtTelefono">Teléfono:</label>
               <input type="text" class="form-control" placeholder="Ingrese el teléfono" id="txtTelefono">
-            </div>
-            <div class="form-group">
-              <label for="txtFechaRegistro">Fecha de Registro:</label>
-              <input type="date" class="form-control" id="txtFechaRegistro">
             </div>
           </div>
 
@@ -104,12 +101,9 @@ Clientes
       ajax: '/api/v1/clientes',  
       columns: [
         { data: 'id_cliente' },
-        { data: 'nombre' },
-        { data: 'apellido' },
-        { data: 'cedula' },
+        { data: 'cliente' },
         { data: 'direccion' },
         { data: 'telefono' },
-        { data: 'fecha_registro' },
         { data: function(row) {
             return `<button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id_cliente}">Editar</button>
                     <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id_cliente}">Eliminar</button>`;
@@ -122,13 +116,9 @@ Clientes
   const agregar = () => {
     $('#btnAgregar').on('click', function(){
       $('#modalTitle').text("Agregar un Cliente");
-      $('#txtIdCliente').val("");
-      $('#txtNombre').val("");
-      $('#txtApellido').val("");
-      $('#txtCedula').val("");
+      $('#cbo_cliente').val("");
       $('#txtDireccion').val("");
       $('#txtTelefono').val("");
-      $('#txtFechaRegistro').val("");
       $('#modalFormulario').modal();
     });
   }
@@ -136,21 +126,15 @@ Clientes
   const guardar = () => {
     $('#btnGuardar').on('click', function() {
       const idCliente = $('#txtIdCliente').val();
-      const nuevoNombre = $('#txtNombre').val();
-      const nuevoApellido = $('#txtApellido').val();
-      const nuevaCedula = $('#txtCedula').val();
+      const nuevoCliente = $('#cbo_cliente').val();
       const nuevaDireccion = $('#txtDireccion').val();
       const nuevoTelefono = $('#txtTelefono').val();
-      const nuevaFechaRegistro = $('#txtFechaRegistro').val();
       const tabla = $('#tbl').DataTable();
 
       const clienteData = {
-        nombre: nuevoNombre,
-        apellido: nuevoApellido,
-        cedula: nuevaCedula,
+        cliente: nuevoCliente,
         direccion: nuevaDireccion,
         telefono: nuevoTelefono,
-        fecha_registro: nuevaFechaRegistro
       };
 
       if(idCliente) {
@@ -175,7 +159,7 @@ Clientes
       } else {
         fetch(`/api/v1/clientes`, {
           method: 'POST',
-          headers: {
+          headers: {  
             'Content-Type': 'application/json'
           }, body: JSON.stringify(clienteData)
         })
@@ -218,12 +202,9 @@ Clientes
           })
           .then(resp => resp.json())
           .then(data => {
-            $('#txtNombre').val(data.data.nombre);
-            $('#txtApellido').val(data.data.apellido);
-            $('#txtCedula').val(data.data.cedula);
+            $('#cbo_cliente').val(data.data.cliente);
             $('#txtDireccion').val(data.data.direccion);
             $('#txtTelefono').val(data.data.telefono);
-            $('#txtFechaRegistro').val(data.data.fecha_registro);
             $('#modalFormulario').modal();
           });
         }

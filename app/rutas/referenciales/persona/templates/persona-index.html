@@ -22,7 +22,9 @@ Personas
               <th>Apellidos</th>
               <th>Nro. Cédula</th>
               <th>Fecha Nacimiento</th>
-              <th>Dirección</th>
+              <th>Fecha Creación</th>
+              <th>Hora Creación</th>
+              <th>Creación Usuario</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -59,12 +61,20 @@ Personas
               <input type="number" class="form-control" placeholder="Ingrese el número de cédula" id="txtNroCedula">
             </div>
             <div class="form-group">
-              <label for="txtFechaNacimiento">Fecha de Nacimiento:</label>
-              <input type="date" class="form-control" id="txtFechaNacimiento">
+              <label for="txtFechanac">Fecha de Nacimiento:</label>
+              <input type="date" class="form-control" id="txtFechanac">
             </div>
             <div class="form-group">
-              <label for="txtDireccion">Dirección:</label>
-              <input type="text" class="form-control" placeholder="Ingrese la dirección" id="txtDireccion">
+              <label for="txtFechaCreacion">Fecha de Creación:</label>
+              <input type="date" class="form-control" id="txtFechaCreacion">
+            </div>
+            <div class="form-group">
+              <label for="txtHoraCreacion">Hora de Creación:</label>
+              <input type="time" class="form-control" id="txtHoraCreacion">
+            </div>
+            <div class="form-group">
+              <label for="txtCreateUser">Creación de Usuario:</label>
+              <input type="number" class="form-control" id="txtCreateUser">
             </div>
           </div>
 
@@ -101,9 +111,11 @@ Personas
         { data: 'id_persona' },
         { data: 'nombres' },
         { data: 'apellidos' },
-        { data: 'nro_cedula' },
-        { data: 'fecha_nacimiento' },
-        { data: 'direccion' },
+        { data: 'ci' },
+        { data: 'fechanac' },
+        { data: 'creacion_fecha' },
+        { data: 'creacion_hora' },
+        { data: 'creacion_usuario' },
         { data: function(row) {
             return `<button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id_persona}">Editar</button>
                     <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id_persona}">Eliminar</button>`;
@@ -120,8 +132,10 @@ Personas
       $('#txtNombre').val("");
       $('#txtApellido').val("");
       $('#txtNroCedula').val("");
-      $('#txtFechaNacimiento').val("");
-      $('#txtDireccion').val("");
+      $('#txtFechanac').val("");
+      $('#txtFechaCreacion').val("");
+      $('#txtHoraCreacion').val("");
+      $('#txtCreateUser').val("");
       $('#modalFormulario').modal();
     });
   }
@@ -132,16 +146,20 @@ Personas
       const nuevoNombre = $('#txtNombre').val();
       const nuevoApellido = $('#txtApellido').val();
       const nuevoNroCedula = $('#txtNroCedula').val();
-      const nuevaFechaNacimiento = $('#txtFechaNacimiento').val();
-      const nuevaDireccion = $('#txtDireccion').val();
+      const nuevaFechaNac = $('#txtFechanac').val();
+      const nuevaFechaCreacion = $('#txtFechaCreacion').val();
+      const nuevaHoraCreacion = $('#txtHoraCreacion').val();
+      const nuevoCreateUser = $('#txtCreateUser').val();
       const tabla = $('#tbl').DataTable();
 
       const personaData = {
         nombres: nuevoNombre,
         apellidos: nuevoApellido,
         nro_cedula: nuevoNroCedula,
-        fecha_nacimiento: nuevaFechaNacimiento,
-        direccion: nuevaDireccion
+        fechanac: nuevaFechaNac,
+        creacion_fecha: nuevaFechaCreacion,
+        creacion_hora: nuevaHoraCreacion,
+        creacion_usuario: nuevoCreateUser,
       };
 
       if(idPersona) {
@@ -212,8 +230,10 @@ Personas
             $('#txtNombre').val(data.data.nombres);
             $('#txtApellido').val(data.data.apellidos);
             $('#txtNroCedula').val(data.data.nro_cedula);
-            $('#txtFechaNacimiento').val(data.data.fecha_nacimiento);
-            $('#txtDireccion').val(data.data.direccion);
+            $('#txtFechanac').val(data.data.fechanac);
+            $('#txtFechaCreacion').val(data.data.creacion_fecha);
+            $('#txtHoraCreacion').val(data.data.creacion_hora);
+            $('#txtCreateUser').val(data.data.creacion_usuario);
             $('#modalFormulario').modal();
           });
         }

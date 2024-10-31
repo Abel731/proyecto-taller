@@ -5,8 +5,16 @@ class ClienteDao:
 
     def getClientes(self):
         clienteSQL = """
-        SELECT id_cliente, id_persona, nombre, apellido, cedula, direccion, telefono, fecha_registro
-        FROM clientes
+        SELECT 
+            c.id_cliente
+            , CONCAT(p.nombres, ' ', p.apellidos) AS cliente
+            , p.ci
+            , c.direccion
+            , c.telefono
+        FROM 
+            clientes c
+        LEFT JOIN 
+        personas p ON p.id_persona = c.id_cliente;  
         """
         # objeto conexion
         conexion = Conexion()
@@ -14,24 +22,13 @@ class ClienteDao:
         cur = con.cursor()
         try:
             cur.execute(clienteSQL)
-            # trae datos de la bd
-            lista_clientes = cur.fetchall()
-            # retorno los datos
-            lista_ordenada = []
-            for item in lista_clientes:
-                lista_ordenada.append({
-                    "id_cliente": item[0],
-                    "id_persona": item[1],  # Relación opcional
-                    "nombre": item[2],
-                    "apellido": item[3],
-                    "cedula": item[4],
-                    "direccion": item[5],
-                    "telefono": item[6],
-                    "fecha_registro": item[7]
-                })
-            return lista_ordenada
+            lista_clientes = cur.fetchall()   # trae datos de la bd
+
+            # Transformar los datos en una lista de diccionarios
+            return [{'id_cliente': item[0], 'cliente': item[1], 'ci': item[2], 'direccion': item[3], 'telefono': item[4]} for item in lista_clientes]
+        
         except con.Error as e:
-            app.logger.info(e)
+            app.logger.info(e)(f"Error al obtener todos los clientes: {str(e)}")
         finally:
             cur.close()
             con.close()
@@ -68,29 +65,27 @@ class ClienteDao:
             cur.close()
             con.close()
 
-    def guardarCliente(self, id_persona, nombre, apellido, cedula, direccion, telefono, fecha_registro):
+    def guardarCliente(self, id_cliente, cliente, direccion, telefono):
         insertClienteSQL = """
-        INSERT INTO clientes(id_persona, nombre, apellido, cedula, direccion, telefono, fecha_registro)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO clientes(id_cliente, cliente, direccion, telefono)
+        VALUES (%s, %s, %s, %s)
         """
 
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
 
-        # Ejecucion exitosa
         try:
-            cur.execute(insertClienteSQL, (id_persona, nombre, apellido, cedula, direccion, telefono, fecha_registro))
-            # se confirma la insercion
+            cur.execute(insertClienteSQL, (id_cliente, cliente, direccion, telefono))
             con.commit()
-            return True
+            return True  # Retorna True si la inserción fue exitosa
         except con.Error as e:
-            app.logger.info(e)
+            app.logger.info(f"Error al guardar cliente: {str(e)}")
+            return False  # Retorna False si hubo un error
         finally:
             cur.close()
             con.close()
 
-        return False
 
     def updateCliente(self, id_cliente, nombre, apellido, cedula, direccion, telefono, fecha_registro):
         updateClienteSQL = """
