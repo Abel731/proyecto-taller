@@ -129,14 +129,14 @@ Clientes
       const nuevoTelefono = $('#txtTelefono').val();
       const tabla = $('#tbl').DataTable();
   
-      const clienteData = {
-        cliente: nuevoCliente,
-        direccion: nuevaDireccion,
-        telefono: nuevoTelefono,
-      };
-  
-      if (clienteData) {  // Comprueba si es una actualización o creación
-        fetch(`/api/v1/clientes/${clienteData}`, {
+    const clienteData = {
+    cliente: nuevoCliente,
+    direccion: nuevaDireccion,
+    telefono: String(nuevoTelefono) // Convertir a string
+};
+      let clientes = null;
+      if (clientes ) {  // Comprueba si es una actualización o creación
+        fetch(`/api/v1/clientes/${clientes}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
@@ -192,7 +192,7 @@ Clientes
           const cliente = $(this).data('id');
           $('#cbo_cliente').val(nuevoCliente);
 
-          fetch(`/api/v1/clientes/${id_cliente}`, {
+          fetch(`/api/v1/clientes/${clientes}`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json'
@@ -212,7 +212,7 @@ Clientes
 
   const eliminar = () => {
     $('#tbl').on('click', 'button[name="btn_eliminar"]', function(){
-      const idCliente = $(this).data('id');
+      const cliente = $(this).data('id');
       Swal.fire({
         title: "¿Deseas eliminar este registro?",
         showCancelButton: true,

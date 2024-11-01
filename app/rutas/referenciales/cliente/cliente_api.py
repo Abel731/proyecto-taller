@@ -55,7 +55,7 @@ def addCliente():
     clientedao = ClienteDao()
 
     campos_requeridos = ['direccion', 'telefono']
-
+    print("Datos recibidos:", data)  # Para verificar los datos recibidos
     for campo in campos_requeridos:
         if campo not in data or data[campo] is None or len(data[campo].strip()) == 0:
             return jsonify({
@@ -64,17 +64,18 @@ def addCliente():
             }), 400
 
     try:
-        # Guardar el cliente sin pasar id_cliente
-        id_cliente = clientedao.guardarCliente(
+        # Asegúrate de que id_cliente sea un entero
+        id_cliente = int(data['cliente'])  # Convierte a entero
+        id_guardado = clientedao.guardarCliente(
+            id_cliente,  # Pasa id_cliente aquí
             data['direccion'].strip().upper(),  # Dirección
             data['telefono']  # Teléfono
         )
 
-
         return jsonify({
             'success': True,
             'data': {
-                'id_cliente': id_cliente,
+                'id_cliente': id_guardado,  # Devuelve el ID guardado
                 'direccion': data['direccion'].upper(),
                 'telefono': data['telefono']
             },
