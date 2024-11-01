@@ -65,10 +65,10 @@ class ClienteDao:
             cur.close()
             con.close()
 
-    def guardarCliente(self, id_cliente, cliente, direccion, telefono):
+    def guardarCliente(self, id_cliente,  direccion, telefono):
         insertClienteSQL = """
-        INSERT INTO clientes(id_cliente, cliente, direccion, telefono)
-        VALUES (%s, %s, %s, %s)
+        INSERT INTO clientes(id_cliente,  direccion, telefono)
+        VALUES (%s, %s, %s)
         """
 
         conexion = Conexion()
@@ -76,7 +76,7 @@ class ClienteDao:
         cur = con.cursor()
 
         try:
-            cur.execute(insertClienteSQL, (id_cliente, cliente, direccion, telefono))
+            cur.execute(insertClienteSQL, (id_cliente, direccion, telefono))
             con.commit()
             return True  # Retorna True si la inserción fue exitosa
         except con.Error as e:

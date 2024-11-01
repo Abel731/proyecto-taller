@@ -53,8 +53,8 @@ Clientes
                   <select id="cbo_cliente" class="custom-select">
                     <option value="">clientes</option>
                       {% for item in clientes %}
-                        <option value="{{ item['id_perosna'] }}">
-                          {{ item['cliente'] }} - CEDULA: {{ item['ci'] }}
+                        <option value="{{ item['id_persona'] }}">
+                          {{ item['nombres'] }} {{ item['apellidos'] }} - CEDULA: {{ item['ci'] }}
                         </option>
                       {% endfor %}
                   </select>
@@ -101,7 +101,6 @@ Clientes
       ajax: '/api/v1/clientes',  
       columns: [
         { data: 'id_cliente' },
-        { data: 'cliente' },
         { data: 'direccion' },
         { data: 'telefono' },
         { data: function(row) {
@@ -125,20 +124,19 @@ Clientes
 
   const guardar = () => {
     $('#btnGuardar').on('click', function() {
-      const idCliente = $('#txtIdCliente').val();
       const nuevoCliente = $('#cbo_cliente').val();
       const nuevaDireccion = $('#txtDireccion').val();
       const nuevoTelefono = $('#txtTelefono').val();
       const tabla = $('#tbl').DataTable();
-
+  
       const clienteData = {
         cliente: nuevoCliente,
         direccion: nuevaDireccion,
         telefono: nuevoTelefono,
       };
-
-      if(idCliente) {
-        fetch(`/api/v1/clientes/${idCliente}`, {
+  
+      if (clienteData) {  // Comprueba si es una actualización o creación
+        fetch(`/api/v1/clientes/${clienteData}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
@@ -156,7 +154,7 @@ Clientes
           console.error(err);
           Swal.fire("Error", "Ocurrió un error al actualizar el cliente.", "error");
         });
-      } else {
+      } else {  // Caso de cliente nuevo
         fetch(`/api/v1/clientes`, {
           method: 'POST',
           headers: {  
@@ -191,10 +189,10 @@ Clientes
         if (result.isConfirmed) {
           $('#modalTitle').text("Editar un Cliente");
 
-          const idCliente = $(this).data('id');
-          $('#txtIdCliente').val(idCliente);
+          const cliente = $(this).data('id');
+          $('#cbo_cliente').val(nuevoCliente);
 
-          fetch(`/api/v1/clientes/${idCliente}`, {
+          fetch(`/api/v1/clientes/${id_cliente}`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json'
