@@ -54,7 +54,7 @@ def addProveedor():
     data = request.get_json()
     proveedordao = ProveedorDao()
 
-    campos_requeridos = ['ruc', 'razon_social', 'registro', 'estado']
+    campos_requeridos = ['ruc', 'razon_social', 'direccion', 'telefono']
 
     for campo in campos_requeridos:
         if campo not in data or data[campo] is None or len(data[campo].strip()) == 0:
@@ -63,20 +63,12 @@ def addProveedor():
                 'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
             }), 400
 
-  
-    estado = data['estado'].lower()
-    if estado not in ['activo', 'inactivo', 'pendiente']:
-        return jsonify({
-            'success': False,
-            'error': 'El estado debe ser "activo", "inactivo" o "pendiente".'
-        }), 400
-
     try:
         id_proveedor = proveedordao.guardarProveedor(
             data['ruc'].strip(),
             data['razon_social'].strip().upper(),
-            data['registro'],
-            estado 
+            data['direccion'].strip().upper(),
+            data['telefono'] 
         )
 
         return jsonify({
@@ -85,8 +77,8 @@ def addProveedor():
                 'id_proveedor': id_proveedor,
                 'ruc': data['ruc'].strip(),
                 'razon_social': data['razon_social'].upper(),
-                'registro': data['registro'],
-                'estado': estado  
+                'direccion': data['direccion'],
+                'telefono': data['telefono'],  
             },
             'error': None
         }), 201
@@ -103,7 +95,7 @@ def updateProveedor(id_proveedor):
     data = request.get_json()
     proveedordao = ProveedorDao()
 
-    campos_requeridos = ['ruc', 'razon_social', 'registro', 'estado']
+    campos_requeridos = ['ruc', 'razon_social', 'direccion', 'telefono']
 
     for campo in campos_requeridos:
         if campo not in data or data[campo] is None or len(data[campo].strip()) == 0:
@@ -112,30 +104,22 @@ def updateProveedor(id_proveedor):
                 'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
             }), 400
 
-    # Validar y normalizar el estado
-    estado = data['estado'].lower()
-    if estado not in ['activo', 'inactivo', 'pendiente']:
-        return jsonify({
-            'success': False,
-            'error': 'El estado debe ser "activo", "inactivo" o "pendiente".'
-        }), 400
-
     try:
         if proveedordao.updateProveedor(
             id_proveedor,
             data['ruc'].strip(),
             data['razon_social'].strip().upper(),
-            data['registro'],
-            estado  # Usar estado como string
+            data['direccion'].strip().upper(),
+            data['telefono']  
         ):
             return jsonify({
                 'success': True,
                 'data': {
                     'id_proveedor': id_proveedor,
-                    'ruc': data['ruc'].strip(),
-                    'razon_social': data['razon_social'].upper(),
-                    'registro': data['registro'],
-                    'estado': estado  # Devolver estado como string
+                'ruc': data['ruc'].strip(),
+                'razon_social': data['razon_social'].upper(),
+                'direccion': data['direccion'],
+                'telefono': data['telefono'],
                 },
                 'error': None
             }), 200

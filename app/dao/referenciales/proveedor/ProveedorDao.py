@@ -5,7 +5,7 @@ class ProveedorDao:
 
     def getProveedores(self):
         proveedorSQL = """
-        SELECT id_proveedor, ruc, razon_social, registro, estado
+        SELECT id_proveedor, ruc, razon_social, direccion, telefono
         FROM proveedores
         """
         # objeto conexion
@@ -23,8 +23,8 @@ class ProveedorDao:
                     "id_proveedor": item[0],
                     "ruc": item[1],
                     "razon_social": item[2],
-                    "registro": item[3],
-                    "estado": item[4]  
+                    "direccion": item[3],
+                    "telefono": item[4]  
                 })
             return lista_ordenada
         except con.Error as e:
@@ -35,7 +35,7 @@ class ProveedorDao:
 
     def getProveedorById(self, id_proveedor):
         proveedorSQL = """
-        SELECT id_proveedor, ruc, razon_social, registro, estado
+        SELECT id_proveedor, ruc, razon_social, direccion, telefono
         FROM proveedores WHERE id_proveedor=%s
         """
         # objeto conexion
@@ -52,8 +52,8 @@ class ProveedorDao:
                     "id_proveedor": proveedorEncontrado[0],
                     "ruc": proveedorEncontrado[1],
                     "razon_social": proveedorEncontrado[2],
-                    "registro": proveedorEncontrado[3],
-                    "estado": proveedorEncontrado[4]  
+                    "direccion": proveedorEncontrado[3],
+                    "telefono": proveedorEncontrado[4]  
                 }
             return None
         except con.Error as e:
@@ -62,9 +62,9 @@ class ProveedorDao:
             cur.close()
             con.close()
 
-    def guardarProveedor(self, ruc, razon_social, registro, estado):
+    def guardarProveedor(self, ruc, razon_social, direccion, telefono):
         insertProveedorSQL = """
-        INSERT INTO proveedores(ruc, razon_social, registro, estado)
+        INSERT INTO proveedores(ruc, razon_social, direccion, telefono)
         VALUES (%s, %s, %s, %s)
         """
 
@@ -74,7 +74,7 @@ class ProveedorDao:
 
         # Ejecucion exitosa
         try:
-            cur.execute(insertProveedorSQL, (ruc, razon_social, registro, estado))
+            cur.execute(insertProveedorSQL, (ruc, razon_social, direccion, telefono))
             # se confirma la insercion
             con.commit()
             return True
@@ -86,10 +86,10 @@ class ProveedorDao:
 
         return False
 
-    def updateProveedor(self, id_proveedor, ruc, razon_social, registro, estado):
+    def updateProveedor(self, id_proveedor, ruc, razon_social, direccion, telefono):
         updateProveedorSQL = """
         UPDATE proveedores
-        SET ruc=%s, razon_social=%s, registro=%s, estado=%s
+        SET ruc=%s, razon_social=%s, direccion=%s, telefono=%s
         WHERE id_proveedor=%s
         """
 
@@ -99,7 +99,7 @@ class ProveedorDao:
 
         # Ejecucion exitosa
         try:
-            cur.execute(updateProveedorSQL, (ruc, razon_social, registro, estado, id_proveedor))
+            cur.execute(updateProveedorSQL, (ruc, razon_social, direccion, telefono, id_proveedor))
             # se confirma la insercion
             con.commit()
             return True

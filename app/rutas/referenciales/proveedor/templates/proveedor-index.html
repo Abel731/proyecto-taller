@@ -20,8 +20,8 @@ Proveedores
               <th>ID</th>
               <th>RUC</th>
               <th>Razón Social</th>
-              <th>Fecha de Registro</th>
-              <th>Estado</th>
+              <th>Direccion</th>
+              <th>Teléfono</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -54,16 +54,12 @@ Proveedores
               <input type="text" class="form-control" placeholder="Ingrese la razón social" id="txtRazonSocial">
             </div>
             <div class="form-group">
-              <label for="txtRegistro">Fecha de Registro:</label>
-              <input type="date" class="form-control" id="txtRegistro">
+              <label for="txtDireccion">Direccion:</label>
+              <input type="text" class="form-control" placeholder="Ingrese la direccion" id="txtDireccion">
             </div>
             <div class="form-group">
-              <label for="txtEstado">Estado:</label>
-              <select class="form-control" id="txtEstado">
-                <option value="activo">Activo</option>
-                <option value="inactivo">Inactivo</option>
-                <option value="pendiente">Pendiente</option>
-              </select>
+              <label for="txtTelefono">telefono:</label>
+              <input type="text" class="form-control" placeholder="Ingrese el telefono" id="txtTelefono">
             </div>
           </div>
 
@@ -100,8 +96,8 @@ Proveedores
         { data: 'id_proveedor' },
         { data: 'ruc' },
         { data: 'razon_social' },
-        { data: 'registro' },
-        { data: 'estado', render: function(data) {
+        { data: 'direccion' },
+        { data: 'telefono', render: function(data) {
           return data.charAt(0).toUpperCase() + data.slice(1);}
         },
         { data: function(row) {
@@ -119,8 +115,8 @@ Proveedores
       $('#txtIdProveedor').val("");
       $('#txtRUC').val("");
       $('#txtRazonSocial').val("");
-      $('#txtRegistro').val("");
-      $('#txtEstado').val("");
+      $('#txtDireccion').val("");
+      $('#txtTelefono').val("");
       $('#modalFormulario').modal();
     });
   }
@@ -130,15 +126,15 @@ Proveedores
       const idProveedor = $('#txtIdProveedor').val();
       const nuevoRUC = $('#txtRUC').val();
       const nuevaRazonSocial = $('#txtRazonSocial').val();
-      const nuevoRegistro = $('#txtRegistro').val();
-      const nuevoEstado = $('#txtEstado').val();
+      const nuevaDireccion = $('#txtDireccion').val();
+      const nuevoTelefono = $('#txtTelefono').val();
       const tabla = $('#tbl').DataTable();
   
       const proveedorData = {
         ruc: nuevoRUC,
         razon_social: nuevaRazonSocial,
-        registro: nuevoRegistro,
-        estado: nuevoEstado // Usamos el estado directamente como string
+        direccion: nuevaDireccion,
+        telefono: nuevoTelefono // Usamos el estado directamente como string
       };
   
       // Operación de actualización
@@ -212,8 +208,8 @@ Proveedores
           .then(data => {
             $('#txtRUC').val(data.data.ruc);
             $('#txtRazonSocial').val(data.data.razon_social);
-            $('#txtRegistro').val(data.data.registro);
-            $('#txtEstado').val(data.data.estado ? "true" : "false");
+            $('#txtDireccion').val(data.data.direccion);
+            $('#txtTelefono').val(data.data.telefono);
             $('#modalFormulario').modal();
           });
         }
