@@ -113,16 +113,17 @@ Clientes
   }
 
   const agregar = () => {
-    $('#btnAgregar').on('click', function(){
+    $('#btnAgregar').on('click', function() {
       $('#modalTitle').text("Agregar un Cliente");
-      $('#cbo_cliente').val("");
+      $('#cbo_cliente').val("").prop('disabled', false); // Habilita el select al agregar
       $('#txtDireccion').val("");
       $('#txtTelefono').val("");
       $('#modalFormulario').modal();
+      clientes = null; // Resetear clientes para nueva entrada
     });
-  }
+}
 
-  let clientes = null; // Variable fuera de la función para que sea accesible en ambos contextos
+let clientes = null; // Variable fuera de la función para que sea accesible en ambos contextos
 
 const guardar = () => {
   $('#btnGuardar').on('click', function() {
@@ -185,19 +186,19 @@ const guardar = () => {
 };
 
 const editar = () => {
-  $('#tbl').on('click', 'button[name="btn_editar"]', function(){
+  $('#tbl').on('click', 'button[name="btn_editar"]', function() {
     Swal.fire({
       title: "¿Deseas editar este registro?",
       showCancelButton: true,
       confirmButtonText: "Si",
-      cancelButtonText: `No`
+      cancelButtonText: "No"
     }).then((result) => {
       if (result.isConfirmed) {
         $('#modalTitle').text("Editar un Cliente");
 
-        clientes = $(this).data('id');  // Asigna el id del cliente a `clientes`
-
-        fetch(`/api/v1/clientes/${clientes}`, {
+        const idCliente = $(this).data('id');
+        
+        fetch(`/api/v1/clientes/${idCliente}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
@@ -205,15 +206,21 @@ const editar = () => {
         })
         .then(resp => resp.json())
         .then(data => {
-          $('#cbo_cliente').val(data.data.cliente);
+          // Asigna el ID del cliente al select pero lo mantiene deshabilitado
+          $('#cbo_cliente').val(idCliente).prop('disabled', true);
           $('#txtDireccion').val(data.data.direccion);
           $('#txtTelefono').val(data.data.telefono);
           $('#modalFormulario').modal();
+          clientes = idCliente; // Guarda el ID del cliente para actualización
+        })
+        .catch(err => {
+          console.error(err);
+          Swal.fire("Error", "Ocurrió un error al obtener los datos del cliente.", "error");
         });
       }
     });
   });
-};
+}
 
   const eliminar = () => {
     $('#tbl').on('click', 'button[name="btn_eliminar"]', function(){
