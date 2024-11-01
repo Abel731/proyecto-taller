@@ -19,8 +19,6 @@ Sucursales
             <tr>
               <th>ID</th>
               <th>Nombre</th>
-              <th>Dirección</th>
-              <th>Teléfono</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -45,16 +43,8 @@ Sucursales
           <div class="modal-body">
             <div class="form-group">
               <input type="hidden" id="txtIdSucursal">
-              <label for="txtNombre">Nombre:</label>
-              <input type="text" class="form-control" placeholder="Ingrese el nombre de la Sucursal" id="txtNombre">
-            </div>
-            <div class="form-group">
-              <label for="txtDireccion">Dirección:</label>
-              <input type="text" class="form-control" placeholder="Ingrese la dirección" id="txtDireccion">
-            </div>
-            <div class="form-group">
-              <label for="txtTelefono">Teléfono:</label>
-              <input type="number" class="form-control" placeholder="Ingrese el número de teléfono" id="txtTelefono">
+              <label for="txtDescripcion">Nombre:</label>
+              <input type="text" class="form-control" placeholder="Ingrese el nombre de la Sucursal" id="txtDescripcion">
             </div>
           </div>
 
@@ -89,9 +79,7 @@ Sucursales
       ajax: '/api/v1/sucursales',
       columns: [
         { data: 'id_sucursal' },
-        { data: 'nombre' },
-        { data: 'direccion' },
-        { data: 'telefono' },
+        { data: 'descripcion' },
         { data: function(row) {
             return `<button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id_sucursal}">Editar</button>
                     <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id_sucursal}">Eliminar</button>`;
@@ -105,9 +93,7 @@ Sucursales
     $('#btnAgregar').on('click', function(){
       $('#modalTitle').text("Agregar una Sucursal");
       $('#txtIdSucursal').val("");
-      $('#txtNombre').val("");
-      $('#txtDireccion').val("");
-      $('#txtTelefono').val("");
+      $('#txtDescripcion').val("");
       $('#modalFormulario').modal();
     });
   }
@@ -115,15 +101,11 @@ Sucursales
   const guardar = () => {
     $('#btnGuardar').on('click', function() {
       const idSucursal = $('#txtIdSucursal').val();
-      const nuevoNombre = $('#txtNombre').val();
-      const nuevaDireccion = $('#txtDireccion').val();
-      const nuevoTelefono = $('#txtTelefono').val();
+      const nuevaDescripcion = $('#txtDescripcion').val();
       const tabla = $('#tbl').DataTable();
 
       const sucursalData = {
-        nombre: nuevoNombre,
-        direccion: nuevaDireccion,
-        telefono: nuevoTelefono
+        descripcion: nuevaDescripcion,
       };
 
       if(idSucursal) {
@@ -191,9 +173,7 @@ Sucursales
           })
           .then(resp => resp.json())
           .then(data => {
-            $('#txtNombre').val(data.data.nombre);
-            $('#txtDireccion').val(data.data.direccion);
-            $('#txtTelefono').val(data.data.telefono);
+            $('#txtDescripcion').val(data.data.descripcion);
             $('#modalFormulario').modal();
           });
         }

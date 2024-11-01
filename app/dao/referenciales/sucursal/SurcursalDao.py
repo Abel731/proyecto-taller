@@ -3,6 +3,33 @@ from app.conexion.Conexion import Conexion
 
 class SucursalDao:
 
+    def getSucursales(self):
+        depositoSQL = """
+        SELECT id_sucursal, descripcion
+        FROM sucursales
+        """
+        # objeto conexion
+        conexion = Conexion()
+        con = conexion.getConexion()
+        cur = con.cursor()
+        try:
+            cur.execute(depositoSQL)
+            # trae datos de la bd
+            lista_depositos = cur.fetchall()
+            # retorno los datos
+            lista_ordenada = []
+            for item in lista_depositos:
+                lista_ordenada.append({
+                    "id_sucursal": item[0],
+                    "descripcion": item[1]
+                })
+            return lista_ordenada
+        except con.Error as e:
+            app.logger.info(e)
+        finally:
+            cur.close()
+            con.close()
+
     def get_sucursales(self):
 
         sucursal_sql = """
@@ -71,7 +98,7 @@ class SucursalDao:
 
     def getSucursalById(self, id_sucursal):
         sucursalSQL = """
-        SELECT id_sucursal, nombre, direccion, telefono
+        SELECT id_sucursal, descripcion
         FROM sucursales WHERE id_sucursal=%s
         """
         # objeto conexion
@@ -86,9 +113,7 @@ class SucursalDao:
             if sucursalEncontrada:
                 return {
                     "id_sucursal": sucursalEncontrada[0],
-                    "nombre": sucursalEncontrada[1],
-                    "direccion": sucursalEncontrada[2],
-                    "telefono": sucursalEncontrada[3]  
+                    "descripcion": sucursalEncontrada[1],
                 }
             return None
         except con.Error as e:
@@ -97,10 +122,10 @@ class SucursalDao:
             cur.close()
             con.close()
 
-    def guardarSucursal(self, nombre, direccion, telefono):
+    def guardarSucursal(self, descripcion):
         insertSucursalSQL = """
-        INSERT INTO sucursales(nombre, direccion, telefono)
-        VALUES (%s, %s, %s)
+        INSERT INTO sucursales(descripcion)
+        VALUES (%s)
         """
 
         conexion = Conexion()
@@ -109,7 +134,7 @@ class SucursalDao:
 
         # Ejecucion exitosa
         try:
-            cur.execute(insertSucursalSQL, (nombre, direccion, telefono))
+            cur.execute(insertSucursalSQL, (descripcion,))
             # se confirma la insercion
             con.commit()
             return True
@@ -121,10 +146,10 @@ class SucursalDao:
 
         return False
 
-    def updateSucursal(self, id_sucursal, nombre, direccion, telefono):
+    def updateSucursal(self, id_sucursal, descripcion):
         updateSucursalSQL = """
         UPDATE sucursales
-        SET nombre=%s, direccion=%s, telefono=%s
+        SET descripcion=%s 
         WHERE id_sucursal=%s
         """
 
@@ -134,7 +159,7 @@ class SucursalDao:
 
         # Ejecucion exitosa
         try:
-            cur.execute(updateSucursalSQL, (nombre, direccion, telefono, id_sucursal))  
+            cur.execute(updateSucursalSQL, (descripcion, id_sucursal))  
             # se confirma la insercion
             con.commit()
             return True

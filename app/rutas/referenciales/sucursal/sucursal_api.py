@@ -22,6 +22,26 @@ def get_sucursal_depositos(id_sucursal):
             'error': 'Ocurrió un error interno. Consulte con el administrador'
         }), 500
 
+@sucapi.route('/sucursales', methods=['GET'])
+def getSucursales():
+    sucursaldao = SucursalDao()
+
+    try:
+        sucursales = sucursaldao.getSucursales()
+
+        return jsonify({
+            'success': True,
+            'data': sucursales,
+            'error': None
+        }), 200
+
+    except Exception as e:
+        app.logger.error(f"Error al obtener todas las sucursales : {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Ocurrió un error interno. Consulte con el administrador.'
+        }), 500
+
 @sucapi.route('/sucursales/<int:id_sucursal>', methods=['GET'])
 def getSucursal(id_sucursal):
     sucursaldao = SucursalDao()
@@ -53,7 +73,7 @@ def addSucursal():
     data = request.get_json()
     sucursaldao = SucursalDao()
 
-    campos_requeridos = ['nombre', 'direccion', 'telefono']
+    campos_requeridos = ['descripcion']
 
     for campo in campos_requeridos:
         if campo not in data or data[campo] is None or len(data[campo].strip()) == 0:
@@ -64,18 +84,14 @@ def addSucursal():
 
     try:
         id_sucursal = sucursaldao.guardarSucursal(
-            data['nombre'].strip().upper(),
-            data['direccion'].strip().upper(),
-            data['telefono']
+            data['descripcion'].strip().upper(),
         )
         
         return jsonify({
             'success': True,
             'data': {
                 'id_sucursal': id_sucursal,
-                'nombre': data['nombre'].upper(),
-                'direccion': data['direccion'].upper(),
-                'telefono': data['telefono']
+                'descripcion': data['descripcion'].upper(),
             },
             'error': None
         }), 201
@@ -92,7 +108,7 @@ def updateSucursal(id_sucursal):
     data = request.get_json()
     sucursaldao = SucursalDao()
 
-    campos_requeridos = ['nombre', 'direccion', 'telefono']
+    campos_requeridos = ['descripcion']
 
     for campo in campos_requeridos:
         if campo not in data or data[campo] is None or len(data[campo].strip()) == 0:
@@ -104,17 +120,13 @@ def updateSucursal(id_sucursal):
     try:
         if sucursaldao.updateSucursal(
             id_sucursal,
-            data['nombre'].strip().upper(),
-            data['direccion'].strip().upper(),
-            data['telefono']
+            data['descripcion'].strip().upper(),
         ):
             return jsonify({
                 'success': True,
                 'data': {
                     'id_sucursal': id_sucursal,
-                    'nombre': data['nombre'].upper(),
-                    'direccion': data['direccion'].upper(),
-                    'telefono': data['telefono']
+                    'descripcion': data['descripcion'].upper(),
                 },
                 'error': None
             }), 200
