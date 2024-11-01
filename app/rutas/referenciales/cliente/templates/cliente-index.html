@@ -225,7 +225,7 @@ const editar = () => {
         cancelButtonText: `No`
       }).then((result) => {
         if (result.isConfirmed) {
-          fetch(`/api/v1/clientes/${idCliente}`, {
+          fetch(`/api/v1/clientes/${cliente}`, {
             method: 'DELETE',
             headers: {
               'Content-Type': 'application/json'
