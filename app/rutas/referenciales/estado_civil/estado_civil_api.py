@@ -4,7 +4,7 @@ from app.dao.referenciales.estado_civil.EstadoCivilDao import EstadoCivilDao
 estadocivilapi = Blueprint('estadocivilapi', __name__)
 
 # Estados civiles permitidos
-ESTADOS_VALIDOS = ['soltero', 'casado', 'divorciado', 'viudo', 'concubino']
+ESTADOS_VALIDOS = ['soltero/a', 'casado/a', 'divorciado/a', 'viudo/a', 'concubino/a']
 
 # Trae todos los estados civiles
 @estadocivilapi.route('/estadosciviles', methods=['GET'])
@@ -68,7 +68,7 @@ def addEstadoCivil():
     if descripcion not in ESTADOS_VALIDOS:
         return jsonify({
             'success': False,
-            'error': 'El estado debe ser uno de los siguientes: Soltero, Casado, Divorciado, Viudo, Concubino.'
+            'error': 'El estado debe ser uno de los siguientes: soltero/a, casado/a, divorciado/a, viudo/a, concubino/a.'
         }), 400
 
     try:
@@ -109,7 +109,7 @@ def updateEstadoCivil(estado_civil_id):
     if descripcion not in ESTADOS_VALIDOS:
         return jsonify({
             'success': False,
-            'error': 'El estado debe ser uno de los siguientes: Soltero, Casado, Divorciado, Viudo, Concubino.'
+            'error': 'El estado debe ser uno de los siguientes: soltero/a, casado/a, divorciado/a, viudo/a, concubino/a.'
         }), 400
 
     try:
