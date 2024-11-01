@@ -5,7 +5,7 @@ class DepositoDao:
 
     def getDepositos(self):
         depositoSQL = """
-        SELECT id_deposito, nombre, direccion, telefono, capacidad
+        SELECT id_deposito, descripcion
         FROM depositos
         """
         # objeto conexion
@@ -21,10 +21,7 @@ class DepositoDao:
             for item in lista_depositos:
                 lista_ordenada.append({
                     "id_deposito": item[0],
-                    "nombre": item[1],
-                    "direccion": item[2],
-                    "telefono": item[3],
-                    "capacidad": item[4],
+                    "descripcion": item[1]
                 })
             return lista_ordenada
         except con.Error as e:
@@ -35,7 +32,7 @@ class DepositoDao:
 
     def getDepositoById(self, id_deposito):
         depositoSQL = """
-        SELECT id_deposito,  nombre, direccion, telefono, capacidad
+        SELECT id_deposito,  descripcion
         FROM depositos WHERE id_deposito=%s
         """
         # objeto conexion
@@ -50,10 +47,7 @@ class DepositoDao:
             if depositoEncontrado:
                 return {
                     "id_deposito": depositoEncontrado[0],
-                    "nombre": depositoEncontrado[1],
-                    "direccion": depositoEncontrado[2],
-                    "telefono": depositoEncontrado[3],
-                    "capacidad": depositoEncontrado[4],
+                    "descripcion": depositoEncontrado[1],
                 }
             return None
         except con.Error as e:
@@ -62,10 +56,10 @@ class DepositoDao:
             cur.close()
             con.close()
 
-    def guardarDeposito(self, nombre, direccion, telefono, capacidad):
+    def guardarDeposito(self, descripcion):
         insertDepositoSQL = """
-        INSERT INTO depositos(nombre, direccion, telefono, capacidad)
-        VALUES (%s, %s, %s, %s)
+        INSERT INTO depositos(descripcion)
+        VALUES (%s)
         """
 
         conexion = Conexion()
@@ -74,7 +68,7 @@ class DepositoDao:
 
         # Ejecucion exitosa
         try:
-            cur.execute(insertDepositoSQL, (nombre, direccion, telefono, capacidad))
+            cur.execute(insertDepositoSQL, (descripcion,))
             # se confirma la insercion
             con.commit()
             return True
@@ -86,10 +80,10 @@ class DepositoDao:
 
         return False
 
-    def updateDeposito(self, id_deposito, nombre, direccion, telefono, capacidad):
+    def updateDeposito(self, id_deposito, descripcion):
         updateDepositoSQL = """
         UPDATE depositos
-        SET nombre=%s, direccion=%s, telefono=%s, capacidad=%s
+        SET descripcion=%s
         WHERE id_deposito=%s
         """
 
@@ -99,7 +93,7 @@ class DepositoDao:
 
         # Ejecucion exitosa
         try:
-            cur.execute(updateDepositoSQL, (nombre, direccion, telefono, capacidad, id_deposito))
+            cur.execute(updateDepositoSQL, (descripcion, id_deposito))
             # se confirma la insercion
             con.commit()
             return True

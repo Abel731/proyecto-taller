@@ -54,7 +54,7 @@ def addDeposito():
     data = request.get_json()
     depositodao = DepositoDao()
 
-    campos_requeridos = ['nombre', 'direccion', 'telefono', 'capacidad']
+    campos_requeridos = ['descripcion']
 
     for campo in campos_requeridos:
         if campo not in data or data[campo] is None or len(data[campo].strip()) == 0:
@@ -65,20 +65,14 @@ def addDeposito():
 
     try:
         id_deposito = depositodao.guardarDeposito(
-            data['nombre'].strip().upper(),
-            data['direccion'].strip().upper(),
-            data['telefono'],
-            data['capacidad']
+            data['descripcion'].strip().upper(),
         )
         
         return jsonify({
             'success': True,
             'data': {
                 'id_deposito': id_deposito,
-                'nombre': data['nombre'].upper(),
-                'direccion': data['direccion'].upper(),
-                'telefono': data['telefono'],
-                'capacidad': data['capacidad']
+                'descripcion': data['descripcion'].upper(),
             },
             'error': None
         }), 201
@@ -95,7 +89,7 @@ def updateDeposito(id_deposito):
     data = request.get_json()
     depositodao = DepositoDao()
 
-    campos_requeridos = ['nombre', 'direccion', 'telefono', 'capacidad']
+    campos_requeridos = ['descripcion']
 
     for campo in campos_requeridos:
         if campo not in data or data[campo] is None or len(data[campo].strip()) == 0:
@@ -107,19 +101,13 @@ def updateDeposito(id_deposito):
     try:
         if depositodao.updateDeposito(
             id_deposito,
-            data['nombre'].strip().upper(),
-            data['direccion'].strip().upper(),
-            data['telefono'],
-            data['capacidad']
+            data['descripcion'].strip().upper(),
         ):
             return jsonify({
                 'success': True,
                 'data': {
                     'id_deposito': id_deposito,
-                    'nombre': data['nombre'].upper(),
-                    'direccion': data['direccion'].upper(),
-                    'telefono': data['telefono'],
-                    'capacidad': data['capacidad']
+                    'descripcion': data['descripcion'].upper()
                 },
                 'error': None
             }), 200
