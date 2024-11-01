@@ -27,12 +27,12 @@ CREATE TABLE estado_civil (
 );
 
 CREATE TABLE sexo (
-    id_sexo SERIAL PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     descripcion VARCHAR(60) NOT NULL
 );
 
 CREATE TABLE marcas (
-    id_marcas SERIAL PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     descripcion VARCHAR(60) NOT NULL
 );
 
