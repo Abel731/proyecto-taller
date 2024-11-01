@@ -35,7 +35,7 @@ class ClienteDao:
 
     def getClienteById(self, id_cliente):
         clienteSQL = """
-        SELECT id_cliente, id_persona, nombre, apellido, cedula, direccion, telefono, fecha_registro
+        SELECT id_cliente, direccion, telefono
         FROM clientes WHERE id_cliente=%s
         """
         # objeto conexion
@@ -50,13 +50,8 @@ class ClienteDao:
             if clienteEncontrado:
                 return {
                     "id_cliente": clienteEncontrado[0],
-                    "id_persona": clienteEncontrado[1],  # Relación opcional
-                    "nombre": clienteEncontrado[2],
-                    "apellido": clienteEncontrado[3],
-                    "cedula": clienteEncontrado[4],
-                    "direccion": clienteEncontrado[5],
-                    "telefono": clienteEncontrado[6],
-                    "fecha_registro": clienteEncontrado[7]
+                    "direccion": clienteEncontrado[1],
+                    "telefono": clienteEncontrado[2]
                 }
             return None
         except con.Error as e:
@@ -87,10 +82,10 @@ class ClienteDao:
             con.close()
 
 
-    def updateCliente(self, id_cliente, nombre, apellido, cedula, direccion, telefono, fecha_registro):
+    def updateCliente(self, id_cliente, direccion, telefono):
         updateClienteSQL = """
         UPDATE clientes
-        SET nombre=%s, apellido=%s, cedula=%s, direccion=%s, telefono=%s, fecha_registro=%s
+        SET  direccion=%s, telefono=%s
         WHERE id_cliente=%s
         """
 
@@ -100,7 +95,7 @@ class ClienteDao:
 
         # Ejecucion exitosa
         try:
-            cur.execute(updateClienteSQL, (nombre, apellido, cedula, direccion, telefono, fecha_registro, id_cliente))
+            cur.execute(updateClienteSQL, (direccion, telefono, id_cliente))
             # se confirma la insercion
             con.commit()
             return True

@@ -125,7 +125,7 @@ CREATE TABLE estado_de_presupuesto_prov(
 );
 
 CREATE TABLE proveedores(
-    id_proveedor INTEGER PRIMARY KEY
+    id_proveedor SERIAL PRIMARY KEY
     , ruc VARCHAR(20) UNIQUE NOT NULL
     , razon_social VARCHAR(70) NOT NULL
     , direccion VARCHAR(70) NOT NULL

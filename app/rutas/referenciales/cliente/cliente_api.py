@@ -98,36 +98,21 @@ def updateCliente(id_cliente):
 
     clientedao = ClienteDao()
 
-    campos_requeridos = ['nombre', 'apellido', 'cedula', 'direccion', 'telefono', 'fecha_registro']
+    campos_requeridos = ['direccion', 'telefono']
 
     for campo in campos_requeridos:
         if campo not in data or data[campo] is None or len(data[campo].strip()) == 0:
             return jsonify({
-                'success': False,
-                'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
-            }), 400
-
+                            'success': False,
+                            'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
+                            }), 400
+    direccion = data['direccion']
+    telefono = data['telefono']
     try:
-        if clientedao.updateCliente(
-            id_cliente,
-            data['nombre'].strip().upper(),
-            data['apellido'].strip().upper(),
-            data['cedula'],
-            data['direccion'].strip().upper(),
-            data['telefono'],
-            data['fecha_registro']
-        ):
+        if clientedao.updateCliente(id_cliente, direccion.upper(),telefono):
             return jsonify({
                 'success': True,
-                'data': {
-                    'id_cliente': id_cliente,
-                    'nombre': data['nombre'].upper(),
-                    'apellido': data['apellido'].upper(),
-                    'cedula': data['cedula'],
-                    'direccion': data['direccion'].upper(),
-                    'telefono': data['telefono'],
-                    'fecha_registro': data['fecha_registro']
-                },
+                'data': {'id': id_cliente, 'direccion': direccion, 'telefono': telefono},
                 'error': None
             }), 200
         else:
@@ -135,14 +120,13 @@ def updateCliente(id_cliente):
                 'success': False,
                 'error': 'No se encontró el cliente con el ID proporcionado o no se pudo actualizar.'
             }), 404
-
     except Exception as e:
         app.logger.error(f"Error al actualizar cliente: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
-
+    
 @cliapi.route('/clientes/<int:id_cliente>', methods=['DELETE'])
 def deleteCliente(id_cliente):
     clientedao = ClienteDao()

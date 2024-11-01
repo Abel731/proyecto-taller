@@ -122,93 +122,98 @@ Clientes
     });
   }
 
-  const guardar = () => {
-    $('#btnGuardar').on('click', function() {
-      const nuevoCliente = $('#cbo_cliente').val();
-      const nuevaDireccion = $('#txtDireccion').val();
-      const nuevoTelefono = $('#txtTelefono').val();
-      const tabla = $('#tbl').DataTable();
-  
+  let clientes = null; // Variable fuera de la función para que sea accesible en ambos contextos
+
+const guardar = () => {
+  $('#btnGuardar').on('click', function() {
+    const nuevoCliente = $('#cbo_cliente').val();
+    const nuevaDireccion = $('#txtDireccion').val();
+    const nuevoTelefono = $('#txtTelefono').val();
+    const tabla = $('#tbl').DataTable();
+
     const clienteData = {
-    cliente: nuevoCliente,
-    direccion: nuevaDireccion,
-    telefono: String(nuevoTelefono) // Convertir a string
+      cliente: nuevoCliente,
+      direccion: nuevaDireccion,
+      telefono: String(nuevoTelefono)
+    };
+
+    if (clientes) {  // Si `clientes` tiene un valor, es una actualización
+      fetch(`/api/v1/clientes/${clientes}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(clienteData)
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.success) {
+          tabla.ajax.reload();
+          Swal.fire("Actualizado", "El cliente ha sido actualizado correctamente.", "success");
+        } else {
+          Swal.fire("Error", data.error);
+        }
+      }).catch(err => {
+        console.error(err);
+        Swal.fire("Error", "Ocurrió un error al actualizar el cliente.", "error");
+      });
+    } else {  // Si `clientes` está vacío, es un nuevo registro
+      fetch(`/api/v1/clientes`, {
+        method: 'POST',
+        headers: {  
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(clienteData)
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.success) {
+          tabla.ajax.reload();
+          Swal.fire("Guardado", "El cliente ha sido agregado correctamente.", "success");
+        } else {
+          Swal.fire("Error", data.error);
+        }
+      }).catch(err => {
+        console.error(err);
+        Swal.fire("Error", "Ocurrió un error al guardar el cliente.", "error");
+      });
+    }
+
+    $('#modalFormulario').modal("hide");
+    clientes = null; // Resetear `clientes` después de guardar
+  });
 };
-      let clientes = null;
-      if (clientes ) {  // Comprueba si es una actualización o creación
+
+const editar = () => {
+  $('#tbl').on('click', 'button[name="btn_editar"]', function(){
+    Swal.fire({
+      title: "¿Deseas editar este registro?",
+      showCancelButton: true,
+      confirmButtonText: "Si",
+      cancelButtonText: `No`
+    }).then((result) => {
+      if (result.isConfirmed) {
+        $('#modalTitle').text("Editar un Cliente");
+
+        clientes = $(this).data('id');  // Asigna el id del cliente a `clientes`
+
         fetch(`/api/v1/clientes/${clientes}`, {
-          method: 'PUT',
+          method: 'GET',
           headers: {
             'Content-Type': 'application/json'
-          }, body: JSON.stringify(clienteData)
+          }
         })
         .then(resp => resp.json())
         .then(data => {
-          if(data && !data.error && data.success) {
-            tabla.ajax.reload();
-            Swal.fire("Actualizado", "El cliente ha sido actualizado correctamente.", "success");
-          } else {
-            Swal.fire(data.error);
-          }
-        }).catch(err => {
-          console.error(err);
-          Swal.fire("Error", "Ocurrió un error al actualizar el cliente.", "error");
-        });
-      } else {  // Caso de cliente nuevo
-        fetch(`/api/v1/clientes`, {
-          method: 'POST',
-          headers: {  
-            'Content-Type': 'application/json'
-          }, body: JSON.stringify(clienteData)
-        })
-        .then(resp => resp.json())
-        .then(data => {
-          if(data && !data.error && data.success) {
-            tabla.ajax.reload();
-            Swal.fire("Guardado", "El cliente ha sido agregado correctamente.", "success");
-          } else {
-            Swal.fire(data.error);
-          }
-        }).catch(err => {
-          console.error(err);
-          Swal.fire("Error", "Ocurrió un error al guardar el cliente.", "error");
+          $('#cbo_cliente').val(data.data.cliente);
+          $('#txtDireccion').val(data.data.direccion);
+          $('#txtTelefono').val(data.data.telefono);
+          $('#modalFormulario').modal();
         });
       }
-      $('#modalFormulario').modal("hide");
     });
-  }
-
-  const editar = () => {
-    $('#tbl').on('click', 'button[name="btn_editar"]', function(){
-      Swal.fire({
-        title: "¿Deseas editar este registro?",
-        showCancelButton: true,
-        confirmButtonText: "Si",
-        cancelButtonText: `No`
-      }).then((result) => {
-        if (result.isConfirmed) {
-          $('#modalTitle').text("Editar un Cliente");
-
-          const cliente = $(this).data('id');
-          $('#cbo_cliente').val(nuevoCliente);
-
-          fetch(`/api/v1/clientes/${clientes}`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          })
-          .then(resp => resp.json())
-          .then(data => {
-            $('#cbo_cliente').val(data.data.cliente);
-            $('#txtDireccion').val(data.data.direccion);
-            $('#txtTelefono').val(data.data.telefono);
-            $('#modalFormulario').modal();
-          });
-        }
-      });
-    });
-  }
+  });
+};
 
   const eliminar = () => {
     $('#tbl').on('click', 'button[name="btn_eliminar"]', function(){

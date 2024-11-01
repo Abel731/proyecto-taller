@@ -55,7 +55,7 @@ CREATE TABLE proveedores(
 );
 
 CREATE TABLE clientes (
-    id_cliente SERIAL PRIMARY KEY,         
+    id_cliente INTEGER PRIMARY KEY,         
     direccion TEXT NOT NULL,                 
     telefono VARCHAR(20),                   
     FOREIGN KEY (id_cliente) REFERENCES personas(id_persona) ON DELETE RESTRICT ON UPDATE CASCADE
