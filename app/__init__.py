@@ -25,6 +25,9 @@ from app.rutas.referenciales.tipo_producto.tipo_producto_routes import tipprodmo
 from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedidos_compras_routes \
     import pdcmod
 
+from app.rutas.gestionar_compras.resgitrar_presupuesto_proveedor.registrar_presupuesto_proveedor_routes \
+    import pdpmod
+
 # registrar referenciales 
 modulo0 = '/referenciales'
 app.register_blueprint(ciumod, url_prefix=f'{modulo0}/ciudad')
@@ -47,6 +50,8 @@ app.register_blueprint(tipprodmod, url_prefix=f'{modulo0}/tipo_producto')
 # registro de modulos - gestionar compras
 modulo1 = '/gestionar-compras'
 app.register_blueprint(pdcmod, url_prefix=f'{modulo1}/registrar-pedido-compras')
+
+app.register_blueprint(pdpmod, url_prefix=f'{modulo1}/registrar-presupuesto-proveedor')
 
 # importar APIS v1
 from app.rutas.referenciales.ciudad.ciudad_api import ciuapi
