@@ -3,6 +3,36 @@ from app.conexion.Conexion import Conexion
 
 class ProveedorDao:
 
+    def get_proveedores(self):
+
+        prov_sql = """
+        SELECT
+            prov.id_proveedor
+            , prov.ruc
+            , prov.razon_social
+        FROM proveedores prov
+        """
+        # objeto conexion
+        conexion = Conexion()
+        con = conexion.getConexion()
+        cur = con.cursor()
+        try:
+            cur.execute(prov_sql)
+            proveedores = cur.fetchall() # trae datos de la bd
+
+            # Transformar los datos en una lista de diccionarios
+            return [{'id_proveedor': proveedor[0], 'ruc': proveedor[1], 'razon_social': proveedor[2]} for proveedor in proveedores]
+
+        except Exception as e:
+            app.logger.error(f"Error al obtener todos los proveedores: {str(e)}")
+            return []
+
+        finally:
+            cur.close()
+            con.close()
+
+
+
     def getProveedores(self):
         proveedorSQL = """
         SELECT id_proveedor, ruc, razon_social, direccion, telefono

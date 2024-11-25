@@ -48,13 +48,13 @@ Listar Presupuesto de Proveedores
       language: {
         url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
       },
-      ajax:'/api/v1/gestionar-compras/registrar-pedido-compras/pedidos',
+      ajax:'/api/v1/gestionar-compras/registrar-presupuesto-proveedor/presupuestos',
       columns: [
         { data: 'id_presupuesto' },
         { data: 'empleado' },
         { data: 'estado' },
         { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id_presupuesto}">Modificar</button>
+            return `<button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id_presupuesto}">Aprobar</button>
                     <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id_presupuesto}">Anular</button>`
           }
         }
