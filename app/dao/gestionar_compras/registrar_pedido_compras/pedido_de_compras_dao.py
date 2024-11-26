@@ -4,7 +4,7 @@ from app.dao.gestionar_compras.registrar_pedido_compras.dto.pedido_de_compras_dt
 from app.dao.gestionar_compras.registrar_pedido_compras.dto.pedido_de_compras_dto import PedidoDeComprasDto
 
 class PedidoDeComprasDao:
-    
+
     def obtener_pedidos(self):
         query_pedidos = """
         SELECT
@@ -98,6 +98,30 @@ class PedidoDeComprasDao:
             cur.close()
             con.close()
         return True
+
+    def obtener_pedidos(self):
+        query = """
+        SELECT 
+            id_pedido_compra, 
+            fecha_pedido 
+        FROM pedido_de_compra
+        """
+        conexion = Conexion()
+        con = conexion.getConexion()
+        cur = con.cursor()
+        try:
+            cur.execute(query)
+            pedidos = cur.fetchall()
+            return [
+            {'id_pedido_compra': pedido[0], 'fecha_pedido': pedido[1]} 
+            for pedido in pedidos
+        ]
+        except Exception as e:
+            app.logger.error(f"Error al obtener pedidos: {e}")
+            return []
+        finally:
+            cur.close()
+            con.close()
 
     # modificar
     def modificar(self):
