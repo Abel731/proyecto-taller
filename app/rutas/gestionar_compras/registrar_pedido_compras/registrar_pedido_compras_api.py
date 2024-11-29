@@ -97,3 +97,29 @@ def get_sucursal_depositos(id_sucursal):
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador'
         }), 500
+    
+
+@pdcapi.route('/detalle-pedido/<int:id_pedido>', methods=['GET'])
+def get_detalle_pedido(id_pedido):
+    dao = PedidoDeComprasDao()
+    
+    try:
+        detalle = dao.get_productos_por_pedido(id_pedido)
+        if detalle:
+            return jsonify({
+                'success': True,
+                'data': detalle,
+                'error': False
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'No se encontraron detalles para este pedido.'
+            }), 404
+
+    except Exception as e:
+        app.logger.error(f"Error al obtener el detalle del pedido: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Ocurrió un error interno. Consulte con el administrador.'
+        }), 500

@@ -39,7 +39,7 @@ Formulario Presupuesto Proveedor
                       {% endfor %}
                     </select>
                   </div>
-              
+                  
                   <!-- Fecha de Pedido -->
                   <div class="form-group">
                     <label for="txt_fecha_de_pedido">Fecha de Pedido:</label>
@@ -114,9 +114,8 @@ Formulario Presupuesto Proveedor
                     <thead>
                         <tr>
                             <th>Producto</th>
+                            <th>descripción</th>
                             <th>Cantidad</th>
-                            <th>Precio Unitario</th>
-                            <th>Subtotal</th>
                         </tr>
                     </thead>
                     <tbody id="productos-table-body">
@@ -137,29 +136,42 @@ Formulario Presupuesto Proveedor
 {% block js %}
 <script>
   document.getElementById('cbo_pedido').addEventListener('change', function() {
-      const pedidoId = this.value;
+    const pedidoId = this.value;
 
-      if (pedidoId) {
-          fetch(`/productos-por-pedido/${pedidoId}`)
-              .then(response => response.json())
-              .then(data => {
-                  const tableBody = document.getElementById('productos-table-body');
-                  tableBody.innerHTML = ''; // Limpiar la tabla
+    if (pedidoId) {
+        // Hacer la solicitud a la API para obtener el detalle del pedido
+        fetch(`/api/v1/gestionar-compras/registrar-pedido-compras/detalle-pedido/${pedidoId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const tableBody = document.getElementById('productos-table-body');
+                    tableBody.innerHTML = ''; // Limpiar la tabla antes de agregar los nuevos productos
 
-                  data.forEach(producto => {
-                      const row = `
-                          <tr>
-                              <td>${producto.nombre_producto}</td>
-                              <td>${producto.cantidad}</td>
-                              <td>${producto.precio_unitario}</td>
-                              <td>${(producto.cantidad * producto.precio_unitario).toFixed(2)}</td>
-                          </tr>
-                      `;
-                      tableBody.innerHTML += row;
-                  });
-              })
-              .catch(error => console.error('Error al cargar productos:', error));
-      }
-  });
+                    // Llenar la tabla con los productos del pedido
+                    data.data.forEach(producto => {
+                        const row = `
+                            <tr>
+                                <td>${producto.id_producto}</td>
+                                <td>${producto.nombre}</td>
+                                <td>${producto.cantidad}</td>
+                                
+                            </tr>
+                        `;
+                        tableBody.innerHTML += row;
+                    });
+                } else {
+                    alert('No se encontraron detalles para este pedido.');
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar productos:', error);
+                alert('Ocurrió un error al cargar los detalles del pedido.');
+            });
+    } else {
+        // Limpiar la tabla si no hay un pedido seleccionado
+        const tableBody = document.getElementById('productos-table-body');
+        tableBody.innerHTML = '';
+    }
+});
 </script>
 {% endblock %}

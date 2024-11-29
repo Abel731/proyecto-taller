@@ -123,6 +123,39 @@ class PedidoDeComprasDao:
             cur.close()
             con.close()
 
+    def get_productos_por_pedido(self, pedido_id):
+        query = """
+        SELECT
+            pcd.id_producto,
+            pro.nombre,
+            pcd.cantidad
+        FROM pedido_de_compra_detalle pcd
+        LEFT JOIN productos pro ON pcd.id_producto = pro.id_producto
+        WHERE pcd.id_pedido_compra = %s
+        """
+        conexion = Conexion()
+        con = conexion.getConexion()
+        cur = con.cursor()
+        try:
+            cur.execute(query, (pedido_id,))
+            productos = cur.fetchall()
+            return [
+            {
+                'id_producto': producto[0],
+                'nombre': producto[1],
+                'cantidad': producto[2],
+            }
+            for producto in productos
+        ]
+        except Exception as e:
+            app.logger.error(f"Error al obtener productos del pedido {pedido_id}: {e}")
+            return []
+
+        finally:
+            cur.close()
+            con.close()
+
+
     # modificar
     def modificar(self):
         pass

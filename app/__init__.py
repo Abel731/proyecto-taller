@@ -73,6 +73,8 @@ from app.rutas.referenciales.tipo_producto.tipo_producto_api import tipo_product
 from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedido_compras_api \
     import pdcapi
 
+from app.rutas.gestionar_compras.resgitrar_presupuesto_proveedor.registrar_presupuesto_proveedor_api \
+    import pdpapi
 
 # registrar APIS
 version1 = '/api/v1'
@@ -95,3 +97,5 @@ app.register_blueprint(tipo_producto_api, url_prefix=version1)
 
 # Gestionar compras API
 app.register_blueprint(pdcapi, url_prefix=f'{version1}/{modulo1}/registrar-pedido-compras')
+
+app.register_blueprint(pdpapi, url_prefix=f'{version1}/{modulo1}/registrar-presupuesto-proveedor')
