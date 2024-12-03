@@ -99,7 +99,7 @@ class PedidoDeComprasDao:
             con.close()
         return True
 
-    def obtener_pedidos(self):
+    def obtener_pedidos_por_fecha(self):
         query = """
         SELECT 
             id_pedido_compra, 

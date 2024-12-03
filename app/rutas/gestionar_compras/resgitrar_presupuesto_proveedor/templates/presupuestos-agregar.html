@@ -116,6 +116,7 @@ Formulario Presupuesto Proveedor
                             <th>Producto</th>
                             <th>descripción</th>
                             <th>Cantidad</th>
+                            <th>Precio</th>
                         </tr>
                     </thead>
                     <tbody id="productos-table-body">
@@ -154,7 +155,9 @@ Formulario Presupuesto Proveedor
                                 <td>${producto.id_producto}</td>
                                 <td>${producto.nombre}</td>
                                 <td>${producto.cantidad}</td>
-                                
+                                <td>
+                                <input type="number" min="0" placeholder="Precio">
+                            </td>
                             </tr>
                         `;
                         tableBody.innerHTML += row;

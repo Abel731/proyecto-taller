@@ -29,5 +29,5 @@ def presupuestos_agregar():
         empleados=empdao.get_empleados(),
         productos=pdao.get_productos(),
         proveedores=provdao.get_proveedores(),
-        pedidos=pedidodao.obtener_pedidos()
+        pedidos=pedidodao.obtener_pedidos_por_fecha()
     )
