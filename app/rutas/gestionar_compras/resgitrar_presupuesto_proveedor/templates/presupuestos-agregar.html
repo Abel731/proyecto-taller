@@ -77,36 +77,6 @@ Formulario Presupuesto Proveedor
                 </div>
               </div>
 
-            <!-- Combo producto -->
-             
-            <!-- <div class="form-group row mt-3">
-              <label for="cbo_producto" class="col-md-2 col-form-label">Producto:</label>
-              <div class="col-md-6">
-                  <select id="cbo_producto" class="custom-select">
-                    <option value="">Productos</option>
-                      {% for item in productos %}
-                        <option value="{{ item['id_producto'] }}">
-                          {{ item['nombre'] }}
-                        </option>
-                      {% endfor %}
-                  </select>
-              </div>
-              <div class="col col-md-4">
-                <button type="button" class="btn btn-primary" id="btn_agregar_producto">Agregar</button>
-              </div>
-            </div>
-            
-
-             "Cantidad de producto" 
-            <div class="form-group row mt-3">
-              <label for="txt_cantidad" class="col-md-2 col-form-label">Cantidad:</label>
-              <div class="col-md-2">
-                <input type="number" class="form-control mb-2 mr-md-2" placeholder="Cantidad" id="txt_cantidad" min="0">
-              </div>
-            </div> -->
-            
-            <!--  -->
-
             <hr>
             <div class="row">
                 <div class="col col-md-12">
@@ -136,45 +106,104 @@ Formulario Presupuesto Proveedor
 
 {% block js %}
 <script>
-  document.getElementById('cbo_pedido').addEventListener('change', function() {
+  document.getElementById('cbo_pedido').addEventListener('change', function () {
     const pedidoId = this.value;
 
     if (pedidoId) {
-        // Hacer la solicitud a la API para obtener el detalle del pedido
-        fetch(`/api/v1/gestionar-compras/registrar-pedido-compras/detalle-pedido/${pedidoId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const tableBody = document.getElementById('productos-table-body');
-                    tableBody.innerHTML = ''; // Limpiar la tabla antes de agregar los nuevos productos
+      // Solicitar el detalle del pedido a la API
+      fetch(`/api/v1/gestionar-compras/registrar-pedido-compras/detalle-pedido/${pedidoId}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Error en la respuesta: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            const tableBody = document.getElementById('productos-table-body');
+            tableBody.innerHTML = ''; // Limpiar tabla antes de agregar nuevos productos
 
-                    // Llenar la tabla con los productos del pedido
-                    data.data.forEach(producto => {
-                        const row = `
-                            <tr>
-                                <td>${producto.id_producto}</td>
-                                <td>${producto.nombre}</td>
-                                <td>${producto.cantidad}</td>
-                                <td>
-                                <input type="number" min="0" placeholder="Precio">
-                            </td>
-                            </tr>
-                        `;
-                        tableBody.innerHTML += row;
-                    });
-                } else {
-                    alert('No se encontraron detalles para este pedido.');
-                }
-            })
-            .catch(error => {
-                console.error('Error al cargar productos:', error);
-                alert('Ocurrió un error al cargar los detalles del pedido.');
+            data.data.forEach(producto => {
+              const row = `
+                <tr data-id="${producto.id_producto}">
+                  <td>${producto.id_producto}</td>
+                  <td>${producto.nombre}</td>
+                  <td>${producto.cantidad}</td>
+                  <td>
+                    <input type="number" class="form-control precio-producto" placeholder="Precio" min="0">
+                  </td>
+                </tr>`;
+              tableBody.innerHTML += row;
             });
+          } else {
+            alert('No se encontraron detalles para este pedido.');
+          }
+        })
+        .catch(error => {
+          console.error('Error al cargar productos:', error);
+          alert('Ocurrió un error al cargar los detalles del pedido.');
+        });
     } else {
-        // Limpiar la tabla si no hay un pedido seleccionado
-        const tableBody = document.getElementById('productos-table-body');
-        tableBody.innerHTML = '';
+      // Limpiar la tabla si no se seleccionó un pedido
+      document.getElementById('productos-table-body').innerHTML = '';
     }
-});
+  });
+
+  document.getElementById('btn_registrar_pedido').addEventListener('click', function () {
+    const productos = [];
+    const rows = document.querySelectorAll('#productos-table-body tr');
+
+    rows.forEach(row => {
+      const idProducto = Number(row.dataset.id);
+      const precio = row.querySelector('.precio-producto').value;
+
+      if (precio) {
+        productos.push({
+          id_producto: idProducto,
+          precio_unitario: Number(precio),
+        });
+      }
+    });
+
+    const payload = {
+      id_empleado: Number(document.getElementById('cbo_empleado').value),
+      id_sucursal: Number(document.getElementById('cbo_sucursal').value),
+      fecha_presupuesto: document.getElementById('txt_fecha_de_pedido').value,
+      id_proveedor: Number(document.getElementById('cbo_proveedor').value),
+      productos: productos,
+    };
+
+    console.log('Payload enviado:', payload);
+
+    // Enviar el presupuesto a la API
+    console.log(payload);
+    fetch(`/api/v1/gestionar-compras/registrar-presupuesto-proveedor`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Error en la respuesta: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          alert('Presupuesto registrado correctamente.');
+          location.replace("{{ url_for('pdpmod.presupuestos_index') }}");
+        } else {
+          alert(data.error || 'Error al registrar el presupuesto.');
+        }
+      })
+      .catch(error => {
+        console.error('Error al registrar presupuesto:', error);
+        alert('Ocurrió un error al registrar el presupuesto.');
+      });
+  });
+
+  document.getElementById('btn_salir_operacion').addEventListener('click', function () {
+    location.replace("{{ url_for('pdpmod.presupuestos_index') }}");
+  });
 </script>
 {% endblock %}

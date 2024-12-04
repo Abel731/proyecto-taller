@@ -3,6 +3,8 @@ from app.conexion.Conexion import Conexion
 from app.dao.gestionar_compras.registrar_presupuesto_proveedor.dto.presupuesto_prov_dto \
     import PresupuestoProvDto
 
+from datetime import datetime
+
 class PresupuestoProvDao:
 
     # Obtener presupuestos
@@ -15,6 +17,8 @@ class PresupuestoProvDao:
             , prov.razon_social
             , pdp.id_pedido_compra
             , pdp.id_empleado
+            , p.nombres
+            , p.apellidos
             , pdp.id_sucursal
             , pdp.id_estpreprov
             , edp.descripcion AS estado
@@ -22,9 +26,11 @@ class PresupuestoProvDao:
         FROM
             public.presupuesto_prov pdp
         LEFT JOIN proveedores prov
-            ON p.id_proveedor = pdp.id_proveedor
+            ON prov.id_proveedor = pdp.id_proveedor
         LEFT JOIN empleados e
             ON e.id_empleado = pdp.id_empleado
+        LEFT JOIN personas p
+            ON p.id_persona = e.id_empleado
         LEFT JOIN estado_de_presupuesto_prov edp
             ON edp.id_estpreprov = pdp.id_estpreprov
         """
@@ -37,13 +43,14 @@ class PresupuestoProvDao:
             presupuestos = cur.fetchall()
             return [{
                     'id_presupuesto': presupuesto[0],
-                    'id_proveedor': f'{presupuesto[2]} {presupuesto[3]}',
-                    'id_pedido_compra': presupuesto[4],
-                    'id_empleado': presupuesto[5],
-                    'id_sucursal': presupuesto[6],
-                    'id_estpreprov': presupuesto[7],
-                    'estado': presupuesto[8],
-                    'fecha_presupuesto': presupuesto[8].strftime("%Y-%m-%d") if presupuesto[8] else None
+                    'id_proveedor': f'{presupuesto[1]} {presupuesto[2]}',
+                    'id_pedido_compra': presupuesto[3],
+                    'id_empleado': presupuesto[4],
+                    'empleado': f'{presupuesto[5]} {presupuesto[6]}',
+                    'id_sucursal': presupuesto[7],
+                    'id_estpreprov': presupuesto[8],
+                    'estado': presupuesto[9],
+                    'fecha_presupuesto': presupuesto[10].strftime("%Y-%m-%d") if presupuesto[10] else None
                 } for presupuesto in presupuestos]
 
         except Exception as e:
