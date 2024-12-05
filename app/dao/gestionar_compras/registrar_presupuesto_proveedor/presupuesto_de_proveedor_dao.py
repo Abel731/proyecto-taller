@@ -12,14 +12,14 @@ class PresupuestoProvDao:
         query_presupuestos = """
         SELECT
             pdp.id_presupuesto
-            , pdp.id_proveedor
-            , prov.ruc
-            , prov.razon_social
             , pdp.id_pedido_compra
             , pdp.id_empleado
             , p.nombres
             , p.apellidos
             , pdp.id_sucursal
+            , pdp.id_proveedor
+            , prov.ruc
+            , prov.razon_social
             , pdp.id_estpreprov
             , edp.descripcion AS estado
             , pdp.fecha_presupuesto
@@ -42,16 +42,19 @@ class PresupuestoProvDao:
             cur.execute(query_presupuestos)
             presupuestos = cur.fetchall()
             return [{
-                    'id_presupuesto': presupuesto[0],
-                    'id_proveedor': f'{presupuesto[1]} {presupuesto[2]}',
-                    'id_pedido_compra': presupuesto[3],
-                    'id_empleado': presupuesto[4],
-                    'empleado': f'{presupuesto[5]} {presupuesto[6]}',
-                    'id_sucursal': presupuesto[7],
-                    'id_estpreprov': presupuesto[8],
-                    'estado': presupuesto[9],
-                    'fecha_presupuesto': presupuesto[10].strftime("%Y-%m-%d") if presupuesto[10] else None
-                } for presupuesto in presupuestos]
+                    'id_presupuesto': presupuesto[0], 
+                    'id_pedido_compra': presupuesto[1],  
+                    'id_empleado': presupuesto[2], 
+                    'empleado': f"{presupuesto[3]} {presupuesto[4]}",  
+                    'id_sucursal': presupuesto[5],  
+                    'id_proveedor': presupuesto[6],  
+                    'proveedor': f"{presupuesto[7]} {presupuesto[8]}",  
+                    'id_estpreprov': presupuesto[9],  
+                    'estado': presupuesto[10],  
+                    'fecha_presupuesto': (
+                        presupuesto[11].strftime("%Y-%m-%d") if isinstance(presupuesto[11], datetime) else presupuesto[11]
+                    ) 
+} for presupuesto in presupuestos]
 
         except Exception as e:
             app.logger.error(f"Error al obtener los presupuestos: {str(e)}")

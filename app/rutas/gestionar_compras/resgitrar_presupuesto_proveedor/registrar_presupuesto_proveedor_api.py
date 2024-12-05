@@ -39,7 +39,7 @@ def add_presupuesto():
     data = request.get_json()
 
     # Validar campos requeridos
-    campos_requeridos = ['id_empleado', 'id_sucursal', 'fecha_presupuesto', 'detalle_presupuesto']
+    campos_requeridos = ['id_empleado', 'id_sucursal', 'fecha_presupuesto', 'detalle_presupuesto', 'id_proveedor', 'id_pedido_compra']
     for campo in campos_requeridos:
         if campo not in data or data[campo] is None:
             return jsonify({
@@ -48,31 +48,36 @@ def add_presupuesto():
             }), 400
 
     try:
+        # Extraer datos
         id_empleado = data['id_empleado']
         id_sucursal = data['id_sucursal']
         fecha_presupuesto = data['fecha_presupuesto']
+        id_proveedor = data['id_proveedor']
+        id_pedido_compra = data['id_pedido_compra']
         detalle_presupuesto = data['detalle_presupuesto']
 
         # Crear detalle del presupuesto
         detalle_dto = [
             PresupuestoProvDetalleDto(
-                id_presupuesto=None,
                 id_producto=item['id_producto'],
                 cantidad=item['cantidad'],
-                precio=item.get('precio', 0)
+                precio_unitario=item.get('precio', 0)
             ) for item in detalle_presupuesto
         ]
 
-        # Crear cabecera del presupuesto
+        # Crear cabecera del presupuesto 
         cabecera_dto = PresupuestoProvDto(
             id_presupuesto=None,
             id_empleado=id_empleado,
             id_sucursal=id_sucursal,
+            id_proveedor=id_proveedor,  
+            id_pedido_compra=id_pedido_compra,  
             estado=EstadoPresupuestoProveedor(id=2, descripcion=None),
             fecha_presupuesto=date.fromisoformat(fecha_presupuesto),
             detalle_presupuesto=detalle_dto
         )
 
+        # Registrar presupuesto en la base de datos
         resultado = ppdao.agregar(presupuesto_dto=cabecera_dto)
         if resultado:
             return jsonify({
@@ -91,5 +96,3 @@ def add_presupuesto():
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
-
-

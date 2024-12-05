@@ -8,8 +8,7 @@ class ProveedorDao:
         prov_sql = """
         SELECT
             prov.id_proveedor
-            , prov.ruc
-            , prov.razon_social
+            , CONCAT(prov.ruc, ' ', prov.razon_social) AS proveedor
         FROM proveedores prov
         """
         # objeto conexion
@@ -21,7 +20,7 @@ class ProveedorDao:
             proveedores = cur.fetchall() # trae datos de la bd
 
             # Transformar los datos en una lista de diccionarios
-            return [{'id_proveedor': proveedor[0], 'ruc': proveedor[1], 'razon_social': proveedor[2]} for proveedor in proveedores]
+            return [{'id_proveedor': proveedor[0], 'proveedor': proveedor[1]} for proveedor in proveedores]
 
         except Exception as e:
             app.logger.error(f"Error al obtener todos los proveedores: {str(e)}")

@@ -69,7 +69,7 @@ Formulario Presupuesto Proveedor
                       <option value="">Proveedores</option>
                       {% for item in proveedores %}
                       <option value="{{ item['id_proveedor'] }}">
-                      Ruc  {{ item['ruc'] }} - R Social: {{ item['razon_social'] }}
+                        {{ item['proveedor'] }}
                       </option>
                       {% endfor %}
                     </select>
@@ -128,9 +128,11 @@ Formulario Presupuesto Proveedor
                 <tr data-id="${producto.id_producto}">
                   <td>${producto.id_producto}</td>
                   <td>${producto.nombre}</td>
-                  <td>${producto.cantidad}</td>
                   <td>
-                    <input type="number" class="form-control precio-producto" placeholder="Precio" min="0">
+                      <input type="number" class="form-control cantidad-producto" value="${producto.cantidad}" min="1">
+                  </td>
+                  <td>
+                      <input type="number" class="form-control precio-producto" id="precio_unitario" placeholder="Precio" min="0">
                   </td>
                 </tr>`;
               tableBody.innerHTML += row;
@@ -154,15 +156,17 @@ Formulario Presupuesto Proveedor
     const rows = document.querySelectorAll('#productos-table-body tr');
 
     rows.forEach(row => {
-      const idProducto = Number(row.dataset.id);
-      const precio = row.querySelector('.precio-producto').value;
+        const idProducto = Number(row.dataset.id);  // Obtén el id_producto de data-id
+        const cantidad = Number(row.querySelector('.cantidad-producto').value);  // Captura la cantidad
+        const precioUnitario = row.querySelector('.precio-producto').value;  // Captura el precio unitario
 
-      if (precio) {
-        productos.push({
-          id_producto: idProducto,
-          precio_unitario: Number(precio),
-        });
-      }
+        if (precioUnitario && cantidad) {
+            productos.push({
+                id_producto: idProducto,
+                precio_unitario: Number(precioUnitario),
+                cantidad: cantidad  // Asegúrate de que la cantidad esté incluida
+            });
+        }
     });
 
     const payload = {
@@ -170,37 +174,37 @@ Formulario Presupuesto Proveedor
       id_sucursal: Number(document.getElementById('cbo_sucursal').value),
       fecha_presupuesto: document.getElementById('txt_fecha_de_pedido').value,
       id_proveedor: Number(document.getElementById('cbo_proveedor').value),
-      productos: productos,
-    };
+      id_pedido_compra: Number(document.getElementById('cbo_pedido').value),
+      detalle_presupuesto: productos,
+  };
 
     console.log('Payload enviado:', payload);
 
     // Enviar el presupuesto a la API
-    console.log(payload);
-    fetch(`/api/v1/gestionar-compras/registrar-presupuesto-proveedor`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+    fetch(`/api/v1/gestionar-compras/registrar-presupuesto-proveedor/presupuestos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
     })
-      .then(response => {
+    .then(response => {
         if (!response.ok) {
-          throw new Error(`Error en la respuesta: ${response.status}`);
+            throw new Error(`Error en la respuesta: ${response.status}`);
         }
         return response.json();
-      })
-      .then(data => {
+    })
+    .then(data => {
         if (data.success) {
-          alert('Presupuesto registrado correctamente.');
-          location.replace("{{ url_for('pdpmod.presupuestos_index') }}");
+            alert('Presupuesto registrado correctamente.');
+            location.replace("{{ url_for('pdpmod.presupuestos_index') }}");
         } else {
-          alert(data.error || 'Error al registrar el presupuesto.');
+            alert(data.error || 'Error al registrar el presupuesto.');
         }
-      })
-      .catch(error => {
+    })
+    .catch(error => {
         console.error('Error al registrar presupuesto:', error);
         alert('Ocurrió un error al registrar el presupuesto.');
-      });
-  });
+    });
+});
 
   document.getElementById('btn_salir_operacion').addEventListener('click', function () {
     location.replace("{{ url_for('pdpmod.presupuestos_index') }}");
