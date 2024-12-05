@@ -61,7 +61,7 @@ def add_presupuesto():
             PresupuestoProvDetalleDto(
                 id_producto=item['id_producto'],
                 cantidad=item['cantidad'],
-                precio_unitario=item.get('precio', 0)
+                precio_unitario=item.get('precio_unitario', 0)
             ) for item in detalle_presupuesto
         ]
 
