@@ -51,17 +51,17 @@ Formulario Presupuesto Proveedor
                 <div class="col-md-6 d-flex flex-column">
                   <!-- Combo pedido -->
                   <div class="form-group">
-                    <label for="cbo_pedido">Pedido por fecha:</label>
+                    <label for="cbo_pedido">Pedido por número y fecha:</label>
                     <select id="cbo_pedido" class="custom-select">
                       <option value="">Seleccione un pedido</option>
                       {% for pedido in pedidos %}
                       <option value="{{ pedido['id_pedido_compra'] }}">
-                          Fecha: {{ pedido['fecha_pedido'] }}
+                          Pedido N° {{ pedido['id_pedido_compra'] }} - Fecha: {{ pedido['fecha_pedido'] }}
                       </option>
                       {% endfor %}
-                  </select>
-                </div>
-              
+                    </select>
+                  </div>
+                  
                   <!-- Combo proveedor -->
                   <div class="form-group">
                     <label for="cbo_proveedor">Proveedores</label>
@@ -75,8 +75,8 @@ Formulario Presupuesto Proveedor
                     </select>
                   </div>
                 </div>
-              </div>
-
+            </div>
+       </div>
             <hr>
             <div class="row">
                 <div class="col col-md-12">
