@@ -23,6 +23,7 @@ class PresupuestoProvDao:
             , pdp.id_estpreprov
             , edp.descripcion AS estado
             , pdp.fecha_presupuesto
+            , pdp.fecha_vencimiento
         FROM
             public.presupuesto_prov pdp
         LEFT JOIN proveedores prov
@@ -42,19 +43,22 @@ class PresupuestoProvDao:
             cur.execute(query_presupuestos)
             presupuestos = cur.fetchall()
             return [{
-                    'id_presupuesto': presupuesto[0], 
-                    'id_pedido_compra': presupuesto[1],  
-                    'id_empleado': presupuesto[2], 
-                    'empleado': f"{presupuesto[3]} {presupuesto[4]}",  
-                    'id_sucursal': presupuesto[5],  
-                    'id_proveedor': presupuesto[6],  
-                    'proveedor': f"{presupuesto[7]} {presupuesto[8]}",  
-                    'id_estpreprov': presupuesto[9],  
-                    'estado': presupuesto[10],  
-                    'fecha_presupuesto': (
-                        presupuesto[11].strftime("%Y-%m-%d") if isinstance(presupuesto[11], datetime) else presupuesto[11]
-                    ) 
-} for presupuesto in presupuestos]
+                'id_presupuesto': presupuesto[0],
+                'id_pedido_compra': presupuesto[1],
+                'id_empleado': presupuesto[2],
+                'empleado': f"{presupuesto[3]} {presupuesto[4]}",
+                'id_sucursal': presupuesto[5],
+                'id_proveedor': presupuesto[6],
+                'proveedor': f"{presupuesto[7]} {presupuesto[8]}",
+                'id_estpreprov': presupuesto[9],
+                'estado': presupuesto[10],
+                'fecha_presupuesto': (
+                    presupuesto[11].strftime("%Y-%m-%d") if isinstance(presupuesto[11], datetime) else presupuesto[11]
+                ),
+                'fecha_vencimiento': (
+                    presupuesto[12].strftime("%Y-%m-%d") if isinstance(presupuesto[12], datetime) else presupuesto[12]
+                )
+            } for presupuesto in presupuestos]
 
         except Exception as e:
             app.logger.error(f"Error al obtener los presupuestos: {str(e)}")
@@ -63,12 +67,11 @@ class PresupuestoProvDao:
             con.close()
         return []
 
-    # Agregar presupuesto
     def agregar(self, presupuesto_dto: PresupuestoProvDto) -> bool:
         insertPresupuesto = """
         INSERT INTO public.presupuesto_prov
-        (id_proveedor, id_pedido_compra, id_empleado, id_sucursal, id_estpreprov, fecha_presupuesto)
-        VALUES(%s, %s, %s, %s, %s, %s)
+        (id_proveedor, id_pedido_compra, id_empleado, id_sucursal, id_estpreprov, fecha_presupuesto, fecha_vencimiento)
+        VALUES(%s, %s, %s, %s, %s, %s, %s)
         RETURNING id_presupuesto
         """
 
@@ -84,19 +87,24 @@ class PresupuestoProvDao:
         cur = con.cursor()
         try:
             # Insertando el presupuesto
-            parametros = (presupuesto_dto.id_proveedor, presupuesto_dto.id_pedido_compra,
-                         presupuesto_dto.id_empleado, presupuesto_dto.id_sucursal, 
-                         presupuesto_dto.estado.id, presupuesto_dto.fecha_presupuesto)
+            parametros = (
+                presupuesto_dto.id_proveedor, presupuesto_dto.id_pedido_compra,
+                presupuesto_dto.id_empleado, presupuesto_dto.id_sucursal,
+                presupuesto_dto.estado.id, presupuesto_dto.fecha_presupuesto,
+                presupuesto_dto.fecha_vencimiento
+            )
             cur.execute(insertPresupuesto, parametros)
             id_presupuesto = cur.fetchone()[0]
 
             # Insertando los detalles del presupuesto
             if len(presupuesto_dto.detalle_presupuesto) > 0:
                 for detalle in presupuesto_dto.detalle_presupuesto:
-                    parametros_detalle = (id_presupuesto, detalle.id_producto, detalle.cantidad, detalle.precio_unitario)
+                    parametros_detalle = (
+                        id_presupuesto, detalle.id_producto, detalle.cantidad, detalle.precio_unitario
+                    )
                     cur.execute(insertDetallePresupuesto, parametros_detalle)
 
-            # Confirmar transacción
+            
             con.commit()
         except Exception as e:
             app.logger.error(f"Error al agregar el presupuesto: {str(e)}")
@@ -107,6 +115,7 @@ class PresupuestoProvDao:
             cur.close()
             con.close()
         return True
+
 
     # Anular presupuesto
     def anular(self, id_presupuesto: int) -> bool:

@@ -39,7 +39,7 @@ def add_presupuesto():
     data = request.get_json()
 
     # Validar campos requeridos
-    campos_requeridos = ['id_empleado', 'id_sucursal', 'fecha_presupuesto', 'detalle_presupuesto', 'id_proveedor', 'id_pedido_compra']
+    campos_requeridos = ['id_empleado', 'id_sucursal', 'fecha_presupuesto', 'detalle_presupuesto', 'id_proveedor', 'id_pedido_compra', 'fecha_vencimiento']
     for campo in campos_requeridos:
         if campo not in data or data[campo] is None:
             return jsonify({
@@ -55,6 +55,7 @@ def add_presupuesto():
         id_proveedor = data['id_proveedor']
         id_pedido_compra = data['id_pedido_compra']
         detalle_presupuesto = data['detalle_presupuesto']
+        fecha_vencimiento = data['fecha_vencimiento']  
 
         # Crear detalle del presupuesto
         detalle_dto = [
@@ -65,7 +66,7 @@ def add_presupuesto():
             ) for item in detalle_presupuesto
         ]
 
-        # Crear cabecera del presupuesto 
+        # Crear cabecera del presupuesto
         cabecera_dto = PresupuestoProvDto(
             id_presupuesto=None,
             id_empleado=id_empleado,
@@ -74,6 +75,7 @@ def add_presupuesto():
             id_pedido_compra=id_pedido_compra,  
             estado=EstadoPresupuestoProveedor(id=2, descripcion=None),
             fecha_presupuesto=date.fromisoformat(fecha_presupuesto),
+            fecha_vencimiento=date.fromisoformat(fecha_vencimiento),  
             detalle_presupuesto=detalle_dto
         )
 

@@ -45,6 +45,12 @@ Formulario Presupuesto Proveedor
                     <label for="txt_fecha_de_pedido">Fecha de Pedido:</label>
                     <input type="date" class="form-control" id="txt_fecha_de_pedido" />
                   </div>
+
+                  <!-- Fecha de Vencimiento -->
+                  <div class="form-group">
+                    <label for="txt_fecha_vencimiento">Fecha de Vencimiento:</label>
+                    <input type="date" class="form-control" id="txt_fecha_vencimiento" />
+                  </div>
                 </div>
               
                 <!-- Columna derecha -->
@@ -84,7 +90,7 @@ Formulario Presupuesto Proveedor
                     <thead>
                         <tr>
                             <th>Producto</th>
-                            <th>descripción</th>
+                            <th>Descripción</th>
                             <th>Cantidad</th>
                             <th>Precio</th>
                         </tr>
@@ -156,15 +162,15 @@ Formulario Presupuesto Proveedor
     const rows = document.querySelectorAll('#productos-table-body tr');
 
     rows.forEach(row => {
-        const idProducto = Number(row.dataset.id);  // Obtén el id_producto de data-id
-        const cantidad = Number(row.querySelector('.cantidad-producto').value);  // Captura la cantidad
-        const precioUnitario = row.querySelector('.precio-producto').value;  // Captura el precio unitario
+        const idProducto = Number(row.dataset.id); 
+        const cantidad = Number(row.querySelector('.cantidad-producto').value);  
+        const precioUnitario = row.querySelector('.precio-producto').value;  
 
         if (precioUnitario && cantidad) {
             productos.push({
                 id_producto: idProducto,
                 precio_unitario: Number(precioUnitario),
-                cantidad: cantidad  // Asegúrate de que la cantidad esté incluida
+                cantidad: cantidad  
             });
         }
     });
@@ -173,6 +179,7 @@ Formulario Presupuesto Proveedor
       id_empleado: Number(document.getElementById('cbo_empleado').value),
       id_sucursal: Number(document.getElementById('cbo_sucursal').value),
       fecha_presupuesto: document.getElementById('txt_fecha_de_pedido').value,
+      fecha_vencimiento: document.getElementById('txt_fecha_vencimiento').value, 
       id_proveedor: Number(document.getElementById('cbo_proveedor').value),
       id_pedido_compra: Number(document.getElementById('cbo_pedido').value),
       detalle_presupuesto: productos,

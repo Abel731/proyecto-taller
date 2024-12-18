@@ -8,8 +8,9 @@ from app.dao.referenciales.estado_presupuesto_proveedor.estado_presupuesto_prove
 class PresupuestoProvDto:
     def __init__(self, id_presupuesto: int, id_proveedor: int, id_pedido_compra: int, 
                  id_empleado: int, id_sucursal: int, estado: EstadoPresupuestoProveedor, 
-                 fecha_presupuesto: date, detalle_presupuesto: List[PresupuestoProvDetalleDto]):
-
+                 fecha_presupuesto: date, fecha_vencimiento: date, 
+                 detalle_presupuesto: List[PresupuestoProvDetalleDto]):
+        
         self.__id_presupuesto = id_presupuesto
         self.__id_proveedor = id_proveedor
         self.__id_pedido_compra = id_pedido_compra
@@ -17,6 +18,7 @@ class PresupuestoProvDto:
         self.__id_sucursal = id_sucursal
         self.__estado = estado
         self.__fecha_presupuesto = fecha_presupuesto
+        self.__fecha_vencimiento = fecha_vencimiento
         self.__detalle_presupuesto = detalle_presupuesto
 
     @property
@@ -86,6 +88,16 @@ class PresupuestoProvDto:
         if not isinstance(valor, date):
             raise ValueError("El atributo fecha_presupuesto debe ser de tipo 'date'")
         self.__fecha_presupuesto = valor
+
+    @property
+    def fecha_vencimiento(self) -> date:
+        return self.__fecha_vencimiento
+
+    @fecha_vencimiento.setter
+    def fecha_vencimiento(self, valor: date):
+        if not isinstance(valor, date):
+            raise ValueError("El atributo fecha_vencimiento debe ser de tipo 'date'")
+        self.__fecha_vencimiento = valor
 
     @property
     def detalle_presupuesto(self) -> List[PresupuestoProvDetalleDto]:
