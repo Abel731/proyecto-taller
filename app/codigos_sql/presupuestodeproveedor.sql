@@ -29,22 +29,33 @@ CREATE TABLE estado_de_presupuesto_prov(
     , descripcion VARCHAR  NOT NULL
 );
 
+ALTER TABLE presupuesto_prov
+ADD COLUMN fecha_vencimiento DATE;
+
+ALTER TABLE presupuesto_prov
+ALTER COLUMN fecha_vencimiento SET NOT NULL;
+
 SELECT
-	pdp.id_presupuesto
-	, pdp.id_proveedor
-	, prov.ruc
-	, prov.razon_social
-	, pdp.id_pedido_compra
-	, pdp.id_empleado
-	, pdp.id_sucursal
-	, pdp.id_estpreprov
-	, edp.descripcion AS estado
-	, pdp.fecha_presupuesto
-FROM
-	public.presupuesto_prov pdp
-LEFT JOIN proveedores prov
-	ON prov.id_proveedor = pdp.id_proveedor
-LEFT JOIN empleados e
-	ON e.id_empleado = pdp.id_empleado
-LEFT JOIN estado_de_presupuesto_prov edp
-	ON edp.id_estpreprov = pdp.id_estpreprov;
+            pdp.id_presupuesto
+            , pdp.id_pedido_compra
+            , pdp.id_empleado
+            , p.nombres
+            , p.apellidos
+            , pdp.id_sucursal
+            , pdp.id_proveedor
+            , prov.ruc
+            , prov.razon_social
+            , pdp.id_estpreprov
+            , edp.descripcion AS estado
+            , pdp.fecha_presupuesto
+            , pdp.fecha_vencimiento
+        FROM
+            public.presupuesto_prov pdp
+        LEFT JOIN proveedores prov
+            ON prov.id_proveedor = pdp.id_proveedor
+        LEFT JOIN empleados e
+            ON e.id_empleado = pdp.id_empleado
+        LEFT JOIN personas p
+            ON p.id_persona = e.id_empleado
+        LEFT JOIN estado_de_presupuesto_prov edp
+            ON edp.id_estpreprov = pdp.id_estpreprov;

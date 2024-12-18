@@ -80,8 +80,28 @@ Formulario Presupuesto Proveedor
                       {% endfor %}
                     </select>
                   </div>
+                  <!-- Radio buttons para el estado del presupuesto -->
+                  <div class="row mt-3">
+                      <div class="col-md-12">
+                          <label for="estado_presupuesto">Estado del Presupuesto:</label><br>
+                          <div class="form-check form-check-inline">
+                              <input class="form-check-input" type="radio" name="estado_presupuesto" id="estado_aprobado" value="aprobado">
+                              <label class="form-check-label" for="estado_aprobado">Aprobado</label>
+                          </div>
+                          <div class="form-check form-check-inline">
+                              <input class="form-check-input" type="radio" name="estado_presupuesto" id="estado_pendiente" value="pendiente" checked>
+                              <label class="form-check-label" for="estado_pendiente">Pendiente</label>
+                          </div>
+                          <div class="form-check form-check-inline">
+                              <input class="form-check-input" type="radio" name="estado_presupuesto" id="estado_rechazado" value="rechazado">
+                              <label class="form-check-label" for="estado_rechazado">Rechazado</label>
+                          </div>
+                      </div>
+                  </div>
                 </div>
             </div>
+            
+            
        </div>
             <hr>
             <div class="row">
@@ -175,6 +195,8 @@ Formulario Presupuesto Proveedor
         }
     });
 
+    const estadoPresupuesto = document.querySelector('input[name="estado_presupuesto"]:checked').value;
+
     const payload = {
       id_empleado: Number(document.getElementById('cbo_empleado').value),
       id_sucursal: Number(document.getElementById('cbo_sucursal').value),
@@ -183,6 +205,7 @@ Formulario Presupuesto Proveedor
       id_proveedor: Number(document.getElementById('cbo_proveedor').value),
       id_pedido_compra: Number(document.getElementById('cbo_pedido').value),
       detalle_presupuesto: productos,
+      estado: estadoPresupuesto 
   };
 
     console.log('Payload enviado:', payload);

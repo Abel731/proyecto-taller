@@ -14,6 +14,12 @@ from app.dao.gestionar_compras.registrar_presupuesto_proveedor.dto.presupuesto_p
 
 pdpapi = Blueprint('pdpapi', __name__)
 
+ESTADOS_PRESUPUESTO = {
+    'aprobado': 1,
+    'pendiente': 2,
+    'rechazado': 3
+}
+
 @pdpapi.route('/presupuestos', methods=['GET'])
 def get_presupuestos():
     dao = PresupuestoProvDao()
@@ -39,7 +45,7 @@ def add_presupuesto():
     data = request.get_json()
 
     # Validar campos requeridos
-    campos_requeridos = ['id_empleado', 'id_sucursal', 'fecha_presupuesto', 'detalle_presupuesto', 'id_proveedor', 'id_pedido_compra', 'fecha_vencimiento']
+    campos_requeridos = ['id_empleado', 'id_sucursal', 'fecha_presupuesto', 'detalle_presupuesto', 'id_proveedor', 'id_pedido_compra', 'fecha_vencimiento', 'estado']
     for campo in campos_requeridos:
         if campo not in data or data[campo] is None:
             return jsonify({
@@ -55,7 +61,15 @@ def add_presupuesto():
         id_proveedor = data['id_proveedor']
         id_pedido_compra = data['id_pedido_compra']
         detalle_presupuesto = data['detalle_presupuesto']
-        fecha_vencimiento = data['fecha_vencimiento']  
+        fecha_vencimiento = data['fecha_vencimiento']
+        estado = data['estado'] 
+
+        # Verificar que el estado es válido
+        if estado not in ESTADOS_PRESUPUESTO:
+            return jsonify({
+                'success': False,
+                'error': f'El estado {estado} no es válido.'
+            }), 400
 
         # Crear detalle del presupuesto
         detalle_dto = [
@@ -71,11 +85,11 @@ def add_presupuesto():
             id_presupuesto=None,
             id_empleado=id_empleado,
             id_sucursal=id_sucursal,
-            id_proveedor=id_proveedor,  
-            id_pedido_compra=id_pedido_compra,  
-            estado=EstadoPresupuestoProveedor(id=2, descripcion=None),
+            id_proveedor=id_proveedor,
+            id_pedido_compra=id_pedido_compra,
+            estado=EstadoPresupuestoProveedor(id=ESTADOS_PRESUPUESTO[estado], descripcion=None),
             fecha_presupuesto=date.fromisoformat(fecha_presupuesto),
-            fecha_vencimiento=date.fromisoformat(fecha_vencimiento),  
+            fecha_vencimiento=date.fromisoformat(fecha_vencimiento),
             detalle_presupuesto=detalle_dto
         )
 
