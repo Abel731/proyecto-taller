@@ -54,8 +54,7 @@ Listar Presupuesto de Proveedores
         { data: 'empleado' },
         { data: 'estado' },
         { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id_presupuesto}">Aprobar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id_presupuesto}">Anular</button>`
+            return `<button type="button" name="btn_verificar" class="btn btn-info" data-id="${row.id_presupuesto}">Verificar</button>`;
           }
         }
       ]
@@ -67,6 +66,70 @@ Listar Presupuesto de Proveedores
 
     });
   }
+  const verificar = () => {
+    $('#tbl').on('click', 'button[name="btn_verificar"]', function() {
+      const idPresupuesto = $(this).data('id');
+  
+      // Obtener los datos del presupuesto seleccionado
+      fetch(`/api/v1/gestionar-compras/registrar-presupuesto-proveedor/presupuestos/${idPresupuesto}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if (data && data.success) {
+          // Rellenar los datos en el formulario
+          $('#txtIdPresupuesto').val(data.data.id_presupuesto);
+          $('#txtEmpleado').val(data.data.empleado);
+          $('#txtEstado').val(data.data.estado);
+  
+          // Configurar los radio buttons según el estado actual
+          $(`#rbEstado[value="${data.data.estado}"]`).prop('checked', true);
+  
+          // Mostrar el formulario modal
+          $('#modalFormulario').modal('show');
+        } else {
+          Swal.fire("Error", "No se pudo obtener los datos del presupuesto.", "error");
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        Swal.fire("Error", "Ocurrió un error al cargar los datos.", "error");
+      });
+    });
+  };
+  
+  const guardarEstado = () => {
+    $('#btnGuardar').on('click', function() {
+      const idPresupuesto = $('#txtIdPresupuesto').val();
+      const nuevoEstado = $('input[name="rbEstado"]:checked').val();
+  
+      // Enviar el nuevo estado al servidor
+      fetch(`/api/v1/gestionar-compras/registrar-presupuesto-proveedor/presupuestos/${idPresupuesto}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ estado: nuevoEstado })
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if (data && data.success) {
+          Swal.fire("Actualizado", "El estado del presupuesto ha sido actualizado correctamente.", "success");
+          $('#tbl').DataTable().ajax.reload(); // Recargar la tabla
+          $('#modalFormulario').modal('hide'); // Cerrar el modal
+        } else {
+          Swal.fire("Error", data.error || "No se pudo actualizar el estado.", "error");
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        Swal.fire("Error", "Ocurrió un error al guardar el estado.", "error");
+      });
+    });
+  };
 
   const guardar = () => {
     $('#btnGuardar').on('click', function() {
@@ -192,9 +255,8 @@ Listar Presupuesto de Proveedores
 
   const addEvents = () => {
     agregar();
-    //guardar();
-    //editar();
-    //eliminar();
+    verificar();
+    guardarEstado();
   }
 
   $(function() {
