@@ -116,28 +116,36 @@ class PresupuestoProvDao:
             con.close()
         return True
 
-
-    # Anular presupuesto
-    def anular(self, id_presupuesto: int) -> bool:
-        updatePresupuesto = """
-        UPDATE public.presupuesto_prov
-        SET id_estpreprov = (SELECT id_estpreprov FROM estado_de_presupuesto_prov 
-                             WHERE descripcion = 'Anulado')
-        WHERE id_presupuesto = %s
+    def get_productos_por_presupuesto(self, presupuesto_id):
+        query = """
+        SELECT
+            pdp.id_producto,
+            pro.nombre,
+            pdp.cantidad,
+            pdp.precio_unitario,
+        FROM presupuesto_detalle pdp
+        LEFT JOIN productos pro 
+        ON pdp.id_producto = pro.id_producto
+        WHERE pdp.id_presupuesto = %s
         """
-        
         conexion = Conexion()
         con = conexion.getConexion()
         cur = con.cursor()
         try:
-            # Actualizar estado a 'Anulado'
-            cur.execute(updatePresupuesto, (id_presupuesto,))
-            con.commit()
+            cur.execute(query, (presupuesto_id,))
+            productos = cur.fetchall()
+            return [
+            {
+                'id_producto': producto[0],
+                'nombre': producto[1],
+                'cantidad': producto[2],
+                'precio_unitario': producto[3],
+            }
+            for producto in productos
+        ]
         except Exception as e:
-            app.logger.error(f"Error al anular el presupuesto: {str(e)}")
-            con.rollback()
-            return False
+            app.logger.error(f"Error al obtener productos del presupuesto {presupuesto_id}: {e}")
+            return []
         finally:
             cur.close()
             con.close()
-        return True
