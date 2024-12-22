@@ -112,3 +112,28 @@ def add_presupuesto():
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
+
+@pdpapi.route('/detalle-presupuesto/<int:id_presupuesto>', methods=['GET'])
+def get_detalle_presupuesto(id_presupuesto):
+    dao = PresupuestoProvDao()
+    
+    try:
+        detalle = dao.get_productos_por_presupuesto(id_presupuesto)
+        if detalle:
+            return jsonify({
+                'success': True,
+                'data': detalle,
+                'error': False
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'No se encontraron detalles para este presupuesto.'
+            }), 404
+
+    except Exception as e:
+        app.logger.error(f"Error al obtener el detalle del presupuesto: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Ocurrió un error interno. Consulte con el administrador.'
+        }), 500

@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Listar Órdenes de Compra
+{% endblock %}
+
+{% block contenido %}
+<div class="container mt-4">
+    <h3>Listar Órdenes de Compra</h3>
+
+    <!-- tarjeta -->
+    <div class="card">
+        <div class="card-header">
+            <a href="{{ url_for('odcmod.ordenes_agregar') }}" target="_blank" class="btn btn-primary">Agregar</a>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped" id="tbl">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Empleado</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+    <!-- /tarjeta -->
+
+    <div class="row mt-4 d-none" id="rowAlerta">
+        <div class="col col-md-12">
+            <div class="alert alert-success">
+                <strong>Registro Exitoso!</strong>
+                <div class="row" id="mostrarAlerta"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+      },
+      ajax: '/api/v1/gestionar-compras/generar-orden-de-compra/ordenes',
+      columns: [
+        { data: 'id_orden' },
+        { data: 'empleado' },
+        { data: 'estado' },
+        { data: function(row) {
+            return `<button type="button" name="btn_verificar" class="btn btn-info" data-id="${row.id_orden_compra}">Verificar</button>`;
+          }
+        }
+      ]
+    });
+  };
+
+  const agregar = () => {
+    $('#btnAgregar').on('click', function(){
+
+    });
+  }
+  const addEvents = () => {
+    agregar();
+  }
+  $(function() {
+    initDatatable();
+    addEvents();
+  });
+</script>
+{% endblock %}

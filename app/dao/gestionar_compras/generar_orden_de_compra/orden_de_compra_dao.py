@@ -75,8 +75,8 @@ class OrdenDeCompraDao:
 
         insertDetalleOrden = """
         INSERT INTO public.orden_de_compra_detalle
-        (id_orden, id_producto, cantidad, precio_unitario, iva_5, iva_10, total)
-        VALUES(%s, %s, %s, %s, %s, %s, %s)
+        (id_orden, id_producto, cantidad, precio_unitario, total)
+        VALUES(%s, %s, %s, %s, %s)
         """
 
         conexion = Conexion()
@@ -98,8 +98,7 @@ class OrdenDeCompraDao:
                 for detalle in orden_dto.detalle_orden:
                     parametros_detalle = (
                         id_orden, detalle.id_producto, detalle.cantidad,
-                        detalle.precio_unitario, detalle.iva_5,
-                        detalle.iva_10, detalle.total
+                        detalle.precio_unitario, detalle.total
                     )
                     cur.execute(insertDetalleOrden, parametros_detalle)
 

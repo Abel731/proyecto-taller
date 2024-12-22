@@ -28,6 +28,9 @@ from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedidos_comp
 from app.rutas.gestionar_compras.resgitrar_presupuesto_proveedor.registrar_presupuesto_proveedor_routes \
     import pdpmod
 
+from app.rutas.gestionar_compras.generar_orden_compra.generar_orden_compra_routes \
+    import odcmod
+
 # registrar referenciales 
 modulo0 = '/referenciales'
 app.register_blueprint(ciumod, url_prefix=f'{modulo0}/ciudad')
@@ -53,6 +56,8 @@ app.register_blueprint(pdcmod, url_prefix=f'{modulo1}/registrar-pedido-compras')
 
 app.register_blueprint(pdpmod, url_prefix=f'{modulo1}/registrar-presupuesto-proveedor')
 
+app.register_blueprint(odcmod, url_prefix=f'{modulo1}/generar-orden-de-compra')
+
 # importar APIS v1
 from app.rutas.referenciales.ciudad.ciudad_api import ciuapi
 from app.rutas.referenciales.pais.pais_api import paiapi
@@ -70,11 +75,16 @@ from app.rutas.referenciales.marca.marca_api import marcaapi
 from app.rutas.referenciales.emisora.emisora_api import emisoraapi
 from app.rutas.referenciales.tipo_producto.tipo_producto_api import tipo_producto_api
 
+#Importar apis del modulo de compras
+
 from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedido_compras_api \
     import pdcapi
 
 from app.rutas.gestionar_compras.resgitrar_presupuesto_proveedor.registrar_presupuesto_proveedor_api \
     import pdpapi
+
+from app.rutas.gestionar_compras.generar_orden_compra.generar_orden_compra_api \
+    import odcapi
 
 # registrar APIS
 version1 = '/api/v1'
@@ -99,3 +109,5 @@ app.register_blueprint(tipo_producto_api, url_prefix=version1)
 app.register_blueprint(pdcapi, url_prefix=f'{version1}/{modulo1}/registrar-pedido-compras')
 
 app.register_blueprint(pdpapi, url_prefix=f'{version1}/{modulo1}/registrar-presupuesto-proveedor')
+
+app.register_blueprint(odcapi, url_prefix=f'{version1}/{modulo1}/generar-orden-de-compra')

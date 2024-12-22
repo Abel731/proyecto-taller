@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Formulario Orden de Compra
+{% endblock %}
+
+{% block contenido %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3>Formulario Orden de Compra</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Columna izquierda -->
+                <div class="col-md-6 d-flex flex-column">
+                    <!-- Combo empleados -->
+                    <div class="form-group">
+                        <label for="cbo_empleado">Empleados:</label>
+                        <select id="cbo_empleado" class="custom-select">
+                            <option selected>Seleccione un empleado</option>
+                            {% for item in empleados %}
+                            <option value="{{ item['id_empleado'] }}">
+                                {{ item['empleado'] }} - CI: {{ item['ci'] }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Combo sucursales -->
+                    <div class="form-group">
+                        <label for="cbo_sucursal">Sucursales:</label>
+                        <select id="cbo_sucursal" class="custom-select">
+                            <option value="">Seleccione una sucursal</option>
+                            {% for item in sucursales %}
+                            <option value="{{ item['id'] }}">
+                                {{ item['descripcion'] }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Fecha de Pedido -->
+                    <div class="form-group">
+                        <label for="txt_fecha_orden">Fecha de Pedido:</label>
+                        <input type="date" class="form-control" id="txt_fecha_orden" />
+                    </div>
+                </div>
+                
+                <!-- Columna derecha -->
+                <div class="col-md-6 d-flex flex-column">
+                    <!-- Combo presupuesto -->
+                    <div class="form-group">
+                        <label for="cbo_presupuesto">Presupuesto por número y fecha:</label>
+                        <select id="cbo_presupuesto" class="custom-select">
+                            <option value="">Seleccione un presupuesto</option>
+                            {% for presupuesto in presupuestos %}
+                            <option value="{{ presupuesto['id_presupuesto'] }}">
+                                Presupuesto N° {{ presupuesto['id_presupuesto'] }} - Fecha: {{ presupuesto['fecha_presupuesto'] }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <!-- Combo proveedor -->
+                    <div class="form-group">
+                        <label for="cbo_proveedor">Proveedores</label>
+                        <select id="cbo_proveedor" class="custom-select">
+                            <option value="">Proveedores</option>
+                            {% for item in proveedores %}
+                            <option value="{{ item['id_proveedor'] }}">
+                                {{ item['proveedor'] }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Radio buttons para el estado del presupuesto -->
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <label for="estado_presupuesto">Estado:</label><br>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="estado_orden" id="estado_aprobado" value="aprobado">
+                                <label class="form-check-label" for="estado_aprobado">Aprobado</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="estado_orden" id="estado_pendiente" value="pendiente" checked>
+                                <label class="form-check-label" for="estado_pendiente">Pendiente</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="estado_orden" id="estado_rechazado" value="rechazado">
+                                <label class="form-check-label" for="estado_rechazado">Rechazado</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <hr>
+            <div class="row">
+              <div class="col col-md-12">
+                  <table class="table">
+                      <thead>
+                          <tr>
+                              <th>Producto</th>
+                              <th>Descripción</th>
+                              <th>Cantidad</th>
+                              <th>Precio Unitario</th>
+                              <th>Subtotal</th>
+                          </tr>
+                      </thead>
+                      <tbody id="productos-table-body">
+                          <!-- Productos se llenarán dinámicamente -->
+                      </tbody>
+                  </table>
+              </div>
+          </div>
+          <div class="row mt-3">
+              <div class="col-md-6 offset-md-6">
+                  <table class="table">
+                      <tbody>
+                          <tr>
+                              <td><strong>Total:</strong></td>
+                              <td id="total">0.00</td>
+                          </tr>
+                      </tbody>
+                  </table>
+              </div>
+          </div>
+          <div class="card-footer">
+              <button type="button" class="btn btn-primary" id="btn_registrar_orden">Registrar Orden</button>
+              <button type="button" class="btn btn-warning" id="btn_cancelar_orden">Cancelar</button>
+          </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+// Función para calcular el total
+function calcularTotales() {
+  const rows = document.querySelectorAll('#productos-table-body tr');
+  let subtotal = 0;
+
+  rows.forEach(row => {
+      const cantidad = Number(row.querySelector('.cantidad-producto').value);
+      const precioUnitario = Number(row.querySelector('.precio-producto').value);
+      const subtotalProducto = cantidad * precioUnitario;
+
+      subtotal += subtotalProducto;
+
+      // Actualizar el campo de subtotal de cada producto
+      row.querySelector('.subtotal-producto').textContent = subtotalProducto.toFixed(2);
+  });
+
+  // Actualizar el total
+  document.getElementById('total').textContent = subtotal.toFixed(2);
+}
+
+document.getElementById('productos-table-body').addEventListener('input', calcularTotales);
+
+document.getElementById('cbo_presupuesto').addEventListener('change', function () {
+  const presupuestoId = this.value;
+
+  if (presupuestoId) {
+      // Solicitar el detalle del presupuesto a la API
+      fetch(`/api/v1/gestionar-compras/registrar-presupuesto-proveedor/detalle-presupuesto/${presupuestoId}`)
+          .then(response => {
+              if (!response.ok) {
+                  throw new Error(`Error en la respuesta: ${response.status}`);
+              }
+              return response.json();
+          })
+          .then(data => {
+              if (data.success) {
+                  const tableBody = document.getElementById('productos-table-body');
+                  tableBody.innerHTML = ''; // Limpiar tabla antes de agregar nuevos productos
+
+                  data.data.forEach(producto => {
+                      const row = `
+                          <tr data-id="${producto.id_producto}">
+                              <td>${producto.id_producto}</td>
+                              <td>${producto.nombre}</td>
+                              <td>
+                                  <input type="number" class="form-control cantidad-producto" value="${producto.cantidad}" min="1">
+                              </td>
+                              <td>
+                                  <input type="number" class="form-control precio-producto" value="${producto.precio_unitario}" min="0">
+                              </td>
+                              <td class="subtotal-producto">0.00</td>
+                          </tr>`;
+                      tableBody.innerHTML += row;
+                  });
+
+                  // Recalcular totales después de cargar los productos
+                  calcularTotales();
+              } else {
+                  alert('No se encontraron detalles para este presupuesto.');
+              }
+          })
+          .catch(error => {
+              console.error('Error al cargar productos:', error);
+              alert('Ocurrió un error al cargar los detalles del presupuesto.');
+          });
+  } else {
+      // Limpiar la tabla si no se seleccionó un presupuesto
+      document.getElementById('productos-table-body').innerHTML = '';
+  }
+});
+
+document.getElementById('btn_registrar_orden').addEventListener('click', function () {
+    const productos = [];
+    const rows = document.querySelectorAll('#productos-table-body tr');
+
+    let subtotal = 0;
+
+    // Recorrer las filas de productos
+    rows.forEach(row => {
+        const idProducto = Number(row.dataset.id);
+        const cantidad = Number(row.querySelector('.cantidad-producto').value);
+        const precioUnitario = Number(row.querySelector('.precio-producto').value);
+
+        if (precioUnitario && cantidad) {
+            const subtotalProducto = cantidad * precioUnitario;
+            subtotal += subtotalProducto;
+
+            productos.push({
+                id_producto: idProducto,
+                precio_unitario: precioUnitario,
+                cantidad: cantidad,
+            });
+        }
+    });
+
+    // Calcular el total general
+    const total = subtotal;
+
+    // Actualizar el total en el DOM
+    document.getElementById('total').textContent = total.toFixed(2);
+
+    // Capturar el estado seleccionado
+    const estadoOrden = document.querySelector('input[name="estado_orden"]:checked').value;
+
+    // Preparar el payload
+    const payload = {
+        id_empleado: Number(document.getElementById('cbo_empleado').value),
+        id_sucursal: Number(document.getElementById('cbo_sucursal').value),
+        fecha_orden: document.getElementById('txt_fecha_orden').value,
+        id_proveedor: Number(document.getElementById('cbo_proveedor').value),
+        id_presupuesto: Number(document.getElementById('cbo_presupuesto').value),
+        detalle_orden: productos,
+        total: parseFloat(total.toFixed(2)),
+        estado: estadoOrden
+    };
+
+    console.log('Payload enviado:', payload);
+
+    // Enviar al backend
+    fetch('/api/v1/gestionar-compras/generar-orden-de-compra/ordenes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        if (!response.ok) throw new Error(`HTTP status ${response.status}`);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Orden registrada:', data);
+        alert('Orden registrada con éxito');
+        location.replace("{{ url_for('odcmod.ordenes_index') }}");
+    })
+    .catch(error => {
+        console.error('Error al registrar orden:', error);
+        alert('Ocurrió un error al registrar la orden.');
+    });
+});
+</script>
+{% endblock %}

@@ -122,8 +122,8 @@ class PresupuestoProvDao:
             pdp.id_producto,
             pro.nombre,
             pdp.cantidad,
-            pdp.precio_unitario,
-        FROM presupuesto_detalle pdp
+            pdp.precio_unitario
+        FROM presupuesto_prov_detalle pdp
         LEFT JOIN productos pro 
         ON pdp.id_producto = pro.id_producto
         WHERE pdp.id_presupuesto = %s
@@ -149,3 +149,27 @@ class PresupuestoProvDao:
         finally:
             cur.close()
             con.close()
+
+    def obtener_presupuestos_por_fecha(self):
+        query = """
+        SELECT 
+            id_presupuesto, 
+            fecha_presupuesto 
+        FROM public.presupuesto_prov
+        """
+        conexion = Conexion()
+        con = conexion.getConexion()
+        cur = con.cursor()
+        try:
+            cur.execute(query)
+            presupuestos = cur.fetchall()
+            return [
+                {'id_presupuesto': presupuesto[0], 'fecha_presupuesto': presupuesto[1]} 
+                for presupuesto in presupuestos
+            ]
+        except Exception as e:
+            app.logger.error(f"Error al obtener presupuestos: {e}")
+            return []
+        finally:
+            cur.close()
+            con.close()        
