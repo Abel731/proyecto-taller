@@ -1,9 +1,19 @@
-from flask import Flask 
+from flask import Flask
+from werkzeug.security import generate_password_hash 
 ## instancia para arrancar el proyecto
 app = Flask (__name__)
 
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
+
+# Contraseña que deseas hashear
+password = ""
+
+# Generar el hash de la contraseña con un algoritmo de scrypt
+hashed_password = generate_password_hash(password, method='scrypt', salt_length=16)
+
+# Asegurarse de que el hash tenga 300 caracteres
+print(hashed_password[:300])
 # importar referenciales
 from app.rutas.referenciales.ciudad.ciudad_routes import ciumod
 from app.rutas.referenciales.pais.pais_routes import paismod
@@ -20,6 +30,10 @@ from app.rutas.referenciales.sexo.sexo_routes import sexomod
 from app.rutas.referenciales.marca.marca_routes import marcmod
 from app.rutas.referenciales.emisora.emisora_routes import emismod
 from app.rutas.referenciales.tipo_producto.tipo_producto_routes import tipprodmod
+
+from app.rutas.login.login_routes import login_bp
+
+app.register_blueprint(login_bp)
 
 # importar gestionar compras
 from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedidos_compras_routes \
