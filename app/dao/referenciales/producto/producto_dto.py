@@ -1,13 +1,11 @@
 class ProductoDto:
     
-    def __init__(self, id_producto, nombre, \
-        cantidad, precio_unitario):
+    def __init__(self, id_producto, nombre, precio_compra):
         self.__id_producto = id_producto
         self.__nombre = nombre
-        self.__cantidad = cantidad
-        self.__precio_unitario = precio_unitario
+        self.__precio_compra = precio_compra
 
-    #getters y setters de id_producto
+    # Getters y setters de id_producto
     @property
     def id_producto(self):
         return self.__id_producto
@@ -15,10 +13,10 @@ class ProductoDto:
     @id_producto.setter
     def id_producto(self, valor):
         if not valor:
-            raise ValueError("El atributo id_producto no puede estar vacio")
+            raise ValueError("El atributo id_producto no puede estar vacío")
         self.__id_producto = valor
 
-    #getters y setters de nombre
+    # Getters y setters de nombre
     @property
     def nombre(self):
         return self.__nombre
@@ -26,27 +24,16 @@ class ProductoDto:
     @nombre.setter
     def nombre(self, valor):
         if not valor:
-            raise ValueError("El atributo nombre no puede estar vacio")
+            raise ValueError("El atributo nombre no puede estar vacío")
         self.__nombre = valor.upper()
 
-    #getters y setters de cantidad
+    # Getters y setters de precio_compra
     @property
-    def cantidad(self):
-        return self.__cantidad
+    def precio_compra(self):
+        return self.__precio_compra
 
-    @cantidad.setter
-    def cantidad(self, valor):
-        if not valor:
-            raise ValueError("El atributo cantidad no puede estar vacio")
-        self.__cantidad = valor
-
-    #getters y setters de precio_unitario
-    @property
-    def precio_unitario(self):
-        return self.__precio_unitario
-
-    @precio_unitario.setter
-    def precio_unitario(self, valor):
-        if not valor:
-            raise ValueError("El atributo precio_unitario no puede estar vacio")
-        self.__precio_unitario = valor
+    @precio_compra.setter
+    def precio_compra(self, valor):
+        if valor is None or valor < 0:
+            raise ValueError("El atributo precio_compra no puede estar vacío ni ser negativo")
+        self.__precio_compra = valor

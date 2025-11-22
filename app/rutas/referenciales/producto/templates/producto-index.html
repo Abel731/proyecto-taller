@@ -18,8 +18,7 @@ Productos
           <thead>
             <tr>
               <th>Nombre</th>
-              <th>Cantidad</th>
-              <th>Precio Unitario</th>
+              <th>Precio de Compra</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -46,16 +45,11 @@ Productos
             <div class="form-group">
               <input type="hidden" id="txtIdProducto">
               
-              <label for="txtNombre">nombre:</label>
+              <label for="txtNombre">Nombre:</label>
               <input type="text" class="form-control" placeholder="Ingrese el nombre del producto" id="txtNombre">
 
-              <!-- Barra deslizante para cantidad -->
-              <label for="cantidadSlider">Cantidad (0-25 unidades):</label>
-              <input type="range" class="form-control-range" id="cantidadSlider" min="0" max="25" value="0" oninput="document.getElementById('cantidadDisplay').textContent = this.value">
-              <p>Unidades seleccionadas: <span id="cantidadDisplay">0</span></p>
-
-              <label for="txtPrecioUnitario">Precio Unitario:</label>
-              <input type="text" class="form-control" placeholder="Ingrese el precio unitario" id="txtPrecioUnitario">
+              <label for="txtPrecioCompra">Precio de Compra:</label>
+              <input type="number" step="0.01" class="form-control" placeholder="Ingrese el precio de compra" id="txtPrecioCompra">
             </div>
           </div>
 
@@ -91,8 +85,7 @@ Productos
       ajax:'/api/v1/productos',
       columns: [
         { data: 'nombre' },
-        { data: 'cantidad' },  
-        { data: 'precio_unitario' }, 
+        { data: 'precio_compra' }, 
         { data: function(row) {
             return `<button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id_producto}">Editar</button>
                     <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id_producto}">Eliminar</button>`
@@ -109,9 +102,7 @@ Productos
       // Iniciar ventana modal
       $('#txtIdProducto').val("");
       $('#txtNombre').val("");
-      $('#cantidadSlider').val(0);
-      $('#cantidadDisplay').text(0);
-      $('#txtPrecioUnitario').val("");
+      $('#txtPrecioCompra').val("");
       $('#modalFormulario').modal();
     });
   }
@@ -120,14 +111,12 @@ Productos
     $('#btnGuardar').on('click', function() {
       const idProducto = $('#txtIdProducto').val();
       const nuevoNombre = $('#txtNombre').val();
-      const cantidad = $('#cantidadSlider').val();  
-      const precioUnitario = $('#txtPrecioUnitario').val();
+      const precioCompra = $('#txtPrecioCompra').val();
       const tabla = $('#tbl').DataTable();
 
       const productoData = {
         nombre: nuevoNombre,
-        cantidad: cantidad,
-        precio_unitario: precioUnitario
+        precio_compra: precioCompra
       };
 
       if(idProducto) {
@@ -175,8 +164,6 @@ Productos
     });
   }
 
-  
-
   const editar = () => {
     $('#tbl').on('click', 'button[name="btn_editar"]',function(){
       Swal.fire({
@@ -200,9 +187,7 @@ Productos
           .then(resp => resp.json())
           .then(data => {
             $('#txtNombre').val(data.data.nombre);
-            $('#cantidadSlider').val(data.data.cantidad);
-            $('#cantidadDisplay').text(data.data.cantidad);
-            $('#txtPrecioUnitario').val(data.data.precio_unitario);
+            $('#txtPrecioCompra').val(data.data.precio_compra);
             $('#modalFormulario').modal();
           });
         }
