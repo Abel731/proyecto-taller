@@ -86,8 +86,9 @@ class ProductoDao:
                     "precio_compra": productoEncontrado[2]
                 }
             return None
-        except con.Error as e:
-            app.logger.info(e)
+        except Exception as e:
+            app.logger.error(f"Error al obtener producto: {str(e)}")
+            return None
         finally:
             cur.close()
             con.close()
@@ -108,19 +109,18 @@ class ProductoDao:
             cur.execute(insertProductoSQL, (nombre, precio_compra))
             # se confirma la insercion
             con.commit()
-
             return True
 
         # Si algo fallo entra aqui
-        except con.Error as e:
-            app.logger.info(e)
+        except Exception as e:
+            con.rollback()  # ← IMPORTANTE: Hacer rollback
+            app.logger.error(f"Error al guardar producto: {str(e)}")
+            raise  # ← RE-LANZA la excepción para que la API la capture
 
         # Siempre se va ejecutar
         finally:
             cur.close()
             con.close()
-
-        return False
 
     def updateProducto(self, id_producto, nombre, precio_compra):
 
@@ -139,19 +139,18 @@ class ProductoDao:
             cur.execute(updateProductoSQL, (nombre, precio_compra, id_producto))
             # se confirma la insercion
             con.commit()
-
             return True
 
         # Si algo fallo entra aqui
-        except con.Error as e:
-            app.logger.info(e)
+        except Exception as e:
+            con.rollback()  # ← IMPORTANTE: Hacer rollback
+            app.logger.error(f"Error al actualizar producto: {str(e)}")
+            raise  # ← RE-LANZA la excepción para que la API la capture
 
         # Siempre se va ejecutar
         finally:
             cur.close()
             con.close()
-
-        return False
 
     def deleteProducto(self, id_producto):
 
@@ -169,16 +168,15 @@ class ProductoDao:
             cur.execute(deleteProductoSQL, (id_producto,))
             # se confirma la eliminacion
             con.commit()
-
             return True
 
         # Si algo fallo entra aqui
-        except con.Error as e:
-            app.logger.info(e)
+        except Exception as e:
+            con.rollback()
+            app.logger.error(f"Error al eliminar producto: {str(e)}")
+            return False
 
         # Siempre se va ejecutar
         finally:
             cur.close()
             con.close()
-
-        return False

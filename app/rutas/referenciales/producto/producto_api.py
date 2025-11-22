@@ -1,5 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app as app
 from app.dao.referenciales.producto.ProductoDao import ProductoDao
+import psycopg2
+from psycopg2 import errors
 
 proapi = Blueprint('proapi', __name__)
 
@@ -67,10 +69,10 @@ def addProducto():
                 'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
             }), 400
 
+    nombre = data['nombre'].upper()
+    precio_compra = data['precio_compra']
+
     try:
-        nombre = data['nombre'].upper()
-        precio_compra = data['precio_compra']
-        
         producto_guardado = prodao.guardarProducto(nombre, precio_compra)
         if producto_guardado:
             return jsonify({
@@ -83,6 +85,14 @@ def addProducto():
                 'success': False, 
                 'error': 'No se pudo guardar el producto. Consulte con el administrador.' 
             }), 500
+    
+    except errors.UniqueViolation:
+        # Captura el error de duplicado de la BD
+        return jsonify({
+            'success': False,
+            'error': f'El producto "{nombre}" ya existe en el sistema. Por favor, ingrese otro producto.'
+        }), 409
+    
     except Exception as e:
         app.logger.error(f"Error al agregar producto: {str(e)}")
         return jsonify({
@@ -106,11 +116,11 @@ def updateProducto(producto_id):
                 'error': f'El campo {campo} es obligatorio y no puede estar vacío.'
             }), 400
 
-    nombre = data['nombre']
+    nombre = data['nombre'].upper()
     precio_compra = data['precio_compra']
     
     try:
-        if prodao.updateProducto(producto_id, nombre.upper(), precio_compra):
+        if prodao.updateProducto(producto_id, nombre, precio_compra):
             return jsonify({
                 'success': True,
                 'data': {'id': producto_id, 'nombre': nombre, 'precio_compra': precio_compra},
@@ -121,6 +131,14 @@ def updateProducto(producto_id):
                 'success': False,
                 'error': 'No se encontró el producto con el ID proporcionado o no se pudo actualizar.'
             }), 404
+    
+    except errors.UniqueViolation:
+        # Captura el error de duplicado de la BD en actualización
+        return jsonify({
+            'success': False,
+            'error': f'El producto "{nombre}" ya existe en el sistema. Por favor, utilice otro nombre.'
+        }), 409
+    
     except Exception as e:
         app.logger.error(f"Error al actualizar producto: {str(e)}")
         return jsonify({
