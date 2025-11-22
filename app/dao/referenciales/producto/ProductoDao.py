@@ -5,12 +5,11 @@ class ProductoDao:
 
     def get_productos(self):
 
-        sucursal_sql = """
+        producto_sql = """
         SELECT
             id_producto
             , nombre
-            , cantidad
-            , precio_unitario
+            , precio_compra
         FROM
             public.productos
         """
@@ -19,15 +18,14 @@ class ProductoDao:
         con = conexion.getConexion()
         cur = con.cursor()
         try:
-            cur.execute(sucursal_sql)
+            cur.execute(producto_sql)
             productos = cur.fetchall() # trae datos de la bd
 
             # Transformar los datos en una lista de diccionarios
-            return [{'id_producto': item[0], 'nombre': item[1]\
-                , 'cantidad': item[2], 'precio_unitario': item[3]} for item in productos]
+            return [{'id_producto': item[0], 'nombre': item[1], 'precio_compra': item[2]} for item in productos]
 
         except Exception as e:
-            app.logger.error(f"Error al obtener todas las productos: {str(e)}")
+            app.logger.error(f"Error al obtener todos los productos: {str(e)}")
             return []
 
         finally:
@@ -69,7 +67,7 @@ class ProductoDao:
     def getProductoById(self, id_producto):
 
         productoSQL = """
-        SELECT id_producto, nombre, cantidad, precio_unitario
+        SELECT id_producto, nombre, precio_compra
         FROM productos WHERE id_producto=%s
         """
         # objeto conexion
@@ -81,23 +79,24 @@ class ProductoDao:
             # trae datos de la bd
             productoEncontrado = cur.fetchone()
             # retorno los datos
-            return {
+            if productoEncontrado:
+                return {
                     "id_producto": productoEncontrado[0],
                     "nombre": productoEncontrado[1],
-                    "cantidad": productoEncontrado[2],
-                    "precio_unitario": productoEncontrado[3]
+                    "precio_compra": productoEncontrado[2]
                 }
+            return None
         except con.Error as e:
             app.logger.info(e)
         finally:
             cur.close()
             con.close()
 
-    def guardarProducto(self, nombre, cantidad, precio_unitario):
+    def guardarProducto(self, nombre, precio_compra):
 
         insertProductoSQL = """
-        INSERT INTO productos(nombre, cantidad, precio_unitario) 
-        VALUES(%s, %s, %s)
+        INSERT INTO productos(nombre, precio_compra) 
+        VALUES(%s, %s)
         """
 
         conexion = Conexion()
@@ -106,7 +105,7 @@ class ProductoDao:
 
         # Ejecucion exitosa
         try:
-            cur.execute(insertProductoSQL, (nombre, cantidad, precio_unitario))
+            cur.execute(insertProductoSQL, (nombre, precio_compra))
             # se confirma la insercion
             con.commit()
 
@@ -123,11 +122,11 @@ class ProductoDao:
 
         return False
 
-    def updateProducto(self, id_producto, nombre, cantidad, precio_unitario):
+    def updateProducto(self, id_producto, nombre, precio_compra):
 
         updateProductoSQL = """
         UPDATE productos
-        SET nombre=%s, cantidad=%s, precio_unitario=%s
+        SET nombre=%s, precio_compra=%s
         WHERE id_producto=%s
         """
 
@@ -137,7 +136,7 @@ class ProductoDao:
 
         # Ejecucion exitosa
         try:
-            cur.execute(updateProductoSQL, (nombre, cantidad, precio_unitario, id_producto))
+            cur.execute(updateProductoSQL, (nombre, precio_compra, id_producto))
             # se confirma la insercion
             con.commit()
 
