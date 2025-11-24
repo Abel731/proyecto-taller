@@ -15,7 +15,7 @@ def ordenes_gestion():
 
     # Obtener solo presupuestos aprobados
     todos_presupuestos = presupuestodao.obtener_presupuestos()
-    presupuestos_aprobados = [p for p in todos_presupuestos if p['estado'] == 'Aprobado']
+    presupuestos_aprobados = [p for p in todos_presupuestos if p['estado'] == 'APROBADO']
 
     return render_template(
         'orden-gestion.html',

@@ -64,7 +64,7 @@ class OrdenCompraDao:
             cur.close()
             con.close()
 
-    def agregar(self, id_presupuesto, id_empleado, id_sucursal, fecha_orden, detalle_orden):
+    def agregar(self, id_presupuesto, id_empleado, id_sucursal, id_estorden, fecha_orden, detalle_orden):
         insertOrdenCompraCabecera = """
         INSERT INTO public.orden_de_compra
         (id_presupuesto, id_empleado, id_sucursal, id_estorden, fecha_orden)
@@ -83,8 +83,8 @@ class OrdenCompraDao:
         con.autocommit = False
         cur = con.cursor()
         try:
-            # Insertando la cabecera (estado por defecto: 1 = Pendiente)
-            parametros = (id_presupuesto, id_empleado, id_sucursal, 1, fecha_orden)
+            # Insertando la cabecera con el estado seleccionado
+            parametros = (id_presupuesto, id_empleado, id_sucursal, id_estorden, fecha_orden)
             cur.execute(insertOrdenCompraCabecera, parametros)
             id_orden = cur.fetchone()[0]
 
