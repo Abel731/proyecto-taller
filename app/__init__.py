@@ -47,7 +47,7 @@ from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedidos_comp
 from app.rutas.gestionar_compras.registrar_presupuesto_proveedor.registrar_presupuesto_proveedor_routes \
     import pdpmod
 
-from app.rutas.gestionar_compras.registrar_orden_compra.orden_compra_routes \
+from app.rutas.gestionar_compras.generar_orden_compra.generar_orden_compra_routes \
     import ocmod
 
 # ============================================================
