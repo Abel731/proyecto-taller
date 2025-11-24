@@ -39,7 +39,7 @@ app.register_blueprint(login_bp)
 from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedidos_compras_routes \
     import pdcmod
 
-from app.rutas.gestionar_compras.resgitrar_presupuesto_proveedor.registrar_presupuesto_proveedor_routes \
+from app.rutas.gestionar_compras.registrar_presupuesto_proveedor.registrar_presupuesto_proveedor_routes \
     import pdpmod
 
 # registrar referenciales 
@@ -87,7 +87,7 @@ from app.rutas.referenciales.tipo_producto.tipo_producto_api import tipo_product
 from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedido_compras_api \
     import pdcapi
 
-from app.rutas.gestionar_compras.resgitrar_presupuesto_proveedor.registrar_presupuesto_proveedor_api \
+from app.rutas.gestionar_compras.registrar_presupuesto_proveedor.registrar_presupuesto_proveedor_api \
     import pdpapi
 
 # registrar APIS
