@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Generar Orden de Compra
+{% endblock %}
+
+{% block contenido %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3>Generar Orden de Compra</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Columna izquierda -->
+                <div class="col-md-6 d-flex flex-column">
+                  <!-- Combo empleados -->
+                  <div class="form-group">
+                    <label for="cbo_empleado">Empleado:</label>
+                    <select id="cbo_empleado" class="custom-select">
+                      <option value="">Seleccione un empleado</option>
+                      {% for item in empleados %}
+                      <option value="{{ item['id_empleado'] }}">
+                        {{ item['empleado'] }} - CI: {{ item['ci'] }}
+                      </option>
+                      {% endfor %}
+                    </select>
+                  </div>
+
+                  <!-- Combo sucursales -->
+                  <div class="form-group">
+                    <label for="cbo_sucursal">Sucursal:</label>
+                    <select id="cbo_sucursal" class="custom-select">
+                      <option value="">Seleccione una sucursal</option>
+                      {% for item in sucursales %}
+                      <option value="{{ item['id'] }}">
+                        {{ item['descripcion'] }}
+                      </option>
+                      {% endfor %}
+                    </select>
+                  </div>
+              
+                  <!-- Fecha de Orden -->
+                  <div class="form-group">
+                    <label for="txt_fecha_orden">Fecha de Orden:</label>
+                    <input type="date" class="form-control" id="txt_fecha_orden" />
+                  </div>
+                </div>
+              
+                <!-- Columna derecha -->
+                <div class="col-md-6 d-flex flex-column">
+                  <!-- Combo presupuesto -->
+                  <div class="form-group">
+                    <label for="cbo_presupuesto">Presupuesto Aprobado:</label>
+                    <select id="cbo_presupuesto" class="custom-select">
+                      <option value="">Seleccione un presupuesto</option>
+                      {% for presupuesto in presupuestos %}
+                      <option value="{{ presupuesto['id_presupuesto'] }}">
+                          Presupuesto N° {{ presupuesto['id_presupuesto'] }} - {{ presupuesto['proveedor'] }} - {{ presupuesto['fecha_presupuesto'] }}
+                      </option>
+                      {% endfor %}
+                    </select>
+                  </div>
+
+                  <!-- Información del presupuesto seleccionado -->
+                  <div class="alert alert-info d-none" id="info_presupuesto">
+                    <strong>Información del Presupuesto:</strong>
+                    <p class="mb-1"><strong>Proveedor:</strong> <span id="info_proveedor"></span></p>
+                    <p class="mb-0"><strong>Empleado:</strong> <span id="info_empleado"></span></p>
+                  </div>
+                </div>
+            </div>
+            
+            <hr>
+            <h5>Detalle de Productos</h5>
+            <div class="row">
+                <div class="col col-md-12">
+                  <table class="table table-bordered">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Precio</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productos-table-body">
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">
+                                Seleccione un presupuesto para cargar los productos
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" class="text-right"><strong>TOTAL:</strong></td>
+                            <td><strong id="total_orden">0.00</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <button type="button" class="btn btn-success" id="btn_generar_orden">Generar Orden de Compra</button>
+            <button type="button" class="btn btn-secondary" id="btn_salir_operacion">Cancelar</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  // Validaciones
+  function validarFormulario() {
+    const empleado = $('#cbo_empleado').val();
+    const sucursal = $('#cbo_sucursal').val();
+    const presupuesto = $('#cbo_presupuesto').val();
+    const fechaOrden = $('#txt_fecha_orden').val();
+
+    if (!empleado) {
+      Swal.fire("Error", "Debe seleccionar un empleado", "error");
+      return false;
+    }
+    if (!sucursal) {
+      Swal.fire("Error", "Debe seleccionar una sucursal", "error");
+      return false;
+    }
+    if (!presupuesto) {
+      Swal.fire("Error", "Debe seleccionar un presupuesto", "error");
+      return false;
+    }
+    if (!fechaOrden) {
+      Swal.fire("Error", "Debe ingresar la fecha de orden", "error");
+      return false;
+    }
+    
+    const productos = $('#productos-table-body tr').length;
+    if (productos === 0 || $('#productos-table-body td[colspan="5"]').length > 0) {
+      Swal.fire("Error", "No hay productos cargados", "error");
+      return false;
+    }
+
+    return true;
+  }
+
+  // Calcular total
+  function calcularTotal() {
+    let total = 0;
+    $('#productos-table-body tr').each(function() {
+      const subtotal = parseFloat($(this).find('.subtotal').text()) || 0;
+      total += subtotal;
+    });
+    $('#total_orden').text(total.toFixed(2));
+  }
+
+  // Cargar productos del presupuesto seleccionado
+  document.getElementById('cbo_presupuesto').addEventListener('change', function () {
+    const presupuestoId = this.value;
+
+    if (presupuestoId) {
+      // Solicitar el detalle del presupuesto a la API
+      fetch(`/api/v1/gestionar-compras/registrar-orden-compra/detalle-presupuesto/${presupuestoId}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Error en la respuesta: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            const tableBody = document.getElementById('productos-table-body');
+            tableBody.innerHTML = ''; // Limpiar tabla
+
+            let total = 0;
+            data.data.forEach(producto => {
+              const subtotal = (producto.cantidad * producto.precio).toFixed(2);
+              total += parseFloat(subtotal);
+              
+              const row = `
+                <tr data-id="${producto.id_producto}">
+                  <td>${producto.id_producto}</td>
+                  <td>${producto.nombre}</td>
+                  <td>
+                      <input type="number" class="form-control cantidad-producto" value="${producto.cantidad}" min="1">
+                  </td>
+                  <td>
+                      <input type="number" step="0.01" class="form-control precio-producto" value="${producto.precio}" min="0">
+                  </td>
+                  <td class="subtotal">${subtotal}</td>
+                </tr>`;
+              tableBody.innerHTML += row;
+            });
+
+            // Calcular total inicial
+            calcularTotal();
+
+            // Mostrar info del presupuesto
+            $('#info_presupuesto').removeClass('d-none');
+
+            // Event listeners para recalcular subtotales
+            $('.cantidad-producto, .precio-producto').on('input', function() {
+              const row = $(this).closest('tr');
+              const cantidad = parseFloat(row.find('.cantidad-producto').val()) || 0;
+              const precio = parseFloat(row.find('.precio-producto').val()) || 0;
+              const subtotal = (cantidad * precio).toFixed(2);
+              row.find('.subtotal').text(subtotal);
+              calcularTotal();
+            });
+
+          } else {
+            Swal.fire('Error', 'No se encontraron detalles para este presupuesto.', 'error');
+          }
+        })
+        .catch(error => {
+          console.error('Error al cargar productos:', error);
+          Swal.fire('Error', 'Ocurrió un error al cargar los detalles del presupuesto.', 'error');
+        });
+    } else {
+      // Limpiar la tabla si no se seleccionó un presupuesto
+      document.getElementById('productos-table-body').innerHTML = `
+        <tr>
+            <td colspan="5" class="text-center text-muted">
+                Seleccione un presupuesto para cargar los productos
+            </td>
+        </tr>`;
+      $('#info_presupuesto').addClass('d-none');
+      $('#total_orden').text('0.00');
+    }
+  });
+
+  // Generar orden de compra
+  document.getElementById('btn_generar_orden').addEventListener('click', function () {
+    if (!validarFormulario()) {
+      return;
+    }
+
+    const productos = [];
+    const rows = document.querySelectorAll('#productos-table-body tr');
+
+    rows.forEach(row => {
+        const idProducto = Number(row.dataset.id); 
+        const cantidad = Number(row.querySelector('.cantidad-producto').value);  
+        const precio = Number(row.querySelector('.precio-producto').value);  
+
+        if (cantidad > 0 && precio >= 0) {
+            productos.push({
+                id_producto: idProducto,
+                cantidad: cantidad,
+                precio: precio
+            });
+        }
+    });
+
+    const payload = {
+      id_presupuesto: Number(document.getElementById('cbo_presupuesto').value),
+      id_empleado: Number(document.getElementById('cbo_empleado').value),
+      id_sucursal: Number(document.getElementById('cbo_sucursal').value),
+      fecha_orden: document.getElementById('txt_fecha_orden').value,
+      detalle_orden: productos
+    };
+
+    console.log('Payload enviado:', payload);
+
+    // Enviar la orden a la API
+    fetch(`/api/v1/gestionar-compras/registrar-orden-compra/ordenes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Error en la respuesta: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                title: 'Éxito',
+                text: 'Orden de compra generada correctamente.',
+                icon: 'success'
+            }).then(() => {
+                location.replace("{{ url_for('ocmod.ordenes_index') }}");
+            });
+        } else {
+            Swal.fire("Error", data.error || 'Error al generar la orden de compra.', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error al generar orden:', error);
+        Swal.fire("Error", 'Ocurrió un error al generar la orden de compra.', 'error');
+    });
+  });
+
+  // Cancelar y volver al índice
+  document.getElementById('btn_salir_operacion').addEventListener('click', function () {
+    location.replace("{{ url_for('ocmod.ordenes_index') }}");
+  });
+
+  // Establecer fecha actual por defecto
+  document.getElementById('txt_fecha_orden').valueAsDate = new Date();
+</script>
+{% endblock %}

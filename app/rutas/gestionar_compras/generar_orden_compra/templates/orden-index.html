@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+    
+{% block titulo %}
+Listar Órdenes de Compra
+{% endblock %}
+
+{% block contenido %}
+<div class="container mt-4">
+    <h3>Listar Órdenes de Compra</h3>
+
+    <!-- tarjeta -->
+    <div class="card">
+      <div class="card-header">
+        <a href="{{ url_for('ocmod.ordenes_gestion') }}" target="_blank" class="btn btn-primary">Agregar Orden</a>
+      </div>
+      <div class="card-body">
+        <table class="table table-striped" id="tbl">
+          <thead>
+            <tr>
+              <th>N° Orden</th>
+              <th>Presupuesto N°</th>
+              <th>Empleado</th>
+              <th>Proveedor</th>
+              <th>Estado</th>
+              <th>Fecha</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+      </table>
+      </div>
+    </div>
+    <!-- /tarjeta -->
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+
+  const initDatatable = () => {
+    $('#tbl').DataTable({
+      language: {
+        url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
+      },
+      ajax: '/api/v1/gestionar-compras/registrar-orden-compra/ordenes',
+      columns: [
+        { data: 'id_orden' },
+        { data: 'id_presupuesto' },
+        { data: 'empleado' },
+        { data: 'proveedor' },
+        { data: 'estado' },
+        { data: 'fecha_orden' },
+        { data: function(row) {
+            let btnAnular = '';
+            // Solo mostrar botón anular si no está cancelada
+            if (row.estado !== 'Cancelada') {
+              btnAnular = `<button type="button" name="btn_anular" class="btn btn-warning btn-sm" data-id="${row.id_orden}">Anular</button>`;
+            }
+            return `<button type="button" name="btn_ver" class="btn btn-info btn-sm" data-id="${row.id_orden}">Ver</button>
+                    ${btnAnular}`;
+          }
+        }
+      ]
+    });
+  }
+
+  const ver = () => {
+    $('#tbl').on('click', 'button[name="btn_ver"]', function() {
+      const idOrden = $(this).data('id');
+      
+      Swal.fire({
+        title: "Ver Orden de Compra",
+        html: `
+          <p>Funcionalidad de vista detallada de la orden N° ${idOrden}</p>
+          <p>Aquí podrías mostrar:</p>
+          <ul style="text-align: left;">
+            <li>Detalle de productos</li>
+            <li>Cantidades y precios</li>
+            <li>Total de la orden</li>
+          </ul>
+        `,
+        icon: "info"
+      });
+    });
+  };
+
+  const anular = () => {
+    $('#tbl').on('click', 'button[name="btn_anular"]', function() {
+      const idOrden = $(this).data('id');
+      
+      Swal.fire({
+        title: "¿Deseas anular esta orden?",
+        text: "La orden pasará a estado 'Cancelada'",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, anular",
+        cancelButtonText: "No"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/api/v1/gestionar-compras/registrar-orden-compra/ordenes/${idOrden}/anular`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+          .then(resp => resp.json())
+          .then(data => {
+            if (data && data.success) {
+              $('#tbl').DataTable().ajax.reload();
+              Swal.fire("Anulada", "La orden ha sido anulada correctamente.", "success");
+            } else {
+              Swal.fire("Error", data.error || "No se pudo anular la orden.", "error");
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            Swal.fire("Error", "Ocurrió un error al anular la orden.", "error");
+          });
+        }
+      });
+    });
+  };
+
+  const addEvents = () => {
+    ver();
+    anular();
+  }
+
+  $(function() {
+    initDatatable();
+    addEvents();
+  });
+</script>
+{% endblock %}
