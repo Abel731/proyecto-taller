@@ -15,6 +15,8 @@ class OrdenCompraDao:
             oc.id_estorden,
             eoc.descripcion AS estado,
             oc.fecha_orden,
+            oc.id_sucursal,
+            s.descripcion AS sucursal,
             pp.id_proveedor,
             prov.razon_social
         FROM
@@ -25,6 +27,8 @@ class OrdenCompraDao:
             ON p.id_persona = e.id_empleado
         LEFT JOIN estado_orden_compra eoc
             ON eoc.id_estorden = oc.id_estorden
+        LEFT JOIN sucursales s
+            ON s.id_sucursal = oc.id_sucursal
         LEFT JOIN presupuesto_prov pp
             ON pp.id_presupuesto = oc.id_presupuesto
         LEFT JOIN proveedores prov
@@ -47,8 +51,10 @@ class OrdenCompraDao:
                 'fecha_orden': (
                     orden[7].strftime("%Y-%m-%d") if isinstance(orden[7], datetime) else orden[7]
                 ),
-                'id_proveedor': orden[8],
-                'proveedor': orden[9]
+                'id_sucursal': orden[8],
+                'sucursal': orden[9],
+                'id_proveedor': orden[10],
+                'proveedor': orden[11]
             } for orden in ordenes]
 
         except Exception as e:
@@ -58,11 +64,11 @@ class OrdenCompraDao:
             cur.close()
             con.close()
 
-    def agregar(self, id_presupuesto, id_empleado, fecha_orden, detalle_orden):
+    def agregar(self, id_presupuesto, id_empleado, id_sucursal, fecha_orden, detalle_orden):
         insertOrdenCompraCabecera = """
         INSERT INTO public.orden_de_compra
-        (id_presupuesto, id_empleado, id_estorden, fecha_orden)
-        VALUES(%s, %s, %s, %s)
+        (id_presupuesto, id_empleado, id_sucursal, id_estorden, fecha_orden)
+        VALUES(%s, %s, %s, %s, %s)
         RETURNING id_orden
         """
 
@@ -78,7 +84,7 @@ class OrdenCompraDao:
         cur = con.cursor()
         try:
             # Insertando la cabecera (estado por defecto: 1 = Pendiente)
-            parametros = (id_presupuesto, id_empleado, 1, fecha_orden)
+            parametros = (id_presupuesto, id_empleado, id_sucursal, 1, fecha_orden)
             cur.execute(insertOrdenCompraCabecera, parametros)
             id_orden = cur.fetchone()[0]
 
@@ -161,6 +167,49 @@ class OrdenCompraDao:
         except Exception as e:
             app.logger.error(f"Error al obtener detalle del presupuesto {id_presupuesto}: {e}")
             return []
+        finally:
+            cur.close()
+            con.close()
+
+    def get_info_presupuesto(self, id_presupuesto):
+        """
+        Obtiene la información completa del presupuesto
+        (sucursal, proveedor, empleado) para mostrar en el formulario
+        """
+        query = """
+        SELECT
+            pp.id_sucursal,
+            s.descripcion AS sucursal,
+            pp.id_proveedor,
+            prov.razon_social AS proveedor,
+            pp.id_empleado,
+            CONCAT(p.nombres, ' ', p.apellidos) AS empleado
+        FROM presupuesto_prov pp
+        LEFT JOIN sucursales s ON s.id_sucursal = pp.id_sucursal
+        LEFT JOIN proveedores prov ON prov.id_proveedor = pp.id_proveedor
+        LEFT JOIN empleados e ON e.id_empleado = pp.id_empleado
+        LEFT JOIN personas p ON p.id_persona = e.id_empleado
+        WHERE pp.id_presupuesto = %s
+        """
+        conexion = Conexion()
+        con = conexion.getConexion()
+        cur = con.cursor()
+        try:
+            cur.execute(query, (id_presupuesto,))
+            info = cur.fetchone()
+            if info:
+                return {
+                    'id_sucursal': info[0],
+                    'sucursal': info[1],
+                    'id_proveedor': info[2],
+                    'proveedor': info[3],
+                    'id_empleado': info[4],
+                    'empleado': info[5]
+                }
+            return None
+        except Exception as e:
+            app.logger.error(f"Error al obtener info del presupuesto {id_presupuesto}: {e}")
+            return None
         finally:
             cur.close()
             con.close()
