@@ -16,25 +16,12 @@ Generar Orden de Compra
                 <div class="col-md-6 d-flex flex-column">
                   <!-- Combo empleados -->
                   <div class="form-group">
-                    <label for="cbo_empleado">Empleado:</label>
+                    <label for="cbo_empleado">Empleado que genera la orden:</label>
                     <select id="cbo_empleado" class="custom-select">
                       <option value="">Seleccione un empleado</option>
                       {% for item in empleados %}
                       <option value="{{ item['id_empleado'] }}">
                         {{ item['empleado'] }} - CI: {{ item['ci'] }}
-                      </option>
-                      {% endfor %}
-                    </select>
-                  </div>
-
-                  <!-- Combo sucursales -->
-                  <div class="form-group">
-                    <label for="cbo_sucursal">Sucursal:</label>
-                    <select id="cbo_sucursal" class="custom-select">
-                      <option value="">Seleccione una sucursal</option>
-                      {% for item in sucursales %}
-                      <option value="{{ item['id'] }}">
-                        {{ item['descripcion'] }}
                       </option>
                       {% endfor %}
                     </select>
@@ -65,8 +52,11 @@ Generar Orden de Compra
                   <!-- Información del presupuesto seleccionado -->
                   <div class="alert alert-info d-none" id="info_presupuesto">
                     <strong>Información del Presupuesto:</strong>
+                    <p class="mb-1"><strong>Sucursal:</strong> <span id="info_sucursal"></span></p>
                     <p class="mb-1"><strong>Proveedor:</strong> <span id="info_proveedor"></span></p>
-                    <p class="mb-0"><strong>Empleado:</strong> <span id="info_empleado"></span></p>
+                    <p class="mb-0"><strong>Solicitado por:</strong> <span id="info_empleado_presupuesto"></span></p>
+                    <!-- Campo oculto para guardar id_sucursal -->
+                    <input type="hidden" id="hidden_id_sucursal" value="">
                   </div>
                 </div>
             </div>
@@ -115,20 +105,20 @@ Generar Orden de Compra
   // Validaciones
   function validarFormulario() {
     const empleado = $('#cbo_empleado').val();
-    const sucursal = $('#cbo_sucursal').val();
     const presupuesto = $('#cbo_presupuesto').val();
     const fechaOrden = $('#txt_fecha_orden').val();
+    const sucursal = $('#hidden_id_sucursal').val();
 
     if (!empleado) {
       Swal.fire("Error", "Debe seleccionar un empleado", "error");
       return false;
     }
-    if (!sucursal) {
-      Swal.fire("Error", "Debe seleccionar una sucursal", "error");
-      return false;
-    }
     if (!presupuesto) {
       Swal.fire("Error", "Debe seleccionar un presupuesto", "error");
+      return false;
+    }
+    if (!sucursal) {
+      Swal.fire("Error", "No se pudo cargar la información del presupuesto", "error");
       return false;
     }
     if (!fechaOrden) {
@@ -155,12 +145,37 @@ Generar Orden de Compra
     $('#total_orden').text(total.toFixed(2));
   }
 
-  // Cargar productos del presupuesto seleccionado
+  // Cargar información y productos del presupuesto seleccionado
   document.getElementById('cbo_presupuesto').addEventListener('change', function () {
     const presupuestoId = this.value;
 
     if (presupuestoId) {
-      // Solicitar el detalle del presupuesto a la API
+      // PASO 1: Obtener información del presupuesto (sucursal, proveedor, empleado)
+      fetch(`/api/v1/gestionar-compras/registrar-orden-compra/info-presupuesto/${presupuestoId}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Error en la respuesta: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            // Mostrar información del presupuesto
+            $('#info_sucursal').text(data.data.sucursal);
+            $('#info_proveedor').text(data.data.proveedor);
+            $('#info_empleado_presupuesto').text(data.data.empleado);
+            $('#hidden_id_sucursal').val(data.data.id_sucursal);
+            $('#info_presupuesto').removeClass('d-none');
+          } else {
+            Swal.fire('Error', 'No se pudo cargar la información del presupuesto.', 'error');
+          }
+        })
+        .catch(error => {
+          console.error('Error al cargar info del presupuesto:', error);
+          Swal.fire('Error', 'Ocurrió un error al cargar la información del presupuesto.', 'error');
+        });
+
+      // PASO 2: Obtener productos del presupuesto
       fetch(`/api/v1/gestionar-compras/registrar-orden-compra/detalle-presupuesto/${presupuestoId}`)
         .then(response => {
           if (!response.ok) {
@@ -196,9 +211,6 @@ Generar Orden de Compra
             // Calcular total inicial
             calcularTotal();
 
-            // Mostrar info del presupuesto
-            $('#info_presupuesto').removeClass('d-none');
-
             // Event listeners para recalcular subtotales
             $('.cantidad-producto, .precio-producto').on('input', function() {
               const row = $(this).closest('tr');
@@ -210,15 +222,15 @@ Generar Orden de Compra
             });
 
           } else {
-            Swal.fire('Error', 'No se encontraron detalles para este presupuesto.', 'error');
+            Swal.fire('Error', 'No se encontraron productos para este presupuesto.', 'error');
           }
         })
         .catch(error => {
           console.error('Error al cargar productos:', error);
-          Swal.fire('Error', 'Ocurrió un error al cargar los detalles del presupuesto.', 'error');
+          Swal.fire('Error', 'Ocurrió un error al cargar los productos del presupuesto.', 'error');
         });
     } else {
-      // Limpiar la tabla si no se seleccionó un presupuesto
+      // Limpiar todo si no se seleccionó un presupuesto
       document.getElementById('productos-table-body').innerHTML = `
         <tr>
             <td colspan="5" class="text-center text-muted">
@@ -226,6 +238,7 @@ Generar Orden de Compra
             </td>
         </tr>`;
       $('#info_presupuesto').addClass('d-none');
+      $('#hidden_id_sucursal').val('');
       $('#total_orden').text('0.00');
     }
   });
@@ -256,7 +269,7 @@ Generar Orden de Compra
     const payload = {
       id_presupuesto: Number(document.getElementById('cbo_presupuesto').value),
       id_empleado: Number(document.getElementById('cbo_empleado').value),
-      id_sucursal: Number(document.getElementById('cbo_sucursal').value),
+      id_sucursal: Number(document.getElementById('hidden_id_sucursal').value),
       fecha_orden: document.getElementById('txt_fecha_orden').value,
       detalle_orden: productos
     };
