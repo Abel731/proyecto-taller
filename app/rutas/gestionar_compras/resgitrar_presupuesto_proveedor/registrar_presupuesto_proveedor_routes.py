@@ -19,7 +19,6 @@ def presupuestos_index():
 def presupuestos_agregar():
     sdao = SucursalDao()
     empdao = EmpleadoDao()
-    pdao = ProductoDao()
     provdao = ProveedorDao()
     pedidodao = PedidoDeComprasDao()
 
@@ -27,7 +26,6 @@ def presupuestos_agregar():
         'presupuestos-agregar.html',
         sucursales=sdao.get_sucursales(),
         empleados=empdao.get_empleados(),
-        productos=pdao.get_productos(),
         proveedores=provdao.get_proveedores(),
         pedidos=pedidodao.obtener_pedidos_por_fecha()
     )
