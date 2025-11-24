@@ -14,7 +14,10 @@ hashed_password = generate_password_hash(password, method='scrypt', salt_length=
 
 # Asegurarse de que el hash tenga 300 caracteres
 print(hashed_password[:300])
-# importar referenciales
+
+# ============================================================
+# IMPORTAR REFERENCIALES
+# ============================================================
 from app.rutas.referenciales.ciudad.ciudad_routes import ciumod
 from app.rutas.referenciales.pais.pais_routes import paismod
 from app.rutas.referenciales.nacionalidad.nacionalidad_routes import nacmod
@@ -35,14 +38,21 @@ from app.rutas.login.login_routes import login_bp
 
 app.register_blueprint(login_bp)
 
-# importar gestionar compras
+# ============================================================
+# IMPORTAR GESTIONAR COMPRAS (ROUTES)
+# ============================================================
 from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedidos_compras_routes \
     import pdcmod
 
 from app.rutas.gestionar_compras.registrar_presupuesto_proveedor.registrar_presupuesto_proveedor_routes \
     import pdpmod
 
-# registrar referenciales 
+from app.rutas.gestionar_compras.registrar_orden_compra.orden_compra_routes \
+    import ocmod
+
+# ============================================================
+# REGISTRAR REFERENCIALES 
+# ============================================================
 modulo0 = '/referenciales'
 app.register_blueprint(ciumod, url_prefix=f'{modulo0}/ciudad')
 app.register_blueprint(paismod, url_prefix=f'{modulo0}/pais')
@@ -61,13 +71,17 @@ app.register_blueprint(emismod, url_prefix=f'{modulo0}/emisora')
 app.register_blueprint(tipprodmod, url_prefix=f'{modulo0}/tipo_producto')
 
 
-# registro de modulos - gestionar compras
+# ============================================================
+# REGISTRAR MÓDULOS - GESTIONAR COMPRAS (ROUTES)
+# ============================================================
 modulo1 = '/gestionar-compras'
 app.register_blueprint(pdcmod, url_prefix=f'{modulo1}/registrar-pedido-compras')
-
 app.register_blueprint(pdpmod, url_prefix=f'{modulo1}/registrar-presupuesto-proveedor')
+app.register_blueprint(ocmod, url_prefix=f'{modulo1}/registrar-orden-compra')
 
-# importar APIS v1
+# ============================================================
+# IMPORTAR APIS v1 - REFERENCIALES
+# ============================================================
 from app.rutas.referenciales.ciudad.ciudad_api import ciuapi
 from app.rutas.referenciales.pais.pais_api import paiapi
 from app.rutas.referenciales.nacionalidad.nacionalidad_api import nacapi
@@ -84,13 +98,21 @@ from app.rutas.referenciales.marca.marca_api import marcaapi
 from app.rutas.referenciales.emisora.emisora_api import emisoraapi
 from app.rutas.referenciales.tipo_producto.tipo_producto_api import tipo_producto_api
 
+# ============================================================
+# IMPORTAR APIS v1 - GESTIONAR COMPRAS
+# ============================================================
 from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedido_compras_api \
     import pdcapi
 
 from app.rutas.gestionar_compras.registrar_presupuesto_proveedor.registrar_presupuesto_proveedor_api \
     import pdpapi
 
-# registrar APIS
+from app.rutas.gestionar_compras.generar_orden_compra.generar_orden_compra_api \
+    import ocapi
+
+# ============================================================
+# REGISTRAR APIS v1 - REFERENCIALES
+# ============================================================
 version1 = '/api/v1'
 app.register_blueprint(ciuapi, url_prefix=version1)
 app.register_blueprint(paiapi, url_prefix=version1)
@@ -109,7 +131,9 @@ app.register_blueprint(emisoraapi, url_prefix=version1)
 app.register_blueprint(tipo_producto_api, url_prefix=version1)
 
 
-# Gestionar compras API
+# ============================================================
+# REGISTRAR APIS v1 - GESTIONAR COMPRAS
+# ============================================================
 app.register_blueprint(pdcapi, url_prefix=f'{version1}/{modulo1}/registrar-pedido-compras')
-
 app.register_blueprint(pdpapi, url_prefix=f'{version1}/{modulo1}/registrar-presupuesto-proveedor')
+app.register_blueprint(ocapi, url_prefix=f'{version1}/{modulo1}/generar-orden-compra')

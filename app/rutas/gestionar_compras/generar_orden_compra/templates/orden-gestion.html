@@ -168,7 +168,7 @@ Generar Orden de Compra
 
     if (presupuestoId) {
       // PASO 1: Obtener información del presupuesto (sucursal, proveedor, empleado)
-      fetch(`/api/v1/gestionar-compras/registrar-orden-compra/info-presupuesto/${presupuestoId}`)
+      fetch(`/api/v1/gestionar-compras/generar-orden-compra/info-presupuesto/${presupuestoId}`)
         .then(response => {
           if (!response.ok) {
             throw new Error(`Error en la respuesta: ${response.status}`);
@@ -193,7 +193,7 @@ Generar Orden de Compra
         });
 
       // PASO 2: Obtener productos del presupuesto
-      fetch(`/api/v1/gestionar-compras/registrar-orden-compra/detalle-presupuesto/${presupuestoId}`)
+      fetch(`/api/v1/gestionar-compras/generar-orden-compra/detalle-presupuesto/${presupuestoId}`)
         .then(response => {
           if (!response.ok) {
             throw new Error(`Error en la respuesta: ${response.status}`);
@@ -297,7 +297,7 @@ Generar Orden de Compra
     console.log('Payload enviado:', payload);
 
     // Enviar la orden a la API
-    fetch(`/api/v1/gestionar-compras/registrar-orden-compra/ordenes`, {
+    fetch(`/api/v1/gestionar-compras/generar-orden-compra/ordenes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

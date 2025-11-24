@@ -42,7 +42,7 @@ Listar Órdenes de Compra
       language: {
         url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
       },
-      ajax: '/api/v1/gestionar-compras/registrar-orden-compra/ordenes',
+      ajax: '/api/v1/gestionar-compras/generar-orden-compra/ordenes',
       columns: [
         { data: 'id_orden' },
         { data: 'id_presupuesto' },
