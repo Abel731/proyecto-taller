@@ -65,24 +65,16 @@ Listar Órdenes de Compra
   }
 
   const ver = () => {
-    $('#tbl').on('click', 'button[name="btn_ver"]', function() {
-      const idOrden = $(this).data('id');
-      
-      Swal.fire({
-        title: "Ver Orden de Compra",
-        html: `
-          <p>Funcionalidad de vista detallada de la orden N° ${idOrden}</p>
-          <p>Aquí podrías mostrar:</p>
-          <ul style="text-align: left;">
-            <li>Detalle de productos</li>
-            <li>Cantidades y precios</li>
-            <li>Total de la orden</li>
-          </ul>
-        `,
-        icon: "info"
-      });
-    });
-  };
+  $('#tbl').on('click', 'button[name="btn_ver"]', function() {
+    const idOrden = $(this).data('id');
+    
+    // Abrir en nueva ventana
+    window.open(
+      `/gestionar-compras/generar-orden-compra/ordenes-ver/${idOrden}`,
+      '_blank'
+    );
+  });
+};
 
   const anular = () => {
     $('#tbl').on('click', 'button[name="btn_anular"]', function() {
@@ -97,7 +89,7 @@ Listar Órdenes de Compra
         cancelButtonText: "No"
       }).then((result) => {
         if (result.isConfirmed) {
-          fetch(`/api/v1/gestionar-compras/registrar-orden-compra/ordenes/${idOrden}/anular`, {
+          fetch(`/api/v1/gestionar-compras/generar-orden-compra/ordenes/${idOrden}/anular`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json'

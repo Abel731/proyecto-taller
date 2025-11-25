@@ -184,3 +184,110 @@ def anular_orden(id_orden):
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
+    
+# Obtener una orden específica por ID
+@ocapi.route('/ordenes/<int:id_orden>', methods=['GET'])
+def get_orden_by_id(id_orden):
+    dao = OrdenCompraDao()
+    
+    try:
+        orden = dao.get_orden_por_id(id_orden)
+        
+        if orden:
+            return jsonify({
+                'success': True,
+                'data': orden,
+                'error': None
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'No se encontró la orden N° {id_orden}.'
+            }), 404
+
+    except Exception as e:
+        app.logger.error(f"Error al obtener orden {id_orden}: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Ocurrió un error interno. Consulte con el administrador.'
+        }), 500
+
+# Actualizar estado de una orden
+@ocapi.route('/ordenes/<int:id_orden>/estado', methods=['PUT'])
+def actualizar_estado_orden(id_orden):
+    dao = OrdenCompraDao()
+    data = request.get_json()
+
+    # Validar que venga el campo estado
+    if 'estado' not in data or data['estado'] is None:
+        return jsonify({
+            'success': False,
+            'error': 'El campo estado es obligatorio.'
+        }), 400
+
+    try:
+        estado = data['estado']
+
+        # Verificar que el estado es válido
+        if estado not in ESTADOS_ORDEN:
+            return jsonify({
+                'success': False,
+                'error': f'El estado "{estado}" no es válido. Estados permitidos: {list(ESTADOS_ORDEN.keys())}'
+            }), 400
+
+        # Obtener la orden actual para validar transiciones
+        orden_actual = dao.get_orden_por_id(id_orden)
+        
+        if not orden_actual:
+            return jsonify({
+                'success': False,
+                'error': f'No se encontró la orden N° {id_orden}.'
+            }), 404
+
+        # Validar transiciones de estado
+        estado_actual = orden_actual['estado'].lower()
+        estado_nuevo = estado.lower()
+
+        # Reglas de transición
+        transiciones_validas = {
+            'pendiente': ['aprobada', 'cancelada'],
+            'aprobada': ['procesada', 'cancelada'],
+            'procesada': [],  # No puede cambiar
+            'cancelada': []   # No puede cambiar
+        }
+
+        if estado_nuevo not in transiciones_validas.get(estado_actual, []):
+            estados_permitidos = transiciones_validas.get(estado_actual, [])
+            if not estados_permitidos:
+                return jsonify({
+                    'success': False,
+                    'error': f'Una orden en estado "{orden_actual["estado"]}" no puede cambiar de estado.'
+                }), 400
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': f'No se puede cambiar de "{orden_actual["estado"]}" a "{estado.capitalize()}". Estados permitidos: {[e.capitalize() for e in estados_permitidos]}'
+                }), 400
+
+        # Actualizar el estado
+        id_estorden_nuevo = ESTADOS_ORDEN[estado]
+        resultado = dao.actualizar_estado(id_orden, id_estorden_nuevo)
+
+        if resultado:
+            return jsonify({
+                'success': True,
+                'mensaje': f'Estado de la orden N° {id_orden} actualizado a "{estado.capitalize()}".',
+                'error': None
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'No se pudo actualizar el estado de la orden.'
+            }), 500
+
+    except Exception as e:
+        app.logger.error(f"Error al actualizar estado de orden {id_orden}: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Ocurrió un error interno. Consulte con el administrador.'
+        }), 500    

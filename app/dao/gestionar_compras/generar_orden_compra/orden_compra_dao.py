@@ -213,3 +213,131 @@ class OrdenCompraDao:
         finally:
             cur.close()
             con.close()
+
+    def get_orden_por_id(self, id_orden):
+        """
+        Obtiene una orden completa con:
+        - Datos de la cabecera (presupuesto, empleado, sucursal, estado, fecha)
+        - Detalle de productos (id, nombre, cantidad, precio)
+        - Información del proveedor
+        """
+        query_cabecera = """
+        SELECT
+            oc.id_orden,
+            oc.id_presupuesto,
+            oc.id_empleado,
+            CONCAT(p.nombres, ' ', p.apellidos) AS empleado,
+            oc.id_sucursal,
+            s.descripcion AS sucursal,
+            oc.id_estorden,
+            eoc.descripcion AS estado,
+            oc.fecha_orden,
+            pp.id_proveedor,
+            prov.razon_social AS proveedor
+        FROM
+            public.orden_de_compra oc
+        LEFT JOIN empleados e
+            ON e.id_empleado = oc.id_empleado
+        LEFT JOIN personas p
+            ON p.id_persona = e.id_empleado
+        LEFT JOIN sucursales s
+            ON s.id_sucursal = oc.id_sucursal
+        LEFT JOIN estado_orden_compra eoc
+            ON eoc.id_estorden = oc.id_estorden
+        LEFT JOIN presupuesto_prov pp
+            ON pp.id_presupuesto = oc.id_presupuesto
+        LEFT JOIN proveedores prov
+            ON prov.id_proveedor = pp.id_proveedor
+        WHERE oc.id_orden = %s
+        """
+
+        query_detalle = """
+        SELECT
+            ocd.id_producto,
+            pro.nombre,
+            ocd.cantidad,
+            ocd.precio
+        FROM orden_de_compra_detalle ocd
+        LEFT JOIN productos pro ON pro.id_producto = ocd.id_producto
+        WHERE ocd.id_orden = %s
+        """
+
+        conexion = Conexion()
+        con = conexion.getConexion()
+        cur = con.cursor()
+        try:
+            # Obtener cabecera
+            cur.execute(query_cabecera, (id_orden,))
+            cabecera = cur.fetchone()
+            
+            if not cabecera:
+                
+                return None
+
+            # Obtener detalle
+            cur.execute(query_detalle, (id_orden,))
+            detalle = cur.fetchall()
+
+            # Estructurar respuesta
+            orden_completa = {
+                'id_orden': cabecera[0],
+                'id_presupuesto': cabecera[1],
+                'id_empleado': cabecera[2],
+                'empleado': cabecera[3],
+                'id_sucursal': cabecera[4],
+                'sucursal': cabecera[5],
+                'id_estorden': cabecera[6],
+                'estado': cabecera[7],
+                'fecha_orden': (
+                    cabecera[8].strftime("%Y-%m-%d") if isinstance(cabecera[8], datetime) else cabecera[8]
+                ),
+                'id_proveedor': cabecera[9],
+                'proveedor': cabecera[10],
+                'detalle': [
+                    {
+                        'id_producto': prod[0],
+                        'nombre': prod[1],
+                        'cantidad': prod[2],
+                        'precio': float(prod[3]) if prod[3] else 0
+                    }
+                    for prod in detalle
+                ]
+            }
+
+            return orden_completa
+
+        except Exception as e:
+                app.logger.error(f"Error al obtener orden {id_orden}: {str(e)}")
+                return None
+        finally:
+            cur.close()
+            con.close()
+
+    def actualizar_estado(self, id_orden, id_estorden):
+        """
+            Actualiza el estado de una orden de compra
+        """
+        updateEstado = """
+        UPDATE public.orden_de_compra
+        SET id_estorden = %s
+        WHERE id_orden = %s
+        """
+    
+        conexion = Conexion()
+        con = conexion.getConexion()
+        cur = con.cursor()
+        try:
+            cur.execute(updateEstado, (id_estorden, id_orden))
+            con.commit()
+            
+            if cur.rowcount > 0:
+                return True
+            return False
+        
+        except Exception as e:
+            app.logger.error(f"Error al actualizar estado de orden {id_orden}: {str(e)}")
+            con.rollback()
+            return False
+        finally:
+            cur.close()
+            con.close()            

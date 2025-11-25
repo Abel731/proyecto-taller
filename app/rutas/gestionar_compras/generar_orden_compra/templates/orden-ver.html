@@ -1,0 +1,338 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Ver/Editar Orden de Compra N° {{ orden.id_orden }}
+{% endblock %}
+
+{% block css %}
+<style>
+    /* Estilos para estados de orden de compra */
+    .estado-pendiente {
+        background-color: #fff3cd !important;
+        color: #856404 !important;
+    }
+    
+    .estado-aprobada {
+        background-color: #d1ecf1 !important;
+        color: #0c5460 !important;
+    }
+    
+    .estado-procesada {
+        background-color: #d4edda !important;
+        color: #155724 !important;
+    }
+    
+    .estado-cancelada {
+        background-color: #f8d7da !important;
+        color: #721c24 !important;
+    }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <!-- Título de la página -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Ver/Editar Orden de Compra N° {{ orden.id_orden }}</h1>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Detalles de la Orden</h6>
+                </div>
+                <div class="card-body">
+                    <!-- Información General (Readonly) -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h5 class="border-bottom pb-2 text-primary">Información General</h5>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Columna izquierda -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label><strong>Presupuesto N°:</strong></label>
+                                <input type="text" class="form-control" value="{{ orden.id_presupuesto }}" readonly>
+                            </div>
+
+                            <div class="form-group">
+                                <label><strong>Proveedor:</strong></label>
+                                <input type="text" class="form-control" value="{{ orden.proveedor }}" readonly>
+                            </div>
+
+                            <div class="form-group">
+                                <label><strong>Sucursal:</strong></label>
+                                <input type="text" class="form-control" value="{{ orden.sucursal }}" readonly>
+                            </div>
+                        </div>
+
+                        <!-- Columna derecha -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label><strong>Empleado que generó:</strong></label>
+                                <input type="text" class="form-control" value="{{ orden.empleado }}" readonly>
+                            </div>
+
+                            <div class="form-group">
+                                <label><strong>Fecha de Orden:</strong></label>
+                                <input type="date" class="form-control" value="{{ orden.fecha_orden }}" readonly>
+                            </div>
+
+                            <div class="form-group">
+                                <label><strong>Estado Actual:</strong></label>
+                                <input type="text" class="form-control font-weight-bold estado-{{ orden.estado|lower }}" 
+                                       value="{{ orden.estado }}" 
+                                       id="estado_actual_display" 
+                                       readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Cambiar Estado -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h5 class="border-bottom pb-2 text-primary">Cambiar Estado de la Orden</h5>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <!-- Mostrar opciones según estado actual -->
+                            {% if orden.estado == 'Pendiente' %}
+                            <div class="alert alert-warning" role="alert">
+                                <strong><i class="fas fa-exclamation-triangle"></i> Estado actual: Pendiente</strong><br>
+                                Puede cambiar a: <strong>Aprobada</strong> o <strong>Cancelada</strong>
+                            </div>
+                            <div class="form-group">
+                                <label>Seleccione el nuevo estado:</label><br>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="nuevo_estado" id="estado_aprobada" value="aprobada">
+                                    <label class="form-check-label" for="estado_aprobada">
+                                        <i class="fas fa-check-circle text-info"></i> Aprobada
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="nuevo_estado" id="estado_cancelada_1" value="cancelada">
+                                    <label class="form-check-label" for="estado_cancelada_1">
+                                        <i class="fas fa-times-circle text-danger"></i> Cancelada
+                                    </label>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary btn-icon-split" id="btn_actualizar_estado">
+                                <span class="icon text-white-50">
+                                    <i class="fas fa-sync-alt"></i>
+                                </span>
+                                <span class="text">Actualizar Estado</span>
+                            </button>
+
+                            {% elif orden.estado == 'Aprobada' %}
+                            <div class="alert alert-info" role="alert">
+                                <strong><i class="fas fa-info-circle"></i> Estado actual: Aprobada</strong><br>
+                                Puede cambiar a: <strong>Procesada</strong> o <strong>Cancelada</strong>
+                            </div>
+                            <div class="form-group">
+                                <label>Seleccione el nuevo estado:</label><br>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="nuevo_estado" id="estado_procesada" value="procesada">
+                                    <label class="form-check-label" for="estado_procesada">
+                                        <i class="fas fa-check-double text-success"></i> Procesada
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="nuevo_estado" id="estado_cancelada_2" value="cancelada">
+                                    <label class="form-check-label" for="estado_cancelada_2">
+                                        <i class="fas fa-times-circle text-danger"></i> Cancelada
+                                    </label>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary btn-icon-split" id="btn_actualizar_estado">
+                                <span class="icon text-white-50">
+                                    <i class="fas fa-sync-alt"></i>
+                                </span>
+                                <span class="text">Actualizar Estado</span>
+                            </button>
+
+                            {% elif orden.estado == 'Procesada' %}
+                            <div class="alert alert-success" role="alert">
+                                <strong><i class="fas fa-check-circle"></i> Estado actual: Procesada</strong><br>
+                                Esta orden ya está finalizada y no puede cambiar de estado.
+                            </div>
+
+                            {% elif orden.estado == 'Cancelada' %}
+                            <div class="alert alert-danger" role="alert">
+                                <strong><i class="fas fa-ban"></i> Estado actual: Cancelada</strong><br>
+                                Esta orden está anulada y no puede cambiar de estado.
+                            </div>
+
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Detalle de Productos (Readonly) -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h5 class="border-bottom pb-2 text-primary">Detalle de Productos</h5>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover" id="tabla_productos">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th width="10%">ID</th>
+                                            <th width="40%">Producto</th>
+                                            <th width="15%" class="text-center">Cantidad</th>
+                                            <th width="17%" class="text-right">Precio Unitario</th>
+                                            <th width="18%" class="text-right">Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% set total = 0 %}
+                                        {% for item in orden.detalle %}
+                                        {% set subtotal = item.cantidad * item.precio %}
+                                        {% set total = total + subtotal %}
+                                        <tr>
+                                            <td>{{ item.id_producto }}</td>
+                                            <td>{{ item.nombre }}</td>
+                                            <td class="text-center">{{ item.cantidad }}</td>
+                                            <td class="text-right">{{ "{:,.2f}".format(item.precio) }}</td>
+                                            <td class="text-right">{{ "{:,.2f}".format(subtotal) }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-info">
+                                            <td colspan="4" class="text-right"><strong>TOTAL:</strong></td>
+                                            <td class="text-right"><strong>{{ "{:,.2f}".format(total) }}</strong></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <button type="button" class="btn btn-secondary btn-icon-split" id="btn_volver">
+                        <span class="icon text-white-50">
+                            <i class="fas fa-arrow-left"></i>
+                        </span>
+                        <span class="text">Volver al Listado</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Campo oculto para guardar el ID de la orden -->
+<input type="hidden" id="hidden_id_orden" value="{{ orden.id_orden }}">
+{% endblock %}
+
+{% block js %}
+<script>
+    // Actualizar estado de la orden
+    const btnActualizarEstado = document.getElementById('btn_actualizar_estado');
+    
+    if (btnActualizarEstado) {
+        btnActualizarEstado.addEventListener('click', function() {
+            const idOrden = document.getElementById('hidden_id_orden').value;
+            const nuevoEstado = document.querySelector('input[name="nuevo_estado"]:checked');
+
+            if (!nuevoEstado) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Debe seleccionar un nuevo estado'
+                });
+                return;
+            }
+
+            // Confirmar cambio de estado
+            Swal.fire({
+                title: '¿Confirmar cambio de estado?',
+                html: `La orden N° <strong>${idOrden}</strong> cambiará a estado <strong>"${nuevoEstado.value.charAt(0).toUpperCase() + nuevoEstado.value.slice(1)}"</strong>`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#4e73df',
+                cancelButtonColor: '#858796',
+                confirmButtonText: '<i class="fas fa-check"></i> Sí, actualizar',
+                cancelButtonText: '<i class="fas fa-times"></i> Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Mostrar loading
+                    Swal.fire({
+                        title: 'Actualizando...',
+                        text: 'Por favor espere',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Enviar actualización al servidor
+                    fetch(`/api/v1/gestionar-compras/generar-orden-compra/ordenes/${idOrden}/estado`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            estado: nuevoEstado.value
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Actualizado!',
+                                text: data.mensaje || 'Estado actualizado correctamente',
+                                confirmButtonColor: '#1cc88a'
+                            }).then(() => {
+                                // Recargar la página para mostrar el nuevo estado
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.error || 'No se pudo actualizar el estado',
+                                confirmButtonColor: '#e74a3b'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error de conexión',
+                            text: 'Ocurrió un error al actualizar el estado',
+                            confirmButtonColor: '#e74a3b'
+                        });
+                    });
+                }
+            });
+        });
+    }
+
+    // Volver al listado
+    document.getElementById('btn_volver').addEventListener('click', function() {
+        // Intentar cerrar la ventana si se abrió con window.open
+        window.close();
+        
+        // Si no se cierra (no se abrió con window.open), navegar
+        setTimeout(() => {
+            location.replace("{{ url_for('ocmod.ordenes_index') }}");
+        }, 100);
+    });
+</script>
+{% endblock %}

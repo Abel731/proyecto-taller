@@ -77,7 +77,7 @@ app.register_blueprint(tipprodmod, url_prefix=f'{modulo0}/tipo_producto')
 modulo1 = '/gestionar-compras'
 app.register_blueprint(pdcmod, url_prefix=f'{modulo1}/registrar-pedido-compras')
 app.register_blueprint(pdpmod, url_prefix=f'{modulo1}/registrar-presupuesto-proveedor')
-app.register_blueprint(ocmod, url_prefix=f'{modulo1}/registrar-orden-compra')
+app.register_blueprint(ocmod, url_prefix=f'{modulo1}/generar-orden-compra')
 
 # ============================================================
 # IMPORTAR APIS v1 - REFERENCIALES

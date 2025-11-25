@@ -22,3 +22,26 @@ def ordenes_gestion():
         empleados=empdao.get_empleados(),
         presupuestos=presupuestos_aprobados
     )
+
+@ocmod.route('/ordenes-ver/<int:id_orden>')
+def ordenes_ver(id_orden):
+    """
+    Renderiza el formulario para ver/editar una orden existente
+    """
+    from app.dao.gestionar_compras.generar_orden_compra.orden_compra_dao import OrdenCompraDao
+    
+    ocdao = OrdenCompraDao()
+    
+    # Obtener la orden completa
+    orden = ocdao.get_orden_por_id(id_orden)
+    
+    if not orden:
+        # Si no existe la orden, redirigir al index con mensaje de error
+        from flask import flash, redirect, url_for
+        flash(f'No se encontró la orden N° {id_orden}', 'error')
+        return redirect(url_for('ocmod.ordenes_index'))
+    
+    return render_template(
+        'orden-ver.html',
+        orden=orden
+    )
