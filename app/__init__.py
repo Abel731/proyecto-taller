@@ -50,6 +50,9 @@ from app.rutas.gestionar_compras.registrar_presupuesto_proveedor.registrar_presu
 from app.rutas.gestionar_compras.generar_orden_compra.generar_orden_compra_routes \
     import ocmod
 
+from app.rutas.gestionar_compras.gestionar_la_compra.gestionar_la_compra_routes import compramod
+
+
 # ============================================================
 # REGISTRAR REFERENCIALES 
 # ============================================================
@@ -78,6 +81,8 @@ modulo1 = '/gestionar-compras'
 app.register_blueprint(pdcmod, url_prefix=f'{modulo1}/registrar-pedido-compras')
 app.register_blueprint(pdpmod, url_prefix=f'{modulo1}/registrar-presupuesto-proveedor')
 app.register_blueprint(ocmod, url_prefix=f'{modulo1}/generar-orden-compra')
+app.register_blueprint(compramod, url_prefix=f'{modulo1}/gestionar-compra')
+
 
 # ============================================================
 # IMPORTAR APIS v1 - REFERENCIALES
@@ -110,6 +115,7 @@ from app.rutas.gestionar_compras.registrar_presupuesto_proveedor.registrar_presu
 from app.rutas.gestionar_compras.generar_orden_compra.generar_orden_compra_api \
     import ocapi
 
+from app.rutas.gestionar_compras.gestionar_la_compra.gestionar_la_compra_api import compraapi
 # ============================================================
 # REGISTRAR APIS v1 - REFERENCIALES
 # ============================================================
@@ -137,3 +143,4 @@ app.register_blueprint(tipo_producto_api, url_prefix=version1)
 app.register_blueprint(pdcapi, url_prefix=f'{version1}/{modulo1}/registrar-pedido-compras')
 app.register_blueprint(pdpapi, url_prefix=f'{version1}/{modulo1}/registrar-presupuesto-proveedor')
 app.register_blueprint(ocapi, url_prefix=f'{version1}/{modulo1}/generar-orden-compra')
+app.register_blueprint(compraapi, url_prefix=f'{version1}{modulo1}/gestionar-compra')
