@@ -109,7 +109,12 @@ Formulario Pedido de Compras
         </div>
         <div class="card-footer">
             <button type="button" class="btn btn-primary" id="btn_registrar_pedido">Registrar pedido</button>
-            <button type="button" class="btn btn-warning" id="btn_salir_operacion">Salir de la operación</button>
+            <button type="button" class="btn btn-secondary btn-icon-split" id="btn_volver">
+        <span class="icon text-white-50">
+            <i class="fas fa-arrow-left"></i>
+        </span>
+        <span class="text">Volver al Listado</span>
+    </button>
         </div>
     </div>
 </div>
@@ -264,10 +269,16 @@ Formulario Pedido de Compras
       });
     });
 
-    // Regresa al index de pedidos
-    $('#btn_salir_operacion').on('click', function() {
-      location.replace("{{ url_for('pdcmod.pedidos_index') }}");
-    });
+    // Botón volver al listado de pedidos
+    document.getElementById('btn_volver').addEventListener('click', function() {
+    // Si se abrió con window.open, cerrar la ventana
+    window.close();
+    
+    // Si no se cierra, navegar a la página de listado
+    setTimeout(() => {
+        window.location.href = "{{ url_for('pdcmod.pedidos_index') }}";
+    }, 100);
+});
   }
   $(function() {
     addEvents();

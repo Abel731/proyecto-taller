@@ -167,7 +167,7 @@ Generar Orden de Compra
     const presupuestoId = this.value;
 
     if (presupuestoId) {
-      // PASO 1: Obtener información del presupuesto (sucursal, proveedor, empleado)
+      //  Obtener información del presupuesto (sucursal, proveedor, empleado)
       fetch(`/api/v1/gestionar-compras/generar-orden-compra/info-presupuesto/${presupuestoId}`)
         .then(response => {
           if (!response.ok) {
@@ -192,7 +192,7 @@ Generar Orden de Compra
           Swal.fire('Error', 'Ocurrió un error al cargar la información del presupuesto.', 'error');
         });
 
-      // PASO 2: Obtener productos del presupuesto
+      // Obtener productos del presupuesto
       fetch(`/api/v1/gestionar-compras/generar-orden-compra/detalle-presupuesto/${presupuestoId}`)
         .then(response => {
           if (!response.ok) {
