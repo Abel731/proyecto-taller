@@ -1,0 +1,613 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Registrar Compra
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-primary text-white">
+            <h6 class="m-0 font-weight-bold">Registrar Compra con Factura Legal</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- ========== COLUMNA IZQUIERDA ========== -->
+                <div class="col-md-6">
+                    <!-- Orden de Compra -->
+                    <div class="form-group">
+                        <label for="cbo_orden">Orden de Compra Aprobada: <span class="text-danger">*</span></label>
+                        <select id="cbo_orden" class="form-control">
+                            <option value="">Seleccione una orden...</option>
+                        </select>
+                    </div>
+
+                    <!-- Información de la Orden (oculto inicialmente) -->
+                    <div class="alert alert-info d-none" id="info_orden">
+                        <strong>Información de la Orden:</strong>
+                        <p class="mb-1"><strong>Proveedor:</strong> <span id="info_proveedor"></span></p>
+                        <p class="mb-1"><strong>Sucursal:</strong> <span id="info_sucursal"></span></p>
+                        <input type="hidden" id="hidden_id_proveedor">
+                        <input type="hidden" id="hidden_id_sucursal">
+                    </div>
+
+                    <!-- Depósito -->
+                    <div class="form-group">
+                        <label for="cbo_deposito">Depósito: <span class="text-danger">*</span></label>
+                        <select id="cbo_deposito" class="form-control" disabled>
+                            <option value="">Primero seleccione una orden...</option>
+                        </select>
+                    </div>
+
+                    <!-- Empleado que registra -->
+                    <div class="form-group">
+                        <label for="cbo_empleado">Empleado que registra: <span class="text-danger">*</span></label>
+                        <select id="cbo_empleado" class="form-control">
+                            <option value="">Seleccione un empleado...</option>
+                            {% for emp in empleados %}
+                            <option value="{{ emp['id_empleado'] }}">
+                                {{ emp['empleado'] }} - CI: {{ emp['ci'] }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Fecha de Compra -->
+                    <div class="form-group">
+                        <label for="txt_fecha_compra">Fecha de Compra: <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="txt_fecha_compra">
+                    </div>
+                </div>
+
+                <!-- ========== COLUMNA DERECHA ========== -->
+                <div class="col-md-6">
+                    <!-- Número de Factura -->
+                    <div class="form-group">
+                        <label for="txt_nro_factura">N° de Factura: <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="txt_nro_factura" 
+                               placeholder="001-001-0000001" maxlength="15">
+                        <small class="form-text text-muted">Formato: XXX-XXX-XXXXXXX</small>
+                    </div>
+
+                    <!-- Timbrado -->
+                    <div class="form-group">
+                        <label for="txt_timbrado">Timbrado: <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="txt_timbrado" 
+                               placeholder="12345678" maxlength="8">
+                        <small class="form-text text-muted">8 dígitos emitidos por DNIT</small>
+                    </div>
+
+                    <!-- Fecha de Vencimiento del Timbrado -->
+                    <div class="form-group">
+                        <label for="txt_fecha_vencimiento_timbrado">Vencimiento del Timbrado: <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="txt_fecha_vencimiento_timbrado">
+                    </div>
+
+                    <!-- Tipo de Factura -->
+                    <div class="form-group">
+                        <label>Tipo de Pago: <span class="text-danger">*</span></label><br>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="tipo_factura" 
+                                   id="tipo_contado" value="1" checked>
+                            <label class="form-check-label" for="tipo_contado">Contado</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="tipo_factura" 
+                                   id="tipo_credito" value="2">
+                            <label class="form-check-label" for="tipo_credito">Crédito</label>
+                        </div>
+                    </div>
+
+                    <!-- Campos adicionales para Crédito (ocultos inicialmente) -->
+                    <div id="campos_credito" class="d-none">
+                        <div class="form-group">
+                            <label for="txt_cantidad_cuotas">Cantidad de Cuotas:</label>
+                            <input type="number" class="form-control" id="txt_cantidad_cuotas" 
+                                   min="1" value="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="txt_fecha_vencimiento">Fecha de Vencimiento:</label>
+                            <input type="date" class="form-control" id="txt_fecha_vencimiento">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+
+            <!-- ========== DETALLE DE PRODUCTOS ========== -->
+            <h5>Detalle de Productos</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unit.</th>
+                            <th>IVA</th>
+                            <th>Subtotal</th>
+                            <th>IVA Gs.</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productos_table_body">
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">
+                                Seleccione una orden para cargar los productos
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-info">
+                            <td colspan="5" class="text-right"><strong>SUBTOTAL:</strong></td>
+                            <td><strong id="total_subtotal">0.00</strong></td>
+                            <td><strong id="total_iva">0.00</strong></td>
+                            <td><strong id="total_general">0.00</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Observaciones -->
+            <div class="form-group">
+                <label for="txt_observacion">Observaciones:</label>
+                <textarea class="form-control" id="txt_observacion" rows="2" 
+                          placeholder="Observaciones adicionales (opcional)"></textarea>
+            </div>
+        </div>
+
+        <!-- ========== FOOTER CON BOTONES ========== -->
+        <div class="card-footer">
+            <button type="button" class="btn btn-success btn-icon-split" id="btn_registrar">
+                <span class="icon text-white-50">
+                    <i class="fas fa-save"></i>
+                </span>
+                <span class="text">Registrar Compra</span>
+            </button>
+            <button type="button" class="btn btn-secondary btn-icon-split" id="btn_volver">
+                <span class="icon text-white-50">
+                    <i class="fas fa-arrow-left"></i>
+                </span>
+                <span class="text">Volver al Listado</span>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    // Variables globales
+    let productosCompra = [];
+    const impuestos = JSON.parse('{{ impuestos_json|safe }}');
+
+    $(document).ready(function() {
+        cargarOrdenesDisponibles();
+        establecerFechaActual();
+        eventosCambioDatos();
+        eventoRegistrar();
+        eventoVolver();
+    });
+
+ 
+    function cargarOrdenesDisponibles() {
+        fetch('/api/v1/gestionar-compras/gestionar-compra/ordenes-disponibles')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const select = $('#cbo_orden');
+                    data.data.forEach(orden => {
+                        select.append(`
+                            <option value="${orden.id_orden}">
+                                Orden N° ${orden.id_orden} - ${orden.proveedor} - ${orden.fecha_orden}
+                            </option>
+                        `);
+                    });
+                } else {
+                    Swal.fire('Error', 'No se pudieron cargar las órdenes', 'error');
+                }
+            })
+            .catch(error => {
+                Swal.fire('Error', 'Error al cargar órdenes', 'error');
+            });
+    }
+
+
+    $('#cbo_orden').on('change', function() {
+        const idOrden = $(this).val();
+
+        if (idOrden) {
+            // Cargar detalle de la orden
+            fetch(`/api/v1/gestionar-compras/gestionar-compra/orden-detalle/${idOrden}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const orden = data.data;
+
+                        // Mostrar info de la orden
+                        $('#info_proveedor').text(orden.proveedor);
+                        $('#info_sucursal').text(orden.sucursal);
+                        $('#hidden_id_proveedor').val(orden.id_proveedor);
+                        $('#hidden_id_sucursal').val(orden.id_sucursal);
+                        $('#info_orden').removeClass('d-none');
+
+                        // Cargar depósitos de la sucursal
+                        cargarDepositos(orden.id_sucursal);
+
+                        // Cargar productos en la tabla
+                        cargarProductos(orden.productos);
+                    } else {
+                        Swal.fire('Error', data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire('Error', 'Error al cargar detalle de orden', 'error');
+                });
+        } else {
+            // Limpiar todo
+            $('#info_orden').addClass('d-none');
+            $('#cbo_deposito').html('<option value="">Primero seleccione una orden...</option>').prop('disabled', true);
+            limpiarTablaProductos();
+        }
+    });
+
+   
+    function cargarDepositos(idSucursal) {
+        fetch(`/api/v1/gestionar-compras/gestionar-compra/depositos/${idSucursal}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const select = $('#cbo_deposito');
+                    select.html('<option value="">Seleccione un depósito...</option>');
+                    data.data.forEach(dep => {
+                        select.append(`<option value="${dep.id_deposito}">${dep.descripcion}</option>`);
+                    });
+                    select.prop('disabled', false);
+                } else {
+                    Swal.fire('Error', 'No se pudieron cargar los depósitos', 'error');
+                }
+            });
+    }
+
+ 
+    function cargarProductos(productos) {
+        productosCompra = [];
+        const tbody = $('#productos_table_body');
+        tbody.empty();
+
+        productos.forEach(prod => {
+            // Asignar IVA por defecto (10%)
+            const impuestoDefault = impuestos.find(imp => imp.tasa === 10) || impuestos[0];
+
+            const productoRow = {
+                id_producto: prod.id_producto,
+                nombre: prod.nombre,
+                cantidad: prod.cantidad,
+                precio_unitario: prod.precio,
+                id_impuesto: impuestoDefault.id_impuesto,
+                tasa_iva: impuestoDefault.tasa
+            };
+
+            productosCompra.push(productoRow);
+
+            const subtotal = prod.cantidad * prod.precio;
+            const montoIva = subtotal * (impuestoDefault.tasa / 100);
+            const total = subtotal + montoIva;
+
+            const fila = `
+                <tr data-id="${prod.id_producto}">
+                    <td>${prod.id_producto}</td>
+                    <td>${prod.nombre}</td>
+                    <td>
+                        <input type="number" class="form-control form-control-sm cantidad-input" 
+                               value="${prod.cantidad}" min="1" data-id="${prod.id_producto}">
+                    </td>
+                    <td>
+                        <input type="number" class="form-control form-control-sm precio-input" 
+                               value="${prod.precio}" min="0" step="0.01" data-id="${prod.id_producto}">
+                    </td>
+                    <td>
+                        <select class="form-control form-control-sm iva-select" data-id="${prod.id_producto}">
+                            ${impuestos.map(imp => `
+                                <option value="${imp.id_impuesto}" data-tasa="${imp.tasa}" 
+                                    ${imp.id_impuesto === impuestoDefault.id_impuesto ? 'selected' : ''}>
+                                    ${imp.descripcion}
+                                </option>
+                            `).join('')}
+                        </select>
+                    </td>
+                    <td class="subtotal-cell">${formatearNumero(subtotal)}</td>
+                    <td class="iva-cell">${formatearNumero(montoIva)}</td>
+                    <td class="total-cell">${formatearNumero(total)}</td>
+                </tr>
+            `;
+
+            tbody.append(fila);
+        });
+
+        calcularTotales();
+    }
+
+    function limpiarTablaProductos() {
+        productosCompra = [];
+        $('#productos_table_body').html(`
+            <tr>
+                <td colspan="8" class="text-center text-muted">
+                    Seleccione una orden para cargar los productos
+                </td>
+            </tr>
+        `);
+        $('#total_subtotal').text('0.00');
+        $('#total_iva').text('0.00');
+        $('#total_general').text('0.00');
+    }
+
+  
+    function eventosCambioDatos() {
+        // Cambio en cantidad
+        $(document).on('input', '.cantidad-input', function() {
+            const idProducto = $(this).data('id');
+            const cantidad = parseFloat($(this).val()) || 0;
+            actualizarProducto(idProducto, 'cantidad', cantidad);
+            recalcularFila($(this).closest('tr'));
+        });
+
+        // Cambio en precio
+        $(document).on('input', '.precio-input', function() {
+            const idProducto = $(this).data('id');
+            const precio = parseFloat($(this).val()) || 0;
+            actualizarProducto(idProducto, 'precio_unitario', precio);
+            recalcularFila($(this).closest('tr'));
+        });
+
+        // Cambio en IVA
+        $(document).on('change', '.iva-select', function() {
+            const idProducto = $(this).data('id');
+            const idImpuesto = parseInt($(this).val());
+            const tasa = parseFloat($(this).find(':selected').data('tasa'));
+            actualizarProducto(idProducto, 'id_impuesto', idImpuesto);
+            actualizarProducto(idProducto, 'tasa_iva', tasa);
+            recalcularFila($(this).closest('tr'));
+        });
+
+        // Cambio en tipo de pago
+        $('input[name="tipo_factura"]').on('change', function() {
+            const valor = $(this).val();
+            if (valor === '2') { // Crédito
+                $('#campos_credito').removeClass('d-none');
+            } else { // Contado
+                $('#campos_credito').addClass('d-none');
+            }
+        });
+    }
+
+   
+    function actualizarProducto(idProducto, campo, valor) {
+        const producto = productosCompra.find(p => p.id_producto === idProducto);
+        if (producto) {
+            producto[campo] = valor;
+        }
+    }
+
+   
+    function recalcularFila(fila) {
+        const cantidad = parseFloat(fila.find('.cantidad-input').val()) || 0;
+        const precio = parseFloat(fila.find('.precio-input').val()) || 0;
+        const tasa = parseFloat(fila.find('.iva-select :selected').data('tasa')) || 0;
+
+        const subtotal = cantidad * precio;
+        const montoIva = subtotal * (tasa / 100);
+        const total = subtotal + montoIva;
+
+        fila.find('.subtotal-cell').text(formatearNumero(subtotal));
+        fila.find('.iva-cell').text(formatearNumero(montoIva));
+        fila.find('.total-cell').text(formatearNumero(total));
+
+        calcularTotales();
+    }
+
+   
+    function calcularTotales() {
+        let totalSubtotal = 0;
+        let totalIva = 0;
+        let totalGeneral = 0;
+
+        $('#productos_table_body tr').each(function() {
+            const subtotal = parseFloat($(this).find('.subtotal-cell').text().replace(/,/g, '')) || 0;
+            const iva = parseFloat($(this).find('.iva-cell').text().replace(/,/g, '')) || 0;
+            const total = parseFloat($(this).find('.total-cell').text().replace(/,/g, '')) || 0;
+
+            totalSubtotal += subtotal;
+            totalIva += iva;
+            totalGeneral += total;
+        });
+
+        $('#total_subtotal').text(formatearNumero(totalSubtotal));
+        $('#total_iva').text(formatearNumero(totalIva));
+        $('#total_general').text(formatearNumero(totalGeneral));
+    }
+
+    function formatearNumero(numero) {
+        return parseFloat(numero).toLocaleString('es-PY', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+  
+    function establecerFechaActual() {
+        const hoy = new Date().toISOString().split('T')[0];
+        $('#txt_fecha_compra').val(hoy);
+    }
+
+    // ========== VALIDAR FORMULARIO ==========
+    function validarFormulario() {
+        const orden = $('#cbo_orden').val();
+        const deposito = $('#cbo_deposito').val();
+        const empleado = $('#cbo_empleado').val();
+        const fechaCompra = $('#txt_fecha_compra').val();
+        const nroFactura = $('#txt_nro_factura').val();
+        const timbrado = $('#txt_timbrado').val();
+        const fechaVencTimbrado = $('#txt_fecha_vencimiento_timbrado').val();
+        const tipoFactura = $('input[name="tipo_factura"]:checked').val();
+
+        if (!orden) {
+            Swal.fire('Error', 'Debe seleccionar una orden', 'error');
+            return false;
+        }
+        if (!deposito) {
+            Swal.fire('Error', 'Debe seleccionar un depósito', 'error');
+            return false;
+        }
+        if (!empleado) {
+            Swal.fire('Error', 'Debe seleccionar un empleado', 'error');
+            return false;
+        }
+        if (!fechaCompra) {
+            Swal.fire('Error', 'Debe ingresar la fecha de compra', 'error');
+            return false;
+        }
+        if (!nroFactura) {
+            Swal.fire('Error', 'Debe ingresar el número de factura', 'error');
+            return false;
+        }
+        if (!timbrado) {
+            Swal.fire('Error', 'Debe ingresar el timbrado', 'error');
+            return false;
+        }
+        if (!fechaVencTimbrado) {
+            Swal.fire('Error', 'Debe ingresar la fecha de vencimiento del timbrado', 'error');
+            return false;
+        }
+
+        // Si es crédito, validar campos adicionales
+        if (tipoFactura === '2') {
+            const cuotas = $('#txt_cantidad_cuotas').val();
+            const fechaVenc = $('#txt_fecha_vencimiento').val();
+
+            if (!cuotas || cuotas < 1) {
+                Swal.fire('Error', 'Debe ingresar la cantidad de cuotas', 'error');
+                return false;
+            }
+            if (!fechaVenc) {
+                Swal.fire('Error', 'Debe ingresar la fecha de vencimiento', 'error');
+                return false;
+            }
+        }
+
+        if (productosCompra.length === 0) {
+            Swal.fire('Error', 'No hay productos cargados', 'error');
+            return false;
+        }
+
+        return true;
+    }
+
+
+    function eventoRegistrar() {
+        $('#btn_registrar').on('click', function() {
+            if (!validarFormulario()) {
+                return;
+            }
+
+            // Calcular saldo (si es crédito, el saldo es el total)
+            const tipoFactura = parseInt($('input[name="tipo_factura"]:checked').val());
+            const totalGeneral = parseFloat($('#total_general').text().replace(/,/g, ''));
+            const saldo = tipoFactura === 2 ? totalGeneral : 0;
+
+            // Preparar payload
+            const payload = {
+                id_orden: parseInt($('#cbo_orden').val()),
+                id_proveedor: parseInt($('#hidden_id_proveedor').val()),
+                id_sucursal: parseInt($('#hidden_id_sucursal').val()),
+                id_deposito: parseInt($('#cbo_deposito').val()),
+                id_empleado: parseInt($('#cbo_empleado').val()),
+                nro_factura: $('#txt_nro_factura').val(),
+                timbrado: $('#txt_timbrado').val(),
+                fecha_compra: $('#txt_fecha_compra').val(),
+                fecha_vencimiento_timbrado: $('#txt_fecha_vencimiento_timbrado').val(),
+                id_tipo_factura: tipoFactura,
+                cantidad_cuotas: tipoFactura === 2 ? parseInt($('#txt_cantidad_cuotas').val()) : 1,
+                saldo: saldo,
+                observacion: $('#txt_observacion').val() || null,
+                detalle_compra: productosCompra
+            };
+
+            // Si es crédito, agregar fecha de vencimiento
+            if (tipoFactura === 2) {
+                payload.fecha_vencimiento = $('#txt_fecha_vencimiento').val();
+            }
+
+            console.log('Payload:', payload);
+
+            // Confirmación
+            Swal.fire({
+                title: '¿Registrar esta compra?',
+                html: `Se registrará la compra con <strong>${productosCompra.length}</strong> producto(s)<br>Total: <strong>${formatearNumero(totalGeneral)}</strong>`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, registrar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Loading
+                    Swal.fire({
+                        title: 'Registrando compra...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Request
+                    fetch('/api/v1/gestionar-compras/gestionar-compra/compras', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(payload)
+                    })
+                    .then(response => {
+                        return response.json().then(data => {
+                            if (!response.ok) {
+                                throw new Error(data.error || 'Error al procesar la solicitud');
+                            }
+                            return data;
+                        });
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: '¡Compra registrada!',
+                                text: data.mensaje,
+                                icon: 'success',
+                                confirmButtonText: 'Ir al listado'
+                            }).then(() => {
+                                location.replace("{{ url_for('compramod.compras_index') }}");
+                            });
+                        } else {
+                            Swal.fire('Error', data.error, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            title: 'No se pudo registrar la compra',
+                            text: error.message,
+                            icon: 'warning'
+                        });
+                    });
+                }
+            });
+        });
+    }
+
+    function eventoVolver() {
+        $('#btn_volver').on('click', function() {
+            window.close();
+            setTimeout(() => {
+                location.replace("{{ url_for('compramod.compras_index') }}");
+            }, 100);
+        });
+    }
+</script>
+{% endblock %}

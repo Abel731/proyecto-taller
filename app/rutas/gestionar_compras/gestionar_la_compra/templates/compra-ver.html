@@ -1,0 +1,334 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Ver Compra N° {{ compra.id_compra }}
+{% endblock %}
+
+{% block css %}
+<style>
+    .estado-registrada {
+        background-color: #fff3cd !important;
+        color: #856404 !important;
+    }
+    .estado-finalizada {
+        background-color: #d4edda !important;
+        color: #155724 !important;
+    }
+    .estado-anulada {
+        background-color: #f8d7da !important;
+        color: #721c24 !important;
+    }
+    .info-label {
+        font-weight: bold;
+        color: #495057;
+    }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-primary text-white">
+            <h6 class="m-0 font-weight-bold">Detalle de Compra N° {{ compra.id_compra }}</h6>
+        </div>
+        <div class="card-body">
+            <!-- ========== INFORMACIÓN GENERAL ========== -->
+            <h5 class="border-bottom pb-2 mb-3">Información General</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="info-label">Orden de Compra:</label>
+                        <input type="text" class="form-control" value="N° {{ compra.id_orden }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="info-label">Proveedor:</label>
+                        <input type="text" class="form-control" value="{{ compra.proveedor }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="info-label">Sucursal:</label>
+                        <input type="text" class="form-control" value="{{ compra.sucursal }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="info-label">Empleado que registró:</label>
+                        <input type="text" class="form-control" value="{{ compra.empleado }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="info-label">Fecha de Compra:</label>
+                        <input type="text" class="form-control" value="{{ compra.fecha_compra }}" readonly>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="info-label">N° de Factura:</label>
+                        <input type="text" class="form-control" value="{{ compra.nro_factura }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="info-label">Timbrado:</label>
+                        <input type="text" class="form-control" value="{{ compra.timbrado }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="info-label">Vencimiento Timbrado:</label>
+                        <input type="text" class="form-control" value="{{ compra.fecha_vencimiento_timbrado }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="info-label">Tipo de Factura:</label>
+                        <input type="text" class="form-control" value="{{ compra.tipo_factura }}" readonly>
+                    </div>
+                    {% if compra.tipo_factura == 'Crédito' %}
+                    <div class="form-group">
+                        <label class="info-label">Cantidad de Cuotas:</label>
+                        <input type="text" class="form-control" value="{{ compra.cantidad_cuotas }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="info-label">Saldo Pendiente:</label>
+                        <input type="text" class="form-control" value="{{ '{:,.2f}'.format(compra.saldo) }}" readonly>
+                    </div>
+                    {% endif %}
+                    <div class="form-group">
+                        <label class="info-label">Estado:</label>
+                        <input type="text" class="form-control estado-{{ compra.estado|lower }}" 
+                               value="{{ compra.estado }}" readonly>
+                    </div>
+                </div>
+            </div>
+
+            {% if compra.observacion %}
+            <div class="form-group">
+                <label class="info-label">Observaciones:</label>
+                <textarea class="form-control" rows="2" readonly>{{ compra.observacion }}</textarea>
+            </div>
+            {% endif %}
+
+            <hr>
+
+            <!-- ========== DETALLE DE PRODUCTOS ========== -->
+            <h5 class="border-bottom pb-2 mb-3">Detalle de Productos</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unit.</th>
+                            <th>IVA</th>
+                            <th>Subtotal</th>
+                            <th>IVA Gs.</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in compra.detalle %}
+                        <tr>
+                            <td>{{ item.id_producto }}</td>
+                            <td>{{ item.producto }}</td>
+                            <td class="text-right">{{ item.cantidad }}</td>
+                            <td class="text-right">{{ "{:,.2f}".format(item.precio_unitario) }}</td>
+                            <td class="text-center">
+                                <span class="badge badge-info">{{ item.impuesto }}</span>
+                            </td>
+                            <td class="text-right">{{ "{:,.2f}".format(item.subtotal) }}</td>
+                            <td class="text-right">{{ "{:,.2f}".format(item.monto_iva) }}</td>
+                            <td class="text-right">{{ "{:,.2f}".format(item.total) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-info">
+                            <td colspan="5" class="text-right"><strong>SUBTOTAL:</strong></td>
+                            <td class="text-right"><strong>{{ "{:,.2f}".format(compra.subtotal) }}</strong></td>
+                            <td class="text-right"><strong>{{ "{:,.2f}".format(compra.total_iva) }}</strong></td>
+                            <td class="text-right"><strong>{{ "{:,.2f}".format(compra.total_compra) }}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <hr>
+
+            <!-- ========== RESUMEN DE TOTALES ========== -->
+            <div class="row">
+                <div class="col-md-6 offset-md-6">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5 class="card-title">Resumen de Totales</h5>
+                            <table class="table table-sm mb-0">
+                                <tr>
+                                    <td><strong>Subtotal (Sin IVA):</strong></td>
+                                    <td class="text-right">{{ "{:,.2f}".format(compra.subtotal) }} Gs.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Total IVA:</strong></td>
+                                    <td class="text-right">{{ "{:,.2f}".format(compra.total_iva) }} Gs.</td>
+                                </tr>
+                                <tr class="border-top">
+                                    <td><strong>TOTAL COMPRA:</strong></td>
+                                    <td class="text-right"><strong class="text-primary">{{ "{:,.2f}".format(compra.total_compra) }} Gs.</strong></td>
+                                </tr>
+                                {% if compra.tipo_factura == 'Crédito' %}
+                                <tr class="border-top">
+                                    <td><strong>Saldo Pendiente:</strong></td>
+                                    <td class="text-right"><strong class="text-danger">{{ "{:,.2f}".format(compra.saldo) }} Gs.</strong></td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== FOOTER CON BOTONES ========== -->
+        <div class="card-footer">
+            <button type="button" class="btn btn-secondary btn-icon-split" id="btn_volver">
+                <span class="icon text-white-50">
+                    <i class="fas fa-arrow-left"></i>
+                </span>
+                <span class="text">Volver al Listado</span>
+            </button>
+
+            {% if compra.estado == 'Registrada' %}
+            <button type="button" class="btn btn-success btn-icon-split" id="btn_finalizar">
+                <span class="icon text-white-50">
+                    <i class="fas fa-check"></i>
+                </span>
+                <span class="text">Finalizar Compra</span>
+            </button>
+            {% endif %}
+
+            {% if compra.estado != 'Finalizada' and compra.estado != 'Anulada' %}
+            <button type="button" class="btn btn-danger btn-icon-split" id="btn_anular">
+                <span class="icon text-white-50">
+                    <i class="fas fa-ban"></i>
+                </span>
+                <span class="text">Anular Compra</span>
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Hidden input para el ID -->
+<input type="hidden" id="hidden_id_compra" value="{{ compra.id_compra }}">
+{% endblock %}
+
+{% block js %}
+<script>
+    $(document).ready(function() {
+        eventoVolver();
+        eventoFinalizar();
+        eventoAnular();
+    });
+
+    function eventoVolver() {
+        $('#btn_volver').on('click', function() {
+            window.close();
+            setTimeout(() => {
+                window.location.href = "{{ url_for('compramod.compras_index') }}";
+            }, 100);
+        });
+    }
+
+    function eventoFinalizar() {
+        $('#btn_finalizar').on('click', function() {
+            const idCompra = $('#hidden_id_compra').val();
+
+            Swal.fire({
+                title: '¿Finalizar esta compra?',
+                html: `La compra N° <strong>${idCompra}</strong> quedará finalizada y no se podrá modificar`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, finalizar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Loading
+                    Swal.fire({
+                        title: 'Finalizando...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Request
+                    fetch(`/api/v1/gestionar-compras/gestionar-compra/compras/${idCompra}/finalizar`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'}
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: '¡Finalizada!',
+                                text: data.mensaje,
+                                icon: 'success'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Error', data.error, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire('Error', 'No se pudo finalizar la compra', 'error');
+                    });
+                }
+            });
+        });
+    }
+
+    function eventoAnular() {
+        $('#btn_anular').on('click', function() {
+            const idCompra = $('#hidden_id_compra').val();
+
+            Swal.fire({
+                title: '¿Anular esta compra?',
+                html: `La compra N° <strong>${idCompra}</strong> quedará anulada<br><small class="text-muted">Esta acción no se puede deshacer</small>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, anular',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Loading
+                    Swal.fire({
+                        title: 'Anulando...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Request
+                    fetch(`/api/v1/gestionar-compras/gestionar-compra/compras/${idCompra}/anular`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'}
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: '¡Anulada!',
+                                text: data.mensaje,
+                                icon: 'success'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Error', data.error, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire('Error', 'No se pudo anular la compra', 'error');
+                    });
+                }
+            });
+        });
+    }
+</script>
+{% endblock %}
