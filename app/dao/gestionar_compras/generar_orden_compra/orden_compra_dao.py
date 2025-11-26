@@ -341,3 +341,33 @@ class OrdenCompraDao:
         finally:
             cur.close()
             con.close()            
+
+    def existe_orden_activa_para_presupuesto(self, id_presupuesto):
+        """
+        Verifica si ya existe una orden de compra activa para este presupuesto.
+        Retorna True si existe una orden con estado diferente a Cancelada.
+        """
+        try:
+            conexion = Conexion()
+            con = conexion.getConexion()
+            cur = con.cursor()
+        
+            query = """
+            SELECT COUNT(*) 
+            FROM orden_de_compra 
+            WHERE id_presupuesto = %s 
+            AND id_estorden != 4  -- 4 = Cancelada
+            """
+        
+            cur.execute(query, (id_presupuesto,))
+            resultado = cur.fetchone()
+        
+            return resultado[0] > 0  # True si existe al menos una orden activa
+        
+        except Exception as e:
+            print(f"Error en existe_orden_activa_para_presupuesto: {str(e)}")
+            return False
+        finally:
+            if conexion:
+                cur.close()
+                con.close()

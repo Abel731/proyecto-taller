@@ -115,8 +115,17 @@ def add_orden():
                 'error': 'Cada producto debe tener id_producto, cantidad y precio.'
             }), 400
 
+    
+    id_presupuesto = data['id_presupuesto']
+    
+    if ocdao.existe_orden_activa_para_presupuesto(id_presupuesto):
+        return jsonify({
+            'success': False,
+            'error': f'Ya existe una orden de compra activa para el Presupuesto N° {id_presupuesto}. No se pueden generar órdenes duplicadas del mismo presupuesto.'
+        }), 400
+    
+
     try:
-        id_presupuesto = data['id_presupuesto']
         id_empleado = data['id_empleado']
         id_sucursal = data['id_sucursal']
         fecha_orden = data['fecha_orden']

@@ -167,7 +167,6 @@ Generar Orden de Compra
     const presupuestoId = this.value;
 
     if (presupuestoId) {
-      //  Obtener información del presupuesto (sucursal, proveedor, empleado)
       fetch(`/api/v1/gestionar-compras/generar-orden-compra/info-presupuesto/${presupuestoId}`)
         .then(response => {
           if (!response.ok) {
@@ -177,7 +176,6 @@ Generar Orden de Compra
         })
         .then(data => {
           if (data.success) {
-            // Mostrar información del presupuesto
             $('#info_sucursal').text(data.data.sucursal);
             $('#info_proveedor').text(data.data.proveedor);
             $('#info_empleado_presupuesto').text(data.data.empleado);
@@ -192,7 +190,6 @@ Generar Orden de Compra
           Swal.fire('Error', 'Ocurrió un error al cargar la información del presupuesto.', 'error');
         });
 
-      // Obtener productos del presupuesto
       fetch(`/api/v1/gestionar-compras/generar-orden-compra/detalle-presupuesto/${presupuestoId}`)
         .then(response => {
           if (!response.ok) {
@@ -203,7 +200,7 @@ Generar Orden de Compra
         .then(data => {
           if (data.success) {
             const tableBody = document.getElementById('productos-table-body');
-            tableBody.innerHTML = ''; // Limpiar tabla
+            tableBody.innerHTML = '';
 
             let total = 0;
             data.data.forEach(producto => {
@@ -225,10 +222,8 @@ Generar Orden de Compra
               tableBody.innerHTML += row;
             });
 
-            // Calcular total inicial
             calcularTotal();
 
-            // Event listeners para recalcular subtotales
             $('.cantidad-producto, .precio-producto').on('input', function() {
               const row = $(this).closest('tr');
               const cantidad = parseFloat(row.find('.cantidad-producto').val()) || 0;
@@ -247,7 +242,6 @@ Generar Orden de Compra
           Swal.fire('Error', 'Ocurrió un error al cargar los productos del presupuesto.', 'error');
         });
     } else {
-      // Limpiar todo si no se seleccionó un presupuesto
       document.getElementById('productos-table-body').innerHTML = `
         <tr>
             <td colspan="5" class="text-center text-muted">
@@ -260,7 +254,7 @@ Generar Orden de Compra
     }
   });
 
-  // Generar orden de compra
+  // ✅ GENERAR ORDEN (VERSIÓN SIMPLE)
   document.getElementById('btn_generar_orden').addEventListener('click', function () {
     if (!validarFormulario()) {
       return;
@@ -296,43 +290,63 @@ Generar Orden de Compra
 
     console.log('Payload enviado:', payload);
 
-    // Enviar la orden a la API
+    Swal.fire({
+        title: 'Generando orden...',
+        text: 'Por favor espere',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
     fetch(`/api/v1/gestionar-compras/generar-orden-compra/ordenes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
     })
     .then(response => {
-        if (!response.ok) {
-            throw new Error(`Error en la respuesta: ${response.status}`);
-        }
-        return response.json();
+        return response.json().then(data => {
+            if (!response.ok) {
+                throw new Error(data.error || 'Error al procesar la solicitud');
+            }
+            return data;
+        });
     })
     .then(data => {
         if (data.success) {
             Swal.fire({
                 title: 'Éxito',
                 text: 'Orden de compra generada correctamente.',
-                icon: 'success'
+                icon: 'success',
+                confirmButtonText: 'Ir al listado'
             }).then(() => {
                 location.replace("{{ url_for('ocmod.ordenes_index') }}");
             });
         } else {
-            Swal.fire("Error", data.error || 'Error al generar la orden de compra.', 'error');
+            Swal.fire({
+                title: 'Error',
+                text: data.error || 'Error al generar la orden de compra.',
+                icon: 'error',
+                confirmButtonText: 'Entendido'
+            });
         }
     })
     .catch(error => {
-        console.error('Error al generar orden:', error);
-        Swal.fire("Error", 'Ocurrió un error al generar la orden de compra.', 'error');
+        console.error('Error:', error);
+        
+        Swal.fire({
+            title: 'No se pudo generar la orden',
+            text: error.message,
+            icon: 'warning',
+            confirmButtonText: 'Entendido'
+        });
     });
   });
 
-  // Cancelar y volver al índice
   document.getElementById('btn_salir_operacion').addEventListener('click', function () {
     location.replace("{{ url_for('ocmod.ordenes_index') }}");
   });
-
-  // Establecer fecha actual por defecto
+      
   document.getElementById('txt_fecha_orden').valueAsDate = new Date();
 </script>
 {% endblock %}
