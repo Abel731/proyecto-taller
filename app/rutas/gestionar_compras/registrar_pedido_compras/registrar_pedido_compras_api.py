@@ -101,23 +101,40 @@ def get_sucursal_depositos(id_sucursal):
 
 @pdcapi.route('/detalle-pedido/<int:id_pedido>', methods=['GET'])
 def get_detalle_pedido(id_pedido):
+    """
+    Obtiene el detalle de productos de un pedido con precios desde la tabla productos
+    """
     dao = PedidoDeComprasDao()
     
     try:
+        print(f"========== DEBUG API PEDIDO: Obteniendo detalle pedido {id_pedido} ==========")
+        
         detalle = dao.get_productos_por_pedido(id_pedido)
+        
+        print(f"DEBUG API: Productos recibidos del DAO: {len(detalle) if detalle else 0}")
+        
         if detalle:
+            # Verificar que cada producto tenga precio
+            for prod in detalle:
+                print(f"DEBUG API: Producto {prod.get('id_producto')}: precio={prod.get('precio_unitario')}")
+            
             return jsonify({
                 'success': True,
                 'data': detalle,
                 'error': False
             }), 200
         else:
+            print("DEBUG API: No se encontraron productos")
             return jsonify({
                 'success': False,
                 'error': 'No se encontraron detalles para este pedido.'
             }), 404
 
     except Exception as e:
+        print(f"❌ ERROR en get_detalle_pedido API: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
         app.logger.error(f"Error al obtener el detalle del pedido: {str(e)}")
         return jsonify({
             'success': False,

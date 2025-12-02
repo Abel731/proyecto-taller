@@ -135,20 +135,26 @@ Formulario Presupuesto Proveedor
 
 {% block js %}
 <script>
-  // Validación de las fechas
+  // ========== ARRAY GLOBAL PARA ALMACENAR PRODUCTOS ==========
+  let productosPresupuesto = [];
+
+  // ========== VALIDACIÓN DE FECHAS ==========
   function validarFechas() {
     const fechaPedido = new Date(document.getElementById('txt_fecha_de_pedido').value);
     const fechaVencimiento = new Date(document.getElementById('txt_fecha_vencimiento').value);
 
     if (fechaVencimiento < fechaPedido) {
-      alert("La Fecha de Vencimiento no puede ser anterior a la Fecha de Pedido.");
+      Swal.fire('Error', 'La Fecha de Vencimiento no puede ser anterior a la Fecha de Pedido.', 'error');
       return false;
     }
     return true;
   }
 
+  // ========== EVENTO: CAMBIO DE PEDIDO ==========
   document.getElementById('cbo_pedido').addEventListener('change', function () {
     const pedidoId = this.value;
+    
+    console.log('DEBUG: Pedido seleccionado:', pedidoId);
 
     if (pedidoId) {
       // Solicitar el detalle del pedido a la API
@@ -160,59 +166,143 @@ Formulario Presupuesto Proveedor
           return response.json();
         })
         .then(data => {
+          console.log('DEBUG: Detalle recibido:', data);
+          
           if (data.success) {
             const tableBody = document.getElementById('productos-table-body');
-            tableBody.innerHTML = ''; // Limpiar tabla antes de agregar nuevos productos
+            tableBody.innerHTML = ''; // Limpiar tabla
+            
+            // ✅ LIMPIAR Y RECREAR EL ARRAY
+            productosPresupuesto = [];
 
             data.data.forEach(producto => {
+              console.log('DEBUG: Procesando producto:', producto);
+              
+              // ✅ AGREGAR AL ARRAY GLOBAL
+              productosPresupuesto.push({
+                id_producto: producto.id_producto,
+                nombre: producto.nombre,
+                cantidad: producto.cantidad,
+                precio_unitario: producto.precio_unitario || 0  // ✅ Usar precio del pedido
+              });
+              
+              // ✅ AGREGAR A LA TABLA CON PRECIO
               const row = `
                 <tr data-id="${producto.id_producto}">
                   <td>${producto.id_producto}</td>
                   <td>${producto.nombre}</td>
                   <td>
-                      <input type="number" class="form-control cantidad-producto" value="${producto.cantidad}" min="1">
+                      <input type="number" class="form-control cantidad-producto" 
+                             value="${producto.cantidad}" min="1" 
+                             data-id="${producto.id_producto}">
                   </td>
                   <td>
-                      <input type="number" class="form-control precio-producto" placeholder="Precio" min="0">
+                      <input type="number" class="form-control precio-producto" 
+                             value="${producto.precio_unitario || 0}" min="0" step="0.01"
+                             data-id="${producto.id_producto}">
                   </td>
                 </tr>`;
               tableBody.innerHTML += row;
             });
+            
+            console.log('DEBUG: Productos cargados en array:', productosPresupuesto);
+            
+            // ✅ AGREGAR EVENTOS PARA ACTUALIZAR EL ARRAY AL CAMBIAR VALORES
+            agregarEventosCambio();
+            
           } else {
-            alert('No se encontraron detalles para este pedido.');
+            Swal.fire('Error', 'No se encontraron detalles para este pedido.', 'error');
           }
         })
         .catch(error => {
           console.error('Error al cargar productos:', error);
-          alert('Ocurrió un error al cargar los detalles del pedido.');
+          Swal.fire('Error', 'Ocurrió un error al cargar los detalles del pedido.', 'error');
         });
     } else {
       // Limpiar la tabla si no se seleccionó un pedido
       document.getElementById('productos-table-body').innerHTML = '';
+      productosPresupuesto = [];
     }
   });
 
+  // ========== EVENTOS PARA ACTUALIZAR ARRAY AL CAMBIAR CANTIDAD O PRECIO ==========
+  function agregarEventosCambio() {
+    // Evento al cambiar cantidad
+    document.querySelectorAll('.cantidad-producto').forEach(input => {
+      input.addEventListener('input', function() {
+        const idProducto = Number(this.dataset.id);
+        const nuevaCantidad = Number(this.value);
+        
+        console.log(`DEBUG: Cambiando cantidad del producto ${idProducto} a ${nuevaCantidad}`);
+        
+        // Actualizar en el array
+        const producto = productosPresupuesto.find(p => p.id_producto === idProducto);
+        if (producto) {
+          producto.cantidad = nuevaCantidad;
+        }
+        
+        console.log('DEBUG: Array actualizado:', productosPresupuesto);
+      });
+    });
+    
+    // Evento al cambiar precio
+    document.querySelectorAll('.precio-producto').forEach(input => {
+      input.addEventListener('input', function() {
+        const idProducto = Number(this.dataset.id);
+        const nuevoPrecio = Number(this.value);
+        
+        console.log(`DEBUG: Cambiando precio del producto ${idProducto} a ${nuevoPrecio}`);
+        
+        // Actualizar en el array
+        const producto = productosPresupuesto.find(p => p.id_producto === idProducto);
+        if (producto) {
+          producto.precio_unitario = nuevoPrecio;
+        }
+        
+        console.log('DEBUG: Array actualizado:', productosPresupuesto);
+      });
+    });
+  }
+
+  // ========== REGISTRAR PRESUPUESTO ==========
   document.getElementById('btn_registrar_pedido').addEventListener('click', function () {
+    console.log('DEBUG: Iniciando registro de presupuesto...');
+    
     if (!validarFechas()) {
-      return; // Si la validación falla, no continuar con el registro
+      return;
     }
 
-    const productos = [];
+    // ✅ ACTUALIZAR ARRAY CON VALORES FINALES DE LA TABLA
+    productosPresupuesto = [];
     const rows = document.querySelectorAll('#productos-table-body tr');
+    
+    console.log(`DEBUG: Procesando ${rows.length} filas de productos`);
 
-    rows.forEach(row => {
-        const idProducto = Number(row.dataset.id); 
-        const cantidad = Number(row.querySelector('.cantidad-producto').value);  
-        const precioUnitario = row.querySelector('.precio-producto').value;  
+    rows.forEach((row, index) => {
+      const idProducto = Number(row.dataset.id);
+      const cantidad = Number(row.querySelector('.cantidad-producto').value);
+      const precioUnitario = Number(row.querySelector('.precio-producto').value);
+      
+      console.log(`DEBUG: Fila ${index + 1}: id=${idProducto}, cantidad=${cantidad}, precio=${precioUnitario}`);
 
-        if (precioUnitario && cantidad) {
-            productos.push({
-                id_producto: idProducto,
-                precio_unitario: Number(precioUnitario),
-                cantidad: cantidad  
-            });
-        }
+      // ✅ AGREGAR INCLUSO SI PRECIO ES 0
+      if (idProducto && cantidad) {
+        productosPresupuesto.push({
+          id_producto: idProducto,
+          precio_unitario: precioUnitario,
+          cantidad: cantidad
+        });
+      }
     });
+
+    console.log('DEBUG: Productos a enviar:', productosPresupuesto);
+    console.log('DEBUG: Cantidad de productos:', productosPresupuesto.length);
+
+    // Validar que haya productos
+    if (productosPresupuesto.length === 0) {
+      Swal.fire('Error', 'Debe agregar al menos un producto al presupuesto.', 'error');
+      return;
+    }
 
     const estadoPresupuesto = document.querySelector('input[name="estado_presupuesto"]:checked').value;
 
@@ -220,49 +310,74 @@ Formulario Presupuesto Proveedor
       id_empleado: Number(document.getElementById('cbo_empleado').value),
       id_sucursal: Number(document.getElementById('cbo_sucursal').value),
       fecha_presupuesto: document.getElementById('txt_fecha_de_pedido').value,
-      fecha_vencimiento: document.getElementById('txt_fecha_vencimiento').value, 
+      fecha_vencimiento: document.getElementById('txt_fecha_vencimiento').value,
       id_proveedor: Number(document.getElementById('cbo_proveedor').value),
       id_pedido_compra: Number(document.getElementById('cbo_pedido').value),
-      detalle_presupuesto: productos,
-      estado: estadoPresupuesto 
-  };
+      detalle_presupuesto: productosPresupuesto,  // ✅ Usar el array global
+      estado: estadoPresupuesto
+    };
 
-    console.log('Payload enviado:', payload);
+    console.log('DEBUG: Payload final a enviar:', payload);
+    console.log('DEBUG: Payload JSON:', JSON.stringify(payload, null, 2));
+
+    // ✅ MOSTRAR LOADING DE SWEETALERT2
+    Swal.fire({
+      title: 'Registrando presupuesto...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
 
     // Enviar el presupuesto a la API
     fetch(`/api/v1/gestionar-compras/registrar-presupuesto-proveedor/presupuestos`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
     })
     .then(response => {
+      console.log('DEBUG: Response status:', response.status);
+      return response.json().then(data => {
         if (!response.ok) {
-            throw new Error(`Error en la respuesta: ${response.status}`);
+          throw new Error(data.error || 'Error al procesar la solicitud');
         }
-        return response.json();
+        return data;
+      });
     })
     .then(data => {
-        if (data.success) {
-            alert('Presupuesto registrado correctamente.');
-            location.replace("{{ url_for('pdpmod.presupuestos_index') }}");
-        } else {
-            alert(data.error || 'Error al registrar el presupuesto.');
-        }
+      console.log('DEBUG: Response data:', data);
+      
+      if (data.success) {
+        // ✅ SWEETALERT2 DE ÉXITO
+        Swal.fire({
+          title: '¡Presupuesto registrado!',
+          text: 'El presupuesto se ha registrado correctamente.',
+          icon: 'success',
+          confirmButtonText: 'Ir al listado'
+        }).then(() => {
+          // ✅ REDIRIGIR AL INDEX
+          location.replace("{{ url_for('pdpmod.presupuestos_index') }}");
+        });
+      } else {
+        Swal.fire('Error', data.error || 'Error al registrar el presupuesto.', 'error');
+      }
     })
     .catch(error => {
-        console.error('Error al registrar presupuesto:', error);
-        alert('Ocurrió un error al registrar el presupuesto.');
+      console.error('Error al registrar presupuesto:', error);
+      // ✅ SWEETALERT2 DE ERROR
+      Swal.fire({
+        title: 'No se pudo registrar el presupuesto',
+        text: error.message,
+        icon: 'warning'
+      });
     });
-});
+  });
 
-  // Botón volver al listado de presupuestos
+  // ========== BOTÓN VOLVER ==========
   document.getElementById('btn_volver').addEventListener('click', function() {
-    // Si se abrió con window.open, cerrar la ventana
     window.close();
-    
-    // Si no se cierra, navegar a la página de listado
     setTimeout(() => {
-        window.location.href = "{{ url_for('pdpmod.presupuestos_index') }}";
+      location.replace("{{ url_for('pdpmod.presupuestos_index') }}");
     }, 100);
   });
 </script>
