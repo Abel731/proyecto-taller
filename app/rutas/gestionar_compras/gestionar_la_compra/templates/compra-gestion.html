@@ -178,11 +178,23 @@ Registrar Compra
 
 {% block js %}
 <script>
-    // Variables globales
+    // ========== VARIABLES GLOBALES ==========
     let productosCompra = [];
     const impuestos = JSON.parse('{{ impuestos_json|safe }}');
 
+    // ========== INICIALIZACIÓN ==========
     $(document).ready(function() {
+        console.log('========== INICIO DE CARGA ==========');
+        console.log('DEBUG: Impuestos cargados:', impuestos);
+        console.log('DEBUG: Tipo de impuestos:', typeof impuestos);
+        console.log('DEBUG: Cantidad de impuestos:', impuestos ? impuestos.length : 0);
+        
+        if (!impuestos || impuestos.length === 0) {
+            console.error('ERROR CRÍTICO: No se cargaron los impuestos');
+            Swal.fire('Error', 'No se pudieron cargar los tipos de IVA. Recargue la página.', 'error');
+            return;
+        }
+        
         cargarOrdenesDisponibles();
         establecerFechaActual();
         eventosCambioDatos();
@@ -190,13 +202,22 @@ Registrar Compra
         eventoVolver();
     });
 
- 
+    // ========== CARGAR ÓRDENES DISPONIBLES ==========
     function cargarOrdenesDisponibles() {
+        console.log('DEBUG: Iniciando carga de órdenes disponibles...');
+        
         fetch('/api/v1/gestionar-compras/gestionar-compra/ordenes-disponibles')
-            .then(response => response.json())
+            .then(response => {
+                console.log('DEBUG cargarOrdenes: Response status:', response.status);
+                return response.json();
+            })
             .then(data => {
+                console.log('DEBUG cargarOrdenes: Data recibida:', data);
+                
                 if (data.success) {
                     const select = $('#cbo_orden');
+                    console.log('DEBUG cargarOrdenes: Cantidad de órdenes:', data.data.length);
+                    
                     data.data.forEach(orden => {
                         select.append(`
                             <option value="${orden.id_orden}">
@@ -204,26 +225,40 @@ Registrar Compra
                             </option>
                         `);
                     });
+                    
+                    console.log('DEBUG cargarOrdenes: Órdenes cargadas exitosamente');
                 } else {
+                    console.error('DEBUG cargarOrdenes: Error del servidor:', data.error);
                     Swal.fire('Error', 'No se pudieron cargar las órdenes', 'error');
                 }
             })
             .catch(error => {
+                console.error('DEBUG cargarOrdenes: Error en fetch:', error);
                 Swal.fire('Error', 'Error al cargar órdenes', 'error');
             });
     }
 
-
+    // ========== EVENTO: CAMBIO DE ORDEN ==========
     $('#cbo_orden').on('change', function() {
         const idOrden = $(this).val();
+        console.log('========== CAMBIO DE ORDEN ==========');
+        console.log('DEBUG: Orden seleccionada:', idOrden);
 
         if (idOrden) {
+            console.log('DEBUG: Iniciando carga de detalle de orden...');
+            
             // Cargar detalle de la orden
             fetch(`/api/v1/gestionar-compras/gestionar-compra/orden-detalle/${idOrden}`)
-                .then(response => response.json())
+                .then(response => {
+                    console.log('DEBUG orden-detalle: Response status:', response.status);
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('DEBUG orden-detalle: Data recibida:', data);
+                    
                     if (data.success) {
                         const orden = data.data;
+                        console.log('DEBUG orden-detalle: Orden completa:', orden);
 
                         // Mostrar info de la orden
                         $('#info_proveedor').text(orden.proveedor);
@@ -231,20 +266,27 @@ Registrar Compra
                         $('#hidden_id_proveedor').val(orden.id_proveedor);
                         $('#hidden_id_sucursal').val(orden.id_sucursal);
                         $('#info_orden').removeClass('d-none');
+                        
+                        console.log('DEBUG: Info de orden mostrada');
 
                         // Cargar depósitos de la sucursal
+                        console.log('DEBUG: Iniciando carga de depósitos para sucursal:', orden.id_sucursal);
                         cargarDepositos(orden.id_sucursal);
 
                         // Cargar productos en la tabla
+                        console.log('DEBUG: Iniciando carga de productos. Cantidad:', orden.productos ? orden.productos.length : 0);
                         cargarProductos(orden.productos);
                     } else {
+                        console.error('DEBUG orden-detalle: Error del servidor:', data.error);
                         Swal.fire('Error', data.error, 'error');
                     }
                 })
                 .catch(error => {
+                    console.error('DEBUG orden-detalle: Error en fetch:', error);
                     Swal.fire('Error', 'Error al cargar detalle de orden', 'error');
                 });
         } else {
+            console.log('DEBUG: Limpiando formulario (orden vacía)');
             // Limpiar todo
             $('#info_orden').addClass('d-none');
             $('#cbo_deposito').html('<option value="">Primero seleccione una orden...</option>').prop('disabled', true);
@@ -252,33 +294,77 @@ Registrar Compra
         }
     });
 
-   
+    // ========== CARGAR DEPÓSITOS ==========
     function cargarDepositos(idSucursal) {
+        console.log('========== CARGAR DEPÓSITOS ==========');
+        console.log('DEBUG cargarDepositos: ID Sucursal:', idSucursal);
+        
         fetch(`/api/v1/gestionar-compras/gestionar-compra/depositos/${idSucursal}`)
-            .then(response => response.json())
+            .then(response => {
+                console.log('DEBUG cargarDepositos: Response status:', response.status);
+                return response.json();
+            })
             .then(data => {
+                console.log('DEBUG cargarDepositos: Data recibida:', data);
+                
                 if (data.success) {
                     const select = $('#cbo_deposito');
                     select.html('<option value="">Seleccione un depósito...</option>');
+                    
+                    console.log('DEBUG cargarDepositos: Cantidad de depósitos:', data.data.length);
+                    
+                    if (data.data.length === 0) {
+                        console.warn('ADVERTENCIA: No hay depósitos para esta sucursal');
+                        Swal.fire('Advertencia', 'Esta sucursal no tiene depósitos asignados', 'warning');
+                    }
+                    
                     data.data.forEach(dep => {
+                        console.log('DEBUG cargarDepositos: Agregando depósito:', dep);
                         select.append(`<option value="${dep.id_deposito}">${dep.descripcion}</option>`);
                     });
+                    
                     select.prop('disabled', false);
+                    console.log('DEBUG cargarDepositos: Depósitos cargados exitosamente');
                 } else {
-                    Swal.fire('Error', 'No se pudieron cargar los depósitos', 'error');
+                    console.error('DEBUG cargarDepositos: Error del servidor:', data.error);
+                    Swal.fire('Error', data.error, 'error');
                 }
+            })
+            .catch(error => {
+                console.error('DEBUG cargarDepositos: Error en fetch:', error);
+                Swal.fire('Error', `Error al cargar depósitos: ${error.message}`, 'error');
             });
     }
 
- 
+    // ========== CARGAR PRODUCTOS EN LA TABLA ==========
     function cargarProductos(productos) {
+        console.log('========== CARGAR PRODUCTOS ==========');
+        console.log('DEBUG cargarProductos: Productos recibidos:', productos);
+        console.log('DEBUG cargarProductos: Impuestos disponibles:', impuestos);
+        
+        if (!productos || productos.length === 0) {
+            console.warn('ADVERTENCIA: No hay productos para cargar');
+            Swal.fire('Advertencia', 'Esta orden no tiene productos', 'warning');
+            return;
+        }
+        
         productosCompra = [];
         const tbody = $('#productos_table_body');
         tbody.empty();
 
-        productos.forEach(prod => {
+        productos.forEach((prod, index) => {
+            console.log(`DEBUG: Procesando producto ${index + 1}:`, prod);
+            
             // Asignar IVA por defecto (10%)
             const impuestoDefault = impuestos.find(imp => imp.tasa === 10) || impuestos[0];
+            
+            if (!impuestoDefault) {
+                console.error('ERROR CRÍTICO: No se encontró impuesto por defecto');
+                Swal.fire('Error', 'No se pudieron cargar los tipos de IVA', 'error');
+                return;
+            }
+            
+            console.log(`DEBUG: Impuesto asignado al producto ${prod.id_producto}:`, impuestoDefault);
 
             const productoRow = {
                 id_producto: prod.id_producto,
@@ -294,6 +380,8 @@ Registrar Compra
             const subtotal = prod.cantidad * prod.precio;
             const montoIva = subtotal * (impuestoDefault.tasa / 100);
             const total = subtotal + montoIva;
+            
+            console.log(`DEBUG: Cálculos - Subtotal: ${subtotal}, IVA: ${montoIva}, Total: ${total}`);
 
             const fila = `
                 <tr data-id="${prod.id_producto}">
@@ -326,10 +414,15 @@ Registrar Compra
             tbody.append(fila);
         });
 
+        console.log('DEBUG: Total productos agregados a productosCompra:', productosCompra.length);
+        console.log('DEBUG: Array productosCompra:', productosCompra);
+        
         calcularTotales();
     }
 
+    // ========== LIMPIAR TABLA ==========
     function limpiarTablaProductos() {
+        console.log('DEBUG: Limpiando tabla de productos');
         productosCompra = [];
         $('#productos_table_body').html(`
             <tr>
@@ -343,12 +436,13 @@ Registrar Compra
         $('#total_general').text('0.00');
     }
 
-  
+    // ========== EVENTOS DE CAMBIO EN CANTIDAD, PRECIO, IVA ==========
     function eventosCambioDatos() {
         // Cambio en cantidad
         $(document).on('input', '.cantidad-input', function() {
             const idProducto = $(this).data('id');
             const cantidad = parseFloat($(this).val()) || 0;
+            console.log(`DEBUG: Cambio cantidad producto ${idProducto}: ${cantidad}`);
             actualizarProducto(idProducto, 'cantidad', cantidad);
             recalcularFila($(this).closest('tr'));
         });
@@ -357,6 +451,7 @@ Registrar Compra
         $(document).on('input', '.precio-input', function() {
             const idProducto = $(this).data('id');
             const precio = parseFloat($(this).val()) || 0;
+            console.log(`DEBUG: Cambio precio producto ${idProducto}: ${precio}`);
             actualizarProducto(idProducto, 'precio_unitario', precio);
             recalcularFila($(this).closest('tr'));
         });
@@ -366,6 +461,7 @@ Registrar Compra
             const idProducto = $(this).data('id');
             const idImpuesto = parseInt($(this).val());
             const tasa = parseFloat($(this).find(':selected').data('tasa'));
+            console.log(`DEBUG: Cambio IVA producto ${idProducto}: Impuesto ${idImpuesto}, Tasa ${tasa}%`);
             actualizarProducto(idProducto, 'id_impuesto', idImpuesto);
             actualizarProducto(idProducto, 'tasa_iva', tasa);
             recalcularFila($(this).closest('tr'));
@@ -374,6 +470,7 @@ Registrar Compra
         // Cambio en tipo de pago
         $('input[name="tipo_factura"]').on('change', function() {
             const valor = $(this).val();
+            console.log(`DEBUG: Cambio tipo de factura: ${valor}`);
             if (valor === '2') { // Crédito
                 $('#campos_credito').removeClass('d-none');
             } else { // Contado
@@ -382,15 +479,16 @@ Registrar Compra
         });
     }
 
-   
+    // ========== ACTUALIZAR PRODUCTO EN ARRAY ==========
     function actualizarProducto(idProducto, campo, valor) {
         const producto = productosCompra.find(p => p.id_producto === idProducto);
         if (producto) {
             producto[campo] = valor;
+            console.log(`DEBUG: Producto ${idProducto} actualizado - ${campo}: ${valor}`);
         }
     }
 
-   
+    // ========== RECALCULAR FILA ==========
     function recalcularFila(fila) {
         const cantidad = parseFloat(fila.find('.cantidad-input').val()) || 0;
         const precio = parseFloat(fila.find('.precio-input').val()) || 0;
@@ -407,7 +505,7 @@ Registrar Compra
         calcularTotales();
     }
 
-   
+    // ========== CALCULAR TOTALES GENERALES ==========
     function calcularTotales() {
         let totalSubtotal = 0;
         let totalIva = 0;
@@ -426,8 +524,11 @@ Registrar Compra
         $('#total_subtotal').text(formatearNumero(totalSubtotal));
         $('#total_iva').text(formatearNumero(totalIva));
         $('#total_general').text(formatearNumero(totalGeneral));
+        
+        console.log(`DEBUG calcularTotales: Subtotal: ${totalSubtotal}, IVA: ${totalIva}, Total: ${totalGeneral}`);
     }
 
+    // ========== FORMATEAR NÚMERO ==========
     function formatearNumero(numero) {
         return parseFloat(numero).toLocaleString('es-PY', {
             minimumFractionDigits: 2,
@@ -435,14 +536,17 @@ Registrar Compra
         });
     }
 
-  
+    // ========== ESTABLECER FECHA ACTUAL ==========
     function establecerFechaActual() {
         const hoy = new Date().toISOString().split('T')[0];
         $('#txt_fecha_compra').val(hoy);
+        console.log('DEBUG: Fecha actual establecida:', hoy);
     }
 
     // ========== VALIDAR FORMULARIO ==========
     function validarFormulario() {
+        console.log('========== VALIDANDO FORMULARIO ==========');
+        
         const orden = $('#cbo_orden').val();
         const deposito = $('#cbo_deposito').val();
         const empleado = $('#cbo_empleado').val();
@@ -451,6 +555,11 @@ Registrar Compra
         const timbrado = $('#txt_timbrado').val();
         const fechaVencTimbrado = $('#txt_fecha_vencimiento_timbrado').val();
         const tipoFactura = $('input[name="tipo_factura"]:checked').val();
+
+        console.log('DEBUG validar: Orden:', orden);
+        console.log('DEBUG validar: Depósito:', deposito);
+        console.log('DEBUG validar: Empleado:', empleado);
+        console.log('DEBUG validar: Productos:', productosCompra.length);
 
         if (!orden) {
             Swal.fire('Error', 'Debe seleccionar una orden', 'error');
@@ -501,12 +610,15 @@ Registrar Compra
             return false;
         }
 
+        console.log('DEBUG validar: Validación exitosa');
         return true;
     }
 
-
+    // ========== EVENTO: REGISTRAR COMPRA ==========
     function eventoRegistrar() {
         $('#btn_registrar').on('click', function() {
+            console.log('========== REGISTRAR COMPRA ==========');
+            
             if (!validarFormulario()) {
                 return;
             }
@@ -539,7 +651,7 @@ Registrar Compra
                 payload.fecha_vencimiento = $('#txt_fecha_vencimiento').val();
             }
 
-            console.log('Payload:', payload);
+            console.log('DEBUG: Payload a enviar:', payload);
 
             // Confirmación
             Swal.fire({
@@ -567,6 +679,7 @@ Registrar Compra
                         body: JSON.stringify(payload)
                     })
                     .then(response => {
+                        console.log('DEBUG registrar: Response status:', response.status);
                         return response.json().then(data => {
                             if (!response.ok) {
                                 throw new Error(data.error || 'Error al procesar la solicitud');
@@ -575,6 +688,8 @@ Registrar Compra
                         });
                     })
                     .then(data => {
+                        console.log('DEBUG registrar: Response data:', data);
+                        
                         if (data.success) {
                             Swal.fire({
                                 title: '¡Compra registrada!',
@@ -589,7 +704,7 @@ Registrar Compra
                         }
                     })
                     .catch(error => {
-                        console.error('Error:', error);
+                        console.error('DEBUG registrar: Error:', error);
                         Swal.fire({
                             title: 'No se pudo registrar la compra',
                             text: error.message,
@@ -601,8 +716,10 @@ Registrar Compra
         });
     }
 
+    // ========== EVENTO: VOLVER ==========
     function eventoVolver() {
         $('#btn_volver').on('click', function() {
+            console.log('DEBUG: Volviendo al listado');
             window.close();
             setTimeout(() => {
                 location.replace("{{ url_for('compramod.compras_index') }}");

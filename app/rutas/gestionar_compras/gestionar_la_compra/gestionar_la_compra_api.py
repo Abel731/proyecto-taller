@@ -73,7 +73,10 @@ def registrar_compra():
     Registra una nueva compra
     """
     try:
+        print("========== DEBUG API: Iniciando registro de compra ==========")
+        
         data = request.get_json()
+        print(f"DEBUG API: Data recibida: {data}")
         
         # Validar campos requeridos
         campos_requeridos = [
@@ -151,6 +154,7 @@ def registrar_compra():
             data['saldo'] = 0
         
         # Validar que la orden no tenga ya una compra registrada
+        print("DEBUG API: Validando orden única...")
         dao = CompraDao()
         if dao.existe_compra_para_orden(data['id_orden']):
             return jsonify({
@@ -179,22 +183,37 @@ def registrar_compra():
         if data['id_tipo_factura'] == 2:
             datos_compra['fecha_vencimiento'] = data['fecha_vencimiento']
         
+        print("DEBUG API: Datos de compra preparados:")
+        print(datos_compra)
+        print("DEBUG API: Detalle de compra:")
+        print(data['detalle_compra'])
+        
+        # ✅ CREAR UNA NUEVA INSTANCIA DEL DAO PARA EVITAR CONFLICTO DE CONEXIONES
+        dao_insert = CompraDao()
+        
         # Registrar la compra
-        id_compra = dao.agregar_compra(datos_compra, data['detalle_compra'])
+        print("DEBUG API: Llamando a agregar_compra()...")
+        id_compra = dao_insert.agregar_compra(datos_compra, data['detalle_compra'])
         
         if id_compra:
+            print(f"DEBUG API: Compra registrada exitosamente. ID: {id_compra}")
             return jsonify({
                 'success': True,
                 'mensaje': f'Compra N° {id_compra} registrada exitosamente',
                 'id_compra': id_compra
             }), 201
         else:
+            print("DEBUG API: Error al registrar compra (DAO retornó None)")
             return jsonify({
                 'success': False,
                 'error': 'No se pudo registrar la compra. Consulte con el administrador'
             }), 500
             
     except Exception as e:
+        print(f"❌ ERROR en registrar_compra API: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
         return jsonify({
             'success': False,
             'error': f'Error al procesar la solicitud: {str(e)}'
@@ -209,10 +228,12 @@ def anular_compra(id_compra):
     Anula una compra
     """
     try:
-        dao = CompraDao()
+        print(f"========== DEBUG API: Anulando compra {id_compra} ==========")
         
-        # Verificar que la compra existe
-        compra = dao.obtener_por_id(id_compra)
+        # ✅ CREAR INSTANCIA PARA VERIFICAR
+        dao_check = CompraDao()
+        compra = dao_check.obtener_por_id(id_compra)
+        
         if not compra:
             return jsonify({
                 'success': False,
@@ -233,19 +254,26 @@ def anular_compra(id_compra):
                 'error': 'Esta compra ya está anulada'
             }), 400
         
-        # Anular
-        if dao.anular_compra(id_compra):
+        # ✅ NUEVA INSTANCIA PARA ANULAR
+        dao_update = CompraDao()
+        if dao_update.anular_compra(id_compra):
+            print(f"DEBUG API: Compra {id_compra} anulada exitosamente")
             return jsonify({
                 'success': True,
                 'mensaje': f'Compra N° {id_compra} anulada exitosamente'
             }), 200
         else:
+            print(f"DEBUG API: No se pudo anular compra {id_compra}")
             return jsonify({
                 'success': False,
                 'error': 'No se pudo anular la compra'
             }), 500
             
     except Exception as e:
+        print(f"❌ ERROR en anular_compra API: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
         return jsonify({
             'success': False,
             'error': f'Error al anular la compra: {str(e)}'
@@ -260,10 +288,12 @@ def finalizar_compra(id_compra):
     Finaliza una compra (cambia estado a Finalizada)
     """
     try:
-        dao = CompraDao()
+        print(f"========== DEBUG API: Finalizando compra {id_compra} ==========")
         
-        # Verificar que la compra existe
-        compra = dao.obtener_por_id(id_compra)
+        # ✅ CREAR INSTANCIA PARA VERIFICAR
+        dao_check = CompraDao()
+        compra = dao_check.obtener_por_id(id_compra)
+        
         if not compra:
             return jsonify({
                 'success': False,
@@ -277,19 +307,26 @@ def finalizar_compra(id_compra):
                 'error': 'Solo se pueden finalizar compras en estado Registrada'
             }), 400
         
-        # Finalizar
-        if dao.finalizar_compra(id_compra):
+        # ✅ NUEVA INSTANCIA PARA FINALIZAR
+        dao_update = CompraDao()
+        if dao_update.finalizar_compra(id_compra):
+            print(f"DEBUG API: Compra {id_compra} finalizada exitosamente")
             return jsonify({
                 'success': True,
                 'mensaje': f'Compra N° {id_compra} finalizada exitosamente'
             }), 200
         else:
+            print(f"DEBUG API: No se pudo finalizar compra {id_compra}")
             return jsonify({
                 'success': False,
                 'error': 'No se pudo finalizar la compra'
             }), 500
             
     except Exception as e:
+        print(f"❌ ERROR en finalizar_compra API: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
         return jsonify({
             'success': False,
             'error': f'Error al finalizar la compra: {str(e)}'
@@ -369,6 +406,8 @@ def obtener_orden_detalle(id_orden):
     Retorna el detalle de productos de una orden
     """
     try:
+        print(f"========== DEBUG: Buscando orden {id_orden} ==========")  # ✅ LOG
+        
         dao = CompraDao()
         con = dao.conexion.getConexion()
         cursor = con.cursor()
@@ -389,10 +428,14 @@ def obtener_orden_detalle(id_orden):
         WHERE oc.id_orden = %s
         """
         
+        print(f"DEBUG: Ejecutando query orden...")  # ✅ LOG
         cursor.execute(query_orden, (id_orden,))
         orden = cursor.fetchone()
         
+        print(f"DEBUG: Orden encontrada: {orden}")  # ✅ LOG
+        
         if not orden:
+            print(f"DEBUG: Orden {id_orden} NO encontrada")  # ✅ LOG
             cursor.close()
             con.close()
             return jsonify({
@@ -412,8 +455,11 @@ def obtener_orden_detalle(id_orden):
         WHERE ocd.id_orden = %s
         """
         
+        print(f"DEBUG: Ejecutando query productos...")  # ✅ LOG
         cursor.execute(query_productos, (id_orden,))
         productos = cursor.fetchall()
+        
+        print(f"DEBUG: Productos encontrados: {len(productos) if productos else 0}")  # ✅ LOG
         
         detalle_productos = []
         for prod in productos:
@@ -427,21 +473,29 @@ def obtener_orden_detalle(id_orden):
         cursor.close()
         con.close()
         
+        resultado = {
+            'id_orden': orden[0],
+            'id_presupuesto': orden[1],
+            'id_sucursal': orden[2],
+            'id_proveedor': orden[3],
+            'proveedor': orden[4],
+            'sucursal': orden[5],
+            'productos': detalle_productos
+        }
+        
+        print(f"DEBUG: Retornando resultado exitoso")  # ✅ LOG
+        
         return jsonify({
             'success': True,
-            'data': {
-                'id_orden': orden[0],
-                'id_presupuesto': orden[1],
-                'id_sucursal': orden[2],
-                'id_proveedor': orden[3],
-                'proveedor': orden[4],
-                'sucursal': orden[5],
-                'productos': detalle_productos
-            },
+            'data': resultado,
             'error': None
         }), 200
         
     except Exception as e:
+        print(f"❌ ERROR en obtener_orden_detalle: {str(e)}")  # ✅ LOG
+        import traceback
+        traceback.print_exc()  # ✅ LOG COMPLETO
+        
         return jsonify({
             'success': False,
             'error': f'Error al obtener detalle: {str(e)}'
@@ -454,18 +508,21 @@ def obtener_orden_detalle(id_orden):
 def obtener_depositos(id_sucursal):
     """
     GET /api/v1/gestionar-compras/gestionar-compra/depositos/<id_sucursal>
-    Retorna los depósitos de una sucursal
+    Retorna los depósitos activos de una sucursal específica
     """
     try:
         dao = CompraDao()
         con = dao.conexion.getConexion()
         cursor = con.cursor()
         
+        # ✅ QUERY CORREGIDO: Usar tabla intermedia sucursal_depositos
         query = """
-        SELECT id_deposito, descripcion
-        FROM depositos
-        WHERE id_sucursal = %s
-        ORDER BY descripcion
+        SELECT d.id_deposito, d.descripcion
+        FROM depositos d
+        INNER JOIN sucursal_depositos sd ON d.id_deposito = sd.id_deposito
+        WHERE sd.id_sucursal = %s 
+        AND sd.estado = TRUE
+        ORDER BY d.descripcion
         """
         
         cursor.execute(query, (id_sucursal,))

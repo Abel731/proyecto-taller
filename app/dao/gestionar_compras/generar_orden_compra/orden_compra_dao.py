@@ -153,9 +153,14 @@ class OrdenCompraDao:
         con = conexion.getConexion()
         cur = con.cursor()
         try:
+            print(f"========== DEBUG DAO: Buscando detalle presupuesto {id_presupuesto} ==========")
             cur.execute(query, (id_presupuesto,))
             productos = cur.fetchall()
-            return [
+            
+            print(f"DEBUG: Productos encontrados: {len(productos)}")
+            print(f"DEBUG: Datos raw: {productos}")
+            
+            resultado = [
                 {
                     'id_producto': producto[0],
                     'nombre': producto[1],
@@ -164,8 +169,14 @@ class OrdenCompraDao:
                 }
                 for producto in productos
             ]
+            
+            print(f"DEBUG: Resultado formateado: {resultado}")
+            
+            return resultado
         except Exception as e:
-            app.logger.error(f"Error al obtener detalle del presupuesto {id_presupuesto}: {e}")
+            print(f"❌ ERROR en get_detalle_presupuesto: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return []
         finally:
             cur.close()

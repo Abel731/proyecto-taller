@@ -28,7 +28,9 @@ def compras_gestion():
         con = dao.conexion.getConexion()
         cursor = con.cursor()
         
-        # Obtener empleados
+        print("========== DEBUG ROUTE: Iniciando carga de datos ==========")
+        
+        # ===== OBTENER EMPLEADOS =====
         query_empleados = """
         SELECT 
             e.id_empleado,
@@ -39,8 +41,10 @@ def compras_gestion():
         ORDER BY p.nombres, p.apellidos
         """
         
+        print("DEBUG: Ejecutando query empleados...")
         cursor.execute(query_empleados)
         empleados = cursor.fetchall()
+        print(f"DEBUG: Empleados encontrados: {len(empleados) if empleados else 0}")
         
         lista_empleados = []
         for emp in empleados:
@@ -50,7 +54,7 @@ def compras_gestion():
                 'ci': emp[2]
             })
         
-        # Obtener impuestos
+        # ===== OBTENER IMPUESTOS =====
         query_impuestos = """
         SELECT id_impuesto, descripcion, tasa
         FROM impuestos
@@ -58,8 +62,10 @@ def compras_gestion():
         ORDER BY tasa DESC
         """
         
+        print("DEBUG: Ejecutando query impuestos...")
         cursor.execute(query_impuestos)
         impuestos = cursor.fetchall()
+        print(f"DEBUG: Impuestos encontrados: {len(impuestos) if impuestos else 0}")
         
         lista_impuestos = []
         for imp in impuestos:
@@ -69,19 +75,29 @@ def compras_gestion():
                 'tasa': float(imp[2])
             })
         
+        print(f"DEBUG: Lista de impuestos: {lista_impuestos}")
+        
         cursor.close()
         con.close()
         
+        # ===== CONVERTIR A JSON STRING =====
         import json
         impuestos_json = json.dumps(lista_impuestos)
+        
+        print(f"DEBUG: JSON generado: {impuestos_json}")
+        print("DEBUG: Renderizando template...")
         
         return render_template(
             'compra-gestion.html',
             empleados=lista_empleados,
-            impuestos_json=impuestos_json  
+            impuestos_json=impuestos_json
         )
         
     except Exception as e:
+        print(f"❌ ERROR en compras_gestion: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
         flash(f'Error al cargar el formulario: {str(e)}', 'error')
         return redirect(url_for('compramod.compras_index'))
 

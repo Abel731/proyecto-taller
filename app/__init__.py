@@ -142,5 +142,13 @@ app.register_blueprint(tipo_producto_api, url_prefix=version1)
 # ============================================================
 app.register_blueprint(pdcapi, url_prefix=f'{version1}/{modulo1}/registrar-pedido-compras')
 app.register_blueprint(pdpapi, url_prefix=f'{version1}/{modulo1}/registrar-presupuesto-proveedor')
-app.register_blueprint(ocapi, url_prefix=f'{version1}/{modulo1}/generar-orden-compra')
+app.register_blueprint(ocapi, url_prefix=f'{version1}{modulo1}/generar-orden-compra')
 app.register_blueprint(compraapi, url_prefix=f'{version1}{modulo1}/gestionar-compra')
+
+
+
+print("\n========== RUTAS REGISTRADAS ==========")
+for rule in app.url_map.iter_rules():
+    if 'generar-orden-compra' in rule.rule or 'detalle-presupuesto' in rule.rule:
+        print(f"{rule.rule} -> {rule.endpoint} [{', '.join(rule.methods)}]")
+print("========================================\n")

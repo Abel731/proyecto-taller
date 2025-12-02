@@ -64,24 +64,37 @@ def get_detalle_presupuesto(id_presupuesto):
     dao = OrdenCompraDao()
     
     try:
+        print(f"========== DEBUG API: Obteniendo detalle presupuesto {id_presupuesto} ==========")
+        
         detalle = dao.get_detalle_presupuesto(id_presupuesto)
-        if detalle:
+        
+        print(f"DEBUG API: Detalle recibido del DAO: {detalle}")
+        print(f"DEBUG API: Tipo: {type(detalle)}, Longitud: {len(detalle) if detalle else 0}")
+        
+        # ✅ VERIFICAR SI ES UNA LISTA Y SI TIENE ELEMENTOS
+        if detalle is not None and len(detalle) > 0:
+            print(f"DEBUG API: Retornando {len(detalle)} productos")
             return jsonify({
                 'success': True,
                 'data': detalle,
                 'error': None
             }), 200
         else:
+            print(f"DEBUG API: No se encontraron productos")
             return jsonify({
                 'success': False,
-                'error': 'No se encontraron productos para este presupuesto.'
-            }), 404
+                'error': 'No se encontraron productos para este presupuesto.',
+                'data': []
+            }), 200  # ✅ CAMBIAR A 200 en lugar de 404
 
     except Exception as e:
-        app.logger.error(f"Error al obtener el detalle del presupuesto: {str(e)}")
+        print(f"❌ ERROR en get_detalle_presupuesto API: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
         return jsonify({
             'success': False,
-            'error': 'Ocurrió un error interno. Consulte con el administrador.'
+            'error': f'Ocurrió un error interno: {str(e)}'
         }), 500
 
 # Crear nueva orden de compra

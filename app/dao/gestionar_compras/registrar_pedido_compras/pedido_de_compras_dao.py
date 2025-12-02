@@ -123,38 +123,67 @@ class PedidoDeComprasDao:
             cur.close()
             con.close()
 
-    def get_productos_por_pedido(self, pedido_id):
-        query = """
-        SELECT
-            pcd.id_producto,
-            pro.nombre,
-            pcd.cantidad
-        FROM pedido_de_compra_detalle pcd
-        LEFT JOIN productos pro ON pcd.id_producto = pro.id_producto
-        WHERE pcd.id_pedido_compra = %s
+    def get_productos_por_pedido(self, id_pedido):
         """
-        conexion = Conexion()
-        con = conexion.getConexion()
-        cur = con.cursor()
+        Obtiene los productos de un pedido con el precio desde la tabla productos
+        """
+        con = None
+        cur = None
+        
         try:
-            cur.execute(query, (pedido_id,))
+            print(f"========== DEBUG DAO PEDIDO: Obteniendo productos del pedido {id_pedido} ==========")
+            
+            conexion = Conexion()
+            con = conexion.getConexion()
+            cur = con.cursor()
+            
+            # ✅ NOMBRE CORRECTO DE LA COLUMNA
+            query = """
+            SELECT 
+                pcd.id_producto,
+                pr.nombre AS producto,
+                pcd.cantidad,
+                pr.precio_compra AS precio_unitario
+            FROM pedido_de_compra_detalle pcd
+            INNER JOIN productos pr ON pcd.id_producto = pr.id_producto
+            WHERE pcd.id_pedido_compra = %s
+            """
+            
+            print(f"DEBUG DAO: Ejecutando query...")
+            cur.execute(query, (id_pedido,))
             productos = cur.fetchall()
-            return [
-            {
-                'id_producto': producto[0],
-                'nombre': producto[1],
-                'cantidad': producto[2],
-            }
-            for producto in productos
-        ]
+            
+            print(f"DEBUG DAO: Productos encontrados: {len(productos) if productos else 0}")
+            
+            if not productos:
+                return []
+            
+            detalle = []
+            for prod in productos:
+                producto_data = {
+                    'id_producto': prod[0],
+                    'nombre': prod[1],
+                    'cantidad': prod[2],
+                    'precio_unitario': float(prod[3]) if prod[3] else 0
+                }
+                print(f"DEBUG DAO: Producto: {producto_data}")
+                detalle.append(producto_data)
+            
+            print(f"DEBUG DAO: Retornando {len(detalle)} productos")
+            return detalle
+            
         except Exception as e:
-            app.logger.error(f"Error al obtener productos del pedido {pedido_id}: {e}")
+            print(f"❌ ERROR en get_productos_por_pedido: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return []
-
+            
         finally:
-            cur.close()
-            con.close()
-
+            if cur:
+                cur.close()
+            if con:
+                con.close()
+            print("DEBUG DAO: Conexión cerrada")
 
     # modificar
     def modificar(self):

@@ -85,36 +85,75 @@ class PresupuestoProvDao:
         con = conexion.getConexion()
         con.autocommit = False
         cur = con.cursor()
+        
         try:
+            print("========== DEBUG PRESUPUESTO DAO: Iniciando ==========")
+            print(f"DEBUG: id_proveedor: {presupuesto_dto.id_proveedor}")
+            print(f"DEBUG: id_pedido_compra: {presupuesto_dto.id_pedido_compra}")
+            print(f"DEBUG: id_empleado: {presupuesto_dto.id_empleado}")
+            print(f"DEBUG: id_sucursal: {presupuesto_dto.id_sucursal}")
+            print(f"DEBUG: estado.id: {presupuesto_dto.estado.id}")
+            print(f"DEBUG: fecha_presupuesto: {presupuesto_dto.fecha_presupuesto}")
+            print(f"DEBUG: fecha_vencimiento: {presupuesto_dto.fecha_vencimiento}")
+            print(f"DEBUG: detalle_presupuesto (cantidad): {len(presupuesto_dto.detalle_presupuesto)}")
+            print(f"DEBUG: detalle_presupuesto (contenido): {presupuesto_dto.detalle_presupuesto}")
+            
             # Insertando el presupuesto
+            print("DEBUG: Insertando cabecera...")
             parametros = (
                 presupuesto_dto.id_proveedor, presupuesto_dto.id_pedido_compra,
                 presupuesto_dto.id_empleado, presupuesto_dto.id_sucursal,
                 presupuesto_dto.estado.id, presupuesto_dto.fecha_presupuesto,
                 presupuesto_dto.fecha_vencimiento
             )
+            print(f"DEBUG: Parámetros cabecera: {parametros}")
+            
             cur.execute(insertPresupuesto, parametros)
             id_presupuesto = cur.fetchone()[0]
+            print(f"DEBUG: Presupuesto insertado con ID: {id_presupuesto}")
 
             # Insertando los detalles del presupuesto
+            print(f"DEBUG: Verificando si hay detalles... Cantidad: {len(presupuesto_dto.detalle_presupuesto)}")
+            
             if len(presupuesto_dto.detalle_presupuesto) > 0:
-                for detalle in presupuesto_dto.detalle_presupuesto:
+                print("DEBUG: SÍ hay detalles, comenzando a insertar...")
+                for idx, detalle in enumerate(presupuesto_dto.detalle_presupuesto):
+                    print(f"DEBUG: Insertando producto {idx + 1}:")
+                    print(f"  - id_producto: {detalle.id_producto}")
+                    print(f"  - cantidad: {detalle.cantidad}")
+                    print(f"  - precio_unitario: {detalle.precio_unitario}")
+                    
                     parametros_detalle = (
                         id_presupuesto, detalle.id_producto, detalle.cantidad, detalle.precio_unitario
                     )
+                    print(f"  - Parámetros: {parametros_detalle}")
+                    
                     cur.execute(insertDetallePresupuesto, parametros_detalle)
+                    print(f"DEBUG: Producto {idx + 1} insertado exitosamente")
+            else:
+                print("❌ DEBUG: NO HAY DETALLES - La lista está vacía")
 
-            
+            print(f"DEBUG: Total de detalles insertados: {len(presupuesto_dto.detalle_presupuesto)}")
+            print("DEBUG: Haciendo commit...")
             con.commit()
+            print("DEBUG: Commit exitoso")
+            return True
+            
         except Exception as e:
+            print(f"❌ ERROR en agregar presupuesto: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            
             app.logger.error(f"Error al agregar el presupuesto: {str(e)}")
             con.rollback()
+            print("DEBUG: Rollback ejecutado")
             return False
+            
         finally:
             con.autocommit = True
             cur.close()
             con.close()
-        return True
+            print("DEBUG: Conexión cerrada")
 
 
     # Anular presupuesto

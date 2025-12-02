@@ -5,7 +5,7 @@ class CompraDao:
     def __init__(self):
         self.conexion = Conexion()
     
-    
+    # Metodo de agregar compra completa
     def agregar_compra(self, datos_compra, detalle_compra):
         """
         Registra una compra completa (cabecera + detalle + libro_compras + cuentas_por_pagar + stock)
@@ -18,11 +18,19 @@ class CompraDao:
         - id_compra si tiene éxito
         - None si hay error
         """
+        con = None
+        cursor = None
+        
         try:
+            print("========== DEBUG DAO: Iniciando agregar_compra ==========")
+            print(f"DEBUG: datos_compra: {datos_compra}")
+            print(f"DEBUG: detalle_compra: {detalle_compra}")
+            
             con = self.conexion.getConexion()
             cursor = con.cursor()
             
-            
+            # 1. INSERTAR CABECERA DE COMPRA
+            print("DEBUG: Insertando cabecera de compra...")
             query_cabecera = """
             INSERT INTO compra (
                 id_orden, id_proveedor, id_sucursal, id_empleado,
@@ -45,13 +53,15 @@ class CompraDao:
                 datos_compra['id_tipo_factura'],
                 datos_compra['cantidad_cuotas'],
                 datos_compra['saldo'],
-                1,  # Estado: Registrada
+                1,
                 datos_compra.get('observacion', None)
             ))
             
             id_compra = cursor.fetchone()[0]
+            print(f"DEBUG: Compra insertada con ID: {id_compra}")
             
-            
+            # 2. INSERTAR DETALLE DE COMPRA
+            print("DEBUG: Insertando detalle de compra...")
             query_detalle = """
             INSERT INTO compra_detalle (
                 id_compra, id_producto, id_impuesto, cantidad, precio_unitario
@@ -59,6 +69,7 @@ class CompraDao:
             """
             
             for item in detalle_compra:
+                print(f"DEBUG: Insertando producto {item['id_producto']}...")
                 cursor.execute(query_detalle, (
                     id_compra,
                     item['id_producto'],
@@ -67,7 +78,10 @@ class CompraDao:
                     item['precio_unitario']
                 ))
             
+            print(f"DEBUG: Insertados {len(detalle_compra)} productos")
             
+            # 3. CALCULAR TOTALES
+            print("DEBUG: Calculando totales...")
             query_totales = """
             SELECT subtotal, total_iva, total_compra, 
                    gravadas_10, iva_10, gravadas_5, iva_5, exentas
@@ -77,7 +91,10 @@ class CompraDao:
             cursor.execute(query_totales, (id_compra,))
             totales = cursor.fetchone()
             
+            print(f"DEBUG: Totales calculados: {totales}")
             
+            # 4. INSERTAR EN LIBRO DE COMPRAS
+            print("DEBUG: Insertando en libro de compras...")
             query_libro = """
             INSERT INTO libro_compras (
                 id_compra, id_proveedor, timbrado, nro_factura, fecha_factura,
@@ -86,7 +103,6 @@ class CompraDao:
             ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
             
-            # Extraer mes y año de la fecha de compra
             from datetime import datetime
             fecha_obj = datetime.strptime(datos_compra['fecha_compra'], '%Y-%m-%d')
             
@@ -96,18 +112,21 @@ class CompraDao:
                 datos_compra['timbrado'],
                 datos_compra['nro_factura'],
                 datos_compra['fecha_compra'],
-                totales[3],  # gravadas_10
-                totales[4],  # iva_10
-                totales[5],  # gravadas_5
-                totales[6],  # iva_5
-                totales[7],  # exentas
-                totales[2],  # total_compra
+                totales[3],
+                totales[4],
+                totales[5],
+                totales[6],
+                totales[7],
+                totales[2],
                 fecha_obj.month,
                 fecha_obj.year
             ))
             
+            print("DEBUG: Libro de compras insertado")
             
-            if datos_compra['id_tipo_factura'] == 2:  # 2 = Crédito
+            # 5. SI ES A CRÉDITO, CREAR CUENTA POR PAGAR
+            if datos_compra['id_tipo_factura'] == 2:
+                print("DEBUG: Insertando cuenta por pagar (crédito)...")
                 query_cuenta = """
                 INSERT INTO cuentas_por_pagar (
                     id_compra, id_proveedor, nro_factura, saldo, 
@@ -121,12 +140,15 @@ class CompraDao:
                     datos_compra['nro_factura'],
                     datos_compra['saldo'],
                     datos_compra['fecha_vencimiento'],
-                    1  # Estado: Pendiente
+                    1
                 ))
+                print("DEBUG: Cuenta por pagar insertada")
+            else:
+                print("DEBUG: Compra al contado, no se crea cuenta por pagar")
             
-           
+            # 6. ACTUALIZAR STOCK
+            print("DEBUG: Actualizando stock...")
             for item in detalle_compra:
-                # Verificar si existe el producto en el depósito
                 query_check_stock = """
                 SELECT id_stock, cantidad_actual 
                 FROM stock 
@@ -139,7 +161,7 @@ class CompraDao:
                 stock_actual = cursor.fetchone()
                 
                 if stock_actual:
-                    # Actualizar stock existente
+                    print(f"DEBUG: Actualizando stock existente - Producto {item['id_producto']}")
                     query_update_stock = """
                     UPDATE stock 
                     SET cantidad_actual = cantidad_actual + %s
@@ -151,7 +173,7 @@ class CompraDao:
                         datos_compra['id_deposito']
                     ))
                 else:
-                    # Crear nuevo registro de stock
+                    print(f"DEBUG: Creando nuevo stock - Producto {item['id_producto']}")
                     query_insert_stock = """
                     INSERT INTO stock (id_producto, id_deposito, cantidad_actual)
                     VALUES (%s, %s, %s)
@@ -162,32 +184,47 @@ class CompraDao:
                         item['cantidad']
                     ))
             
+            print("DEBUG: Stock actualizado")
             
+            # 7. ACTUALIZAR ESTADO DE LA ORDEN
+            print("DEBUG: Actualizando estado de la orden...")
             query_update_orden = """
             UPDATE orden_de_compra
             SET id_estorden = 3
             WHERE id_orden = %s
             """
             cursor.execute(query_update_orden, (datos_compra['id_orden'],))
+            print("DEBUG: Orden actualizada a Procesada")
             
             con.commit()
+            print(f"DEBUG: Transacción confirmada. ID Compra: {id_compra}")
             return id_compra
             
         except Exception as e:
             if con:
                 con.rollback()
-            print(f"Error en agregar_compra: {str(e)}")
+                print("DEBUG: Transacción revertida (rollback)")
+            
+            print(f"❌ ERROR en agregar_compra: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return None
+            
         finally:
             if cursor:
                 cursor.close()
             if con:
                 con.close()
+            print("DEBUG: Conexión cerrada")
     
+    # Obtener las compras
     def obtener_todas(self):
         """
         Obtiene todas las compras con información resumida
         """
+        con = None
+        cursor = None
+        
         try:
             con = self.conexion.getConexion()
             cursor = con.cursor()
@@ -234,16 +271,21 @@ class CompraDao:
         except Exception as e:
             print(f"Error en obtener_todas: {str(e)}")
             return []
+            
         finally:
             if cursor:
                 cursor.close()
             if con:
                 con.close()
     
+    # Obtener compra por id
     def obtener_por_id(self, id_compra):
         """
         Obtiene una compra completa con su detalle
         """
+        con = None
+        cursor = None
+        
         try:
             con = self.conexion.getConexion()
             cursor = con.cursor()
@@ -356,17 +398,21 @@ class CompraDao:
         except Exception as e:
             print(f"Error en obtener_por_id: {str(e)}")
             return None
+            
         finally:
             if cursor:
                 cursor.close()
             if con:
                 con.close()
     
-
+    # Método anular compra
     def anular_compra(self, id_compra):
         """
         Anula una compra (cambia estado a Anulada)
         """
+        con = None
+        cursor = None
+        
         try:
             con = self.conexion.getConexion()
             cursor = con.cursor()
@@ -390,17 +436,21 @@ class CompraDao:
                 con.rollback()
             print(f"Error en anular_compra: {str(e)}")
             return False
+            
         finally:
             if cursor:
                 cursor.close()
             if con:
                 con.close()
     
-
+    # Método finalizar la compra
     def finalizar_compra(self, id_compra):
         """
         Cambia el estado de la compra a Finalizada
         """
+        con = None
+        cursor = None
+        
         try:
             con = self.conexion.getConexion()
             cursor = con.cursor()
@@ -424,16 +474,21 @@ class CompraDao:
                 con.rollback()
             print(f"Error en finalizar_compra: {str(e)}")
             return False
+            
         finally:
             if cursor:
                 cursor.close()
             if con:
                 con.close()
     
+    # Método 6: Validar si ya existe una compra con la orden
     def existe_compra_para_orden(self, id_orden):
         """
         Verifica si ya existe una compra registrada para una orden
         """
+        con = None
+        cursor = None
+        
         try:
             con = self.conexion.getConexion()
             cursor = con.cursor()
@@ -452,6 +507,7 @@ class CompraDao:
         except Exception as e:
             print(f"Error en existe_compra_para_orden: {str(e)}")
             return False
+            
         finally:
             if cursor:
                 cursor.close()
