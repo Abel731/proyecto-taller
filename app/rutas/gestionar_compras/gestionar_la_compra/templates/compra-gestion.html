@@ -616,105 +616,119 @@ Registrar Compra
 
     // ========== EVENTO: REGISTRAR COMPRA ==========
     function eventoRegistrar() {
-        $('#btn_registrar').on('click', function() {
-            console.log('========== REGISTRAR COMPRA ==========');
-            
-            if (!validarFormulario()) {
-                return;
-            }
+    $('#btn_registrar').on('click', function() {
+        console.log('========== REGISTRAR COMPRA ==========');
+        
+        if (!validarFormulario()) {
+            return;
+        }
 
-            // Calcular saldo (si es crédito, el saldo es el total)
-            const tipoFactura = parseInt($('input[name="tipo_factura"]:checked').val());
-            const totalGeneral = parseFloat($('#total_general').text().replace(/,/g, ''));
-            const saldo = tipoFactura === 2 ? totalGeneral : 0;
+        // Calcular saldo (si es crédito, el saldo es el total)
+        const tipoFactura = parseInt($('input[name="tipo_factura"]:checked').val());
+        const totalGeneralTexto = $('#total_general').text();
+        const totalGeneral = parseFloat(totalGeneralTexto.replace(/,/g, ''));
+        const saldo = tipoFactura === 2 ? totalGeneral : 0;
 
-            // Preparar payload
-            const payload = {
-                id_orden: parseInt($('#cbo_orden').val()),
-                id_proveedor: parseInt($('#hidden_id_proveedor').val()),
-                id_sucursal: parseInt($('#hidden_id_sucursal').val()),
-                id_deposito: parseInt($('#cbo_deposito').val()),
-                id_empleado: parseInt($('#cbo_empleado').val()),
-                nro_factura: $('#txt_nro_factura').val(),
-                timbrado: $('#txt_timbrado').val(),
-                fecha_compra: $('#txt_fecha_compra').val(),
-                fecha_vencimiento_timbrado: $('#txt_fecha_vencimiento_timbrado').val(),
-                id_tipo_factura: tipoFactura,
-                cantidad_cuotas: tipoFactura === 2 ? parseInt($('#txt_cantidad_cuotas').val()) : 1,
-                saldo: saldo,
-                observacion: $('#txt_observacion').val() || null,
-                detalle_compra: productosCompra
-            };
+        // ✅ LOGS DE DEBUG
+        console.log('DEBUG: Tipo de factura:', tipoFactura === 1 ? 'Contado' : 'Crédito');
+        console.log('DEBUG: Total general (texto):', totalGeneralTexto);
+        console.log('DEBUG: Total general (número):', totalGeneral);
+        console.log('DEBUG: Saldo calculado:', saldo);
+        console.log('DEBUG: ¿Es el 100% del total?', saldo === totalGeneral);
 
-            // Si es crédito, agregar fecha de vencimiento
-            if (tipoFactura === 2) {
-                payload.fecha_vencimiento = $('#txt_fecha_vencimiento').val();
-            }
+        // Preparar payload
+        const payload = {
+            id_orden: parseInt($('#cbo_orden').val()),
+            id_proveedor: parseInt($('#hidden_id_proveedor').val()),
+            id_sucursal: parseInt($('#hidden_id_sucursal').val()),
+            id_deposito: parseInt($('#cbo_deposito').val()),
+            id_empleado: parseInt($('#cbo_empleado').val()),
+            nro_factura: $('#txt_nro_factura').val(),
+            timbrado: $('#txt_timbrado').val(),
+            fecha_compra: $('#txt_fecha_compra').val(),
+            fecha_vencimiento_timbrado: $('#txt_fecha_vencimiento_timbrado').val(),
+            id_tipo_factura: tipoFactura,
+            cantidad_cuotas: tipoFactura === 2 ? parseInt($('#txt_cantidad_cuotas').val()) : 1,
+            saldo: saldo,
+            observacion: $('#txt_observacion').val() || null,
+            detalle_compra: productosCompra
+        };
 
-            console.log('DEBUG: Payload a enviar:', payload);
+        // Si es crédito, agregar fecha de vencimiento
+        if (tipoFactura === 2) {
+            payload.fecha_vencimiento = $('#txt_fecha_vencimiento').val();
+        }
 
-            // Confirmación
-            Swal.fire({
-                title: '¿Registrar esta compra?',
-                html: `Se registrará la compra con <strong>${productosCompra.length}</strong> producto(s)<br>Total: <strong>${formatearNumero(totalGeneral)}</strong>`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, registrar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Loading
-                    Swal.fire({
-                        title: 'Registrando compra...',
-                        allowOutsideClick: false,
-                        didOpen: () => {
-                            Swal.showLoading();
+        console.log('DEBUG: Payload completo a enviar:', payload);
+        console.log('DEBUG: Saldo en payload:', payload.saldo);
+
+        // Confirmación
+        Swal.fire({
+            title: '¿Registrar esta compra?',
+            html: `
+                <p>Se registrará la compra con <strong>${productosCompra.length}</strong> producto(s)</p>
+                <p>Total: <strong>${formatearNumero(totalGeneral)}</strong></p>
+                ${tipoFactura === 2 ? `<p>Saldo pendiente: <strong>${formatearNumero(saldo)}</strong></p>` : ''}
+                ${tipoFactura === 2 ? `<p>Cuotas: <strong>${payload.cantidad_cuotas}</strong></p>` : ''}
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, registrar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Loading
+                Swal.fire({
+                    title: 'Registrando compra...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Request
+                fetch('/api/v1/gestionar-compras/gestionar-compra/compras', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                })
+                .then(response => {
+                    console.log('DEBUG registrar: Response status:', response.status);
+                    return response.json().then(data => {
+                        if (!response.ok) {
+                            throw new Error(data.error || 'Error al procesar la solicitud');
                         }
+                        return data;
                     });
-
-                    // Request
-                    fetch('/api/v1/gestionar-compras/gestionar-compra/compras', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(payload)
-                    })
-                    .then(response => {
-                        console.log('DEBUG registrar: Response status:', response.status);
-                        return response.json().then(data => {
-                            if (!response.ok) {
-                                throw new Error(data.error || 'Error al procesar la solicitud');
-                            }
-                            return data;
-                        });
-                    })
-                    .then(data => {
-                        console.log('DEBUG registrar: Response data:', data);
-                        
-                        if (data.success) {
-                            Swal.fire({
-                                title: '¡Compra registrada!',
-                                text: data.mensaje,
-                                icon: 'success',
-                                confirmButtonText: 'Ir al listado'
-                            }).then(() => {
-                                location.replace("{{ url_for('compramod.compras_index') }}");
-                            });
-                        } else {
-                            Swal.fire('Error', data.error, 'error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('DEBUG registrar: Error:', error);
+                })
+                .then(data => {
+                    console.log('DEBUG registrar: Response data:', data);
+                    
+                    if (data.success) {
                         Swal.fire({
-                            title: 'No se pudo registrar la compra',
-                            text: error.message,
-                            icon: 'warning'
+                            title: '¡Compra registrada!',
+                            text: data.mensaje,
+                            icon: 'success',
+                            confirmButtonText: 'Ir al listado'
+                        }).then(() => {
+                            location.replace("{{ url_for('compramod.compras_index') }}");
                         });
+                    } else {
+                        Swal.fire('Error', data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('DEBUG registrar: Error:', error);
+                    Swal.fire({
+                        title: 'No se pudo registrar la compra',
+                        text: error.message,
+                        icon: 'warning'
                     });
-                }
-            });
+                });
+            }
         });
-    }
+    });
+}
 
     // ========== EVENTO: VOLVER ==========
     function eventoVolver() {
