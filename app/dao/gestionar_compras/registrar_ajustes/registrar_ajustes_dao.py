@@ -193,7 +193,9 @@ class AjusteStockDao:
         try:
             print(f"========== DEBUG DAO: Anulando ajuste {id_ajuste} ==========")
             
-            con = self.conexion.getConexion()
+            # ✅ CREAR NUEVA CONEXIÓN
+            conexion = Conexion()
+            con = conexion.getConexion()
             cursor = con.cursor()
             
             # 1. Verificar que el ajuste existe y está en estado Registrado
@@ -423,10 +425,10 @@ class AjusteStockDao:
             con = self.conexion.getConexion()
             cursor = con.cursor()
             
+            # ✅ QUERY CORREGIDO (sin WHERE estado)
             query = """
             SELECT id_producto, nombre
             FROM productos
-            WHERE estado = TRUE
             ORDER BY nombre
             """
             
@@ -444,6 +446,8 @@ class AjusteStockDao:
             
         except Exception as e:
             print(f"❌ ERROR en obtener_productos_disponibles: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return []
             
         finally:

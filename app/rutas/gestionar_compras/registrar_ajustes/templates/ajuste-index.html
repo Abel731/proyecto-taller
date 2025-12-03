@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Gestión de Ajustes de Stock
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center bg-primary text-white">
+            <h6 class="m-0 font-weight-bold">Listado de Ajustes de Stock</h6>
+            <a href="{{ url_for('ajustemod.ajustes_gestion') }}" class="btn btn-light btn-sm">
+                <i class="fas fa-plus"></i> Registrar Ajuste
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="tbl_ajustes" width="100%" cellspacing="0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th>Empleado</th>
+                            <th>Depósito</th>
+                            <th>Tipo</th>
+                            <th>Productos</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Cargado por DataTables -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    $(document).ready(function() {
+        console.log('========== INICIO DE CARGA INDEX AJUSTES ==========');
+        cargarAjustes();
+    });
+
+    // ========== CARGAR AJUSTES ==========
+    function cargarAjustes() {
+        const tabla = $('#tbl_ajustes').DataTable({
+            ajax: {
+                url: '/api/v1/gestionar-compras/registrar-ajustes/ajustes',
+                dataSrc: function(json) {
+                    console.log('DEBUG: Data recibida:', json);
+                    if (json.success) {
+                        return json.data;
+                    } else {
+                        Swal.fire('Error', json.error, 'error');
+                        return [];
+                    }
+                },
+                error: function(xhr, error, thrown) {
+                    console.error('Error en cargarAjustes:', error);
+                    Swal.fire('Error', 'No se pudieron cargar los ajustes', 'error');
+                }
+            },
+            columns: [
+                { data: 'id_ajuste' },
+                { data: 'fecha_ajuste' },
+                { data: 'empleado' },
+                { data: 'deposito' },
+                { 
+                    data: 'tipo_ajuste',
+                    render: function(data) {
+                        if (data === 'POSITIVO') {
+                            return '<span class="badge badge-success">POSITIVO</span>';
+                        } else {
+                            return '<span class="badge badge-warning">NEGATIVO</span>';
+                        }
+                    }
+                },
+                { data: 'cantidad_productos' },
+                { 
+                    data: 'estado',
+                    render: function(data, type, row) {
+                        if (row.id_estado_ajuste === 1) {
+                            return '<span class="badge badge-info">Registrado</span>';
+                        } else {
+                            return '<span class="badge badge-secondary">Anulado</span>';
+                        }
+                    }
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        let botones = `
+                            <button class="btn btn-info btn-sm" onclick="verAjuste(${row.id_ajuste})" title="Ver detalle">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        `;
+                        
+                        // Solo mostrar botón anular si está en estado Registrado
+                        if (row.id_estado_ajuste === 1) {
+                            botones += `
+                                <button class="btn btn-danger btn-sm" onclick="anularAjuste(${row.id_ajuste})" title="Anular">
+                                    <i class="fas fa-ban"></i>
+                                </button>
+                            `;
+                        }
+                        
+                        return botones;
+                    }
+                }
+            ],
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+            },
+            order: [[0, 'desc']]
+        });
+    }
+
+    // ========== VER DETALLE ==========
+    function verAjuste(idAjuste) {
+        console.log('DEBUG: Ver ajuste:', idAjuste);
+        window.location.href = `/gestionar-compras/registrar-ajustes/ajustes-ver/${idAjuste}`;
+    }
+
+    // ========== ANULAR AJUSTE ==========
+    function anularAjuste(idAjuste) {
+        console.log('DEBUG: Anular ajuste:', idAjuste);
+        
+        Swal.fire({
+            title: '¿Anular este ajuste?',
+            html: `
+                <p>Se revertirán los cambios realizados en el stock.</p>
+                <p class="text-danger"><strong>Esta acción no se puede deshacer.</strong></p>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, anular',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Loading
+                Swal.fire({
+                    title: 'Anulando ajuste...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Request
+                fetch(`/api/v1/gestionar-compras/registrar-ajustes/ajustes/${idAjuste}/anular`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'}
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('DEBUG: Response anular:', data);
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: '¡Ajuste anulado!',
+                            text: data.mensaje,
+                            icon: 'success'
+                        }).then(() => {
+                            $('#tbl_ajustes').DataTable().ajax.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al anular:', error);
+                    Swal.fire('Error', 'No se pudo anular el ajuste', 'error');
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}

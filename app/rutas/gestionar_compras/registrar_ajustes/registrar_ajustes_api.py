@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app.dao.gestionar_servicios.registrar_ajustes.registrar_ajustes_dao import AjusteStockDao
+from app.dao.gestionar_compras.registrar_ajustes.registrar_ajustes_dao import AjusteStockDao
 
 # Crear Blueprint
 ajusteapi = Blueprint('ajusteapi', __name__)
@@ -170,30 +170,16 @@ def registrar_ajuste():
 @ajusteapi.route('/ajustes/<int:id_ajuste>/anular', methods=['PUT'])
 def anular_ajuste(id_ajuste):
     """
-    PUT /api/v1/gestionar-servicios/registrar-ajustes/ajustes/<id>/anular
+    PUT /api/v1/gestionar-compras/registrar-ajustes/ajustes/<id>/anular
     Anula un ajuste y revierte los cambios en el stock
     """
     try:
         print(f"========== DEBUG API: Anulando ajuste {id_ajuste} ==========")
         
+        # ✅ CREAR NUEVA INSTANCIA DEL DAO
         dao = AjusteStockDao()
         
-        # Verificar que el ajuste existe
-        ajuste = dao.obtener_por_id(id_ajuste)
-        if not ajuste:
-            return jsonify({
-                'success': False,
-                'error': f'No se encontró el ajuste N° {id_ajuste}'
-            }), 404
-        
-        # Verificar que no esté ya anulado
-        if ajuste['id_estado_ajuste'] == 2:
-            return jsonify({
-                'success': False,
-                'error': 'Este ajuste ya está anulado'
-            }), 400
-        
-        # Anular el ajuste
+        # Anular el ajuste (las validaciones están en el DAO)
         if dao.anular_ajuste(id_ajuste):
             print(f"DEBUG API: Ajuste {id_ajuste} anulado exitosamente")
             return jsonify({
@@ -279,7 +265,7 @@ def obtener_motivos():
 @ajusteapi.route('/depositos', methods=['GET'])
 def obtener_depositos():
     """
-    GET /api/v1/gestionar-servicios/registrar-ajustes/depositos
+    GET /api/v1/gestionar-compras/registrar-ajustes/depositos
     Retorna todos los depósitos activos
     """
     try:
@@ -287,10 +273,10 @@ def obtener_depositos():
         con = dao.conexion.getConexion()
         cursor = con.cursor()
         
+        # ✅ QUERY CORREGIDO (sin WHERE estado)
         query = """
         SELECT id_deposito, descripcion
         FROM depositos
-        WHERE estado = TRUE
         ORDER BY descripcion
         """
         

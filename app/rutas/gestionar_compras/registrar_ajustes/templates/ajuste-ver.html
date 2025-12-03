@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Ver Ajuste de Stock N° {{ ajuste.id_ajuste }}
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-info text-white">
+            <h6 class="m-0 font-weight-bold">Detalle del Ajuste N° {{ ajuste.id_ajuste }}</h6>
+        </div>
+        <div class="card-body">
+            <!-- ========== INFORMACIÓN GENERAL ========== -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card border-left-primary h-100 py-2">
+                        <div class="card-body">
+                            <h6 class="text-primary font-weight-bold mb-3">Información General</h6>
+                            <p><strong>Fecha:</strong> {{ ajuste.fecha_ajuste }}</p>
+                            <p><strong>Empleado:</strong> {{ ajuste.empleado }}</p>
+                            <p><strong>Depósito:</strong> {{ ajuste.deposito }}</p>
+                            <p><strong>Tipo:</strong> 
+                                {% if ajuste.tipo_ajuste == 'POSITIVO' %}
+                                    <span class="badge badge-success">POSITIVO</span>
+                                {% else %}
+                                    <span class="badge badge-warning">NEGATIVO</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>Estado:</strong> 
+                                {% if ajuste.id_estado_ajuste == 1 %}
+                                    <span class="badge badge-info">Registrado</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">Anulado</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-left-secondary h-100 py-2">
+                        <div class="card-body">
+                            <h6 class="text-secondary font-weight-bold mb-3">Observaciones</h6>
+                            <p>{{ ajuste.observacion if ajuste.observacion else 'Sin observaciones' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== DETALLE DE PRODUCTOS ========== -->
+            <h5 class="mb-3">Productos Ajustados</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Motivo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in ajuste.detalle %}
+                        <tr>
+                            <td>{{ item.id_producto }}</td>
+                            <td>{{ item.producto }}</td>
+                            <td>{{ item.cantidad }}</td>
+                            <td>{{ item.motivo }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== FOOTER CON BOTONES ========== -->
+        <div class="card-footer">
+            {% if ajuste.id_estado_ajuste == 1 %}
+            <button type="button" class="btn btn-danger btn-icon-split" id="btn_anular">
+                <span class="icon text-white-50">
+                    <i class="fas fa-ban"></i>
+                </span>
+                <span class="text">Anular Ajuste</span>
+            </button>
+            {% endif %}
+            <button type="button" class="btn btn-secondary btn-icon-split" id="btn_volver">
+                <span class="icon text-white-50">
+                    <i class="fas fa-arrow-left"></i>
+                </span>
+                <span class="text">Volver al Listado</span>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    $(document).ready(function() {
+        console.log('========== INICIO VER AJUSTE ==========');
+        eventoAnular();
+        eventoVolver();
+    });
+
+    // ========== ANULAR AJUSTE ==========
+    function eventoAnular() {
+        $('#btn_anular').on('click', function() {
+            console.log('DEBUG: Anulando ajuste...');
+            
+            Swal.fire({
+                title: '¿Anular este ajuste?',
+                html: `
+                    <p>Se revertirán los cambios realizados en el stock.</p>
+                    <p class="text-danger"><strong>Esta acción no se puede deshacer.</strong></p>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, anular',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Loading
+                    Swal.fire({
+                        title: 'Anulando ajuste...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Request
+                    fetch(`/api/v1/gestionar-compras/registrar-ajustes/ajustes/{{ ajuste.id_ajuste }}/anular`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'}
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('DEBUG: Response:', data);
+                        
+                        if (data.success) {
+                            Swal.fire({
+                                title: '¡Ajuste anulado!',
+                                text: data.mensaje,
+                                icon: 'success',
+                                confirmButtonText: 'Ir al listado'
+                            }).then(() => {
+                                location.replace("{{ url_for('ajustemod.ajustes_index') }}");
+                            });
+                        } else {
+                            Swal.fire('Error', data.error, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al anular:', error);
+                        Swal.fire('Error', 'No se pudo anular el ajuste', 'error');
+                    });
+                }
+            });
+        });
+    }
+
+    // ========== VOLVER ==========
+    function eventoVolver() {
+        $('#btn_volver').on('click', function() {
+            console.log('DEBUG: Volviendo al listado');
+            location.replace("{{ url_for('ajustemod.ajustes_index') }}");
+        });
+    }
+</script>
+{% endblock %}
