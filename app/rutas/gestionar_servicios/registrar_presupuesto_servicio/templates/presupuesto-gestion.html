@@ -1,0 +1,630 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Registrar Presupuesto de Servicio
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-success text-white">
+            <h6 class="m-0 font-weight-bold">Registrar Presupuesto de Servicio</h6>
+        </div>
+        <div class="card-body">
+            <!-- ========== SECCIÓN 1: SOLICITUD ORIGEN ========== -->
+            <h5 class="text-success">1. Solicitud de Servicio Origen</h5>
+            <hr>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="cbo_solicitud">Solicitud de Servicio: <span class="text-danger">*</span></label>
+                        <select id="cbo_solicitud" class="form-control">
+                            <option value="">Seleccione una solicitud...</option>
+                            {% for sol in solicitudes_disponibles %}
+                            <option value="{{ sol['id_solicitud'] }}" 
+                                    data-cliente="{{ sol['cliente'] }}"
+                                    data-id-cliente="{{ sol['id_cliente'] }}"
+                                    data-tipo-servicio="{{ sol['tipo_servicio'] }}">
+                                {{ sol['nro_solicitud'] }} - {{ sol['cliente'] }} ({{ sol['fecha_solicitud'] }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="cbo_empleado">Empleado que elabora: <span class="text-danger">*</span></label>
+                        <select id="cbo_empleado" class="form-control">
+                            <option value="">Seleccione un empleado...</option>
+                            {% for emp in empleados %}
+                            <option value="{{ emp['id_empleado'] }}">
+                                {{ emp['empleado'] }} - CI: {{ emp['ci'] }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información de la Solicitud (se llena automáticamente) -->
+            <div class="row" id="info_solicitud" style="display: none;">
+                <div class="col-12">
+                    <div class="card border-left-info py-2 mb-3">
+                        <div class="card-body">
+                            <h6 class="text-info font-weight-bold">Información de la Solicitud</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Cliente:</strong> <span id="info_cliente">-</span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Tipo de Servicio:</strong> <span id="info_tipo_servicio">-</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== SECCIÓN 2: DATOS DEL PRESUPUESTO ========== -->
+            <h5 class="text-success mt-4">2. Datos del Presupuesto</h5>
+            <hr>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="txt_nro_presupuesto">N° Presupuesto: <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="txt_nro_presupuesto" 
+                               placeholder="PSERV-2025-001" maxlength="20">
+                        <small class="form-text text-muted">Formato: PSERV-YYYY-XXX</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="txt_fecha_presupuesto">Fecha Presupuesto: <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="txt_fecha_presupuesto">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="txt_fecha_validez">Fecha Validez: <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="txt_fecha_validez">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="txt_observaciones">Observaciones:</label>
+                        <textarea class="form-control" id="txt_observaciones" rows="3" 
+                                  placeholder="Observaciones del presupuesto"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== SECCIÓN 3: PRODUCTOS/SERVICIOS CON PRECIOS ========== -->
+            <h5 class="text-success mt-4">3. Productos/Servicios con Precios</h5>
+            <hr>
+
+            <!-- Botón para cargar productos de la solicitud -->
+            <div class="mb-3">
+                <button type="button" class="btn btn-primary btn-sm" id="btn_cargar_productos">
+                    <i class="fas fa-download"></i> Cargar productos de la solicitud
+                </button>
+                <span class="text-muted ml-2">
+                    <small><i class="fas fa-info-circle"></i> Los productos se cargarán con el precio de compra como referencia</small>
+                </span>
+            </div>
+
+            <!-- Agregar Producto Manual -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label>Producto/Servicio:</label>
+                    <select id="cbo_producto" class="form-control" disabled>
+                        <option value="">Primero cargue los productos de la solicitud...</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label>Cantidad:</label>
+                    <input type="number" id="txt_cantidad" class="form-control" min="1" value="1" readonly>
+                </div>
+                <div class="col-md-2">
+                    <label>Precio Unit.:</label>
+                    <input type="number" id="txt_precio" class="form-control" step="0.01" min="0" value="0">
+                </div>
+                <div class="col-md-3">
+                    <label>IVA:</label>
+                    <select id="cbo_impuesto" class="form-control" disabled>
+                        <option value="">Seleccione IVA...</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <label>&nbsp;</label>
+                    <button type="button" class="btn btn-success btn-block" id="btn_agregar_producto">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabla de Productos -->
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Producto/Servicio</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unit.</th>
+                            <th>IVA (%)</th>
+                            <th>Subtotal</th>
+                            <th>IVA</th>
+                            <th>Total</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productos_table_body">
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">
+                                No hay productos agregados
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="font-weight-bold bg-light">
+                            <td colspan="4" class="text-right">TOTALES:</td>
+                            <td id="total_subtotal">0</td>
+                            <td id="total_iva">0</td>
+                            <td id="total_general">0</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== FOOTER CON BOTONES ========== -->
+        <div class="card-footer">
+            <button type="button" class="btn btn-success btn-icon-split" id="btn_registrar">
+                <span class="icon text-white-50">
+                    <i class="fas fa-save"></i>
+                </span>
+                <span class="text">Registrar Presupuesto</span>
+            </button>
+            <button type="button" class="btn btn-secondary btn-icon-split" id="btn_volver">
+                <span class="icon text-white-50">
+                    <i class="fas fa-arrow-left"></i>
+                </span>
+                <span class="text">Volver al Listado</span>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    // ========== VARIABLES GLOBALES ==========
+    const impuestos = {{ impuestos_json | safe }};
+    let productosPresupuesto = [];
+    let productosSolicitud = [];
+    let idClienteSeleccionado = null;
+
+    // Función para formatear números al estilo paraguayo
+    function formatearNumero(numero) {
+        return new Intl.NumberFormat('es-PY', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(numero);
+    }
+
+    // ========== INICIALIZACIÓN ==========
+    $(document).ready(function() {
+        console.log('========== INICIO PRESUPUESTO GESTIÓN ==========');
+        console.log('DEBUG: Impuestos cargados:', impuestos);
+        
+        establecerFechaActual();
+        cargarImpuestos();
+        eventoSeleccionarSolicitud();
+        eventoCargarProductos();
+        eventoSeleccionarProducto();
+        eventoAgregarProducto();
+        eventoRegistrar();
+        eventoVolver();
+    });
+
+    // ========== ESTABLECER FECHA ACTUAL ==========
+    function establecerFechaActual() {
+        const hoy = new Date().toISOString().split('T')[0];
+        $('#txt_fecha_presupuesto').val(hoy);
+        
+        // Fecha de validez: 30 días después
+        const validez = new Date();
+        validez.setDate(validez.getDate() + 30);
+        $('#txt_fecha_validez').val(validez.toISOString().split('T')[0]);
+        
+        console.log('DEBUG: Fechas establecidas - Hoy:', hoy, 'Validez:', validez.toISOString().split('T')[0]);
+    }
+
+    // ========== CARGAR IMPUESTOS EN SELECT ==========
+    function cargarImpuestos() {
+        const select = $('#cbo_impuesto');
+        select.empty();
+        select.append('<option value="">Seleccione IVA...</option>');
+        
+        impuestos.forEach(imp => {
+            select.append(`<option value="${imp.id_impuesto}" data-tasa="${imp.tasa}">${imp.descripcion} (${imp.tasa}%)</option>`);
+        });
+    }
+
+    // ========== SELECCIONAR SOLICITUD ==========
+    function eventoSeleccionarSolicitud() {
+        $('#cbo_solicitud').on('change', function() {
+            const selectedOption = $(this).find('option:selected');
+            
+            if ($(this).val()) {
+                const cliente = selectedOption.data('cliente');
+                const tipoServicio = selectedOption.data('tipo-servicio');
+                idClienteSeleccionado = selectedOption.data('id-cliente');
+                
+                $('#info_cliente').text(cliente);
+                $('#info_tipo_servicio').text(tipoServicio);
+                
+                $('#info_solicitud').slideDown();
+                
+                // Limpiar productos cargados
+                productosSolicitud = [];
+                productosPresupuesto = [];
+                $('#cbo_producto').prop('disabled', true).html('<option value="">Cargue los productos de la solicitud...</option>');
+                actualizarTablaProductos();
+            } else {
+                $('#info_solicitud').slideUp();
+                idClienteSeleccionado = null;
+            }
+        });
+    }
+
+    // ========== CARGAR PRODUCTOS DE LA SOLICITUD ==========
+    function eventoCargarProductos() {
+        $('#btn_cargar_productos').on('click', function() {
+            const idSolicitud = $('#cbo_solicitud').val();
+            
+            if (!idSolicitud) {
+                Swal.fire('Error', 'Primero debe seleccionar una solicitud', 'warning');
+                return;
+            }
+
+            console.log('DEBUG: Cargando productos de solicitud:', idSolicitud);
+
+            // Loading
+            Swal.fire({
+                title: 'Cargando productos...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Request
+            fetch(`/api/v1/gestionar-servicios/presupuesto-servicio/solicitudes/${idSolicitud}/productos`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('DEBUG: Productos recibidos:', data);
+                
+                if (data.success) {
+                    productosSolicitud = data.data;
+                    
+                    if (productosSolicitud.length === 0) {
+                        Swal.fire('Aviso', 'Esta solicitud no tiene productos', 'info');
+                        return;
+                    }
+
+                    // Cargar en el select
+                    const select = $('#cbo_producto');
+                    select.empty();
+                    select.append('<option value="">Seleccione un producto...</option>');
+                    
+                    productosSolicitud.forEach(prod => {
+                        select.append(`
+                            <option value="${prod.id_producto}" 
+                                    data-nombre="${prod.producto}"
+                                    data-cantidad="${prod.cantidad}"
+                                    data-precio="${prod.precio_compra}">
+                                ${prod.producto} (Cantidad: ${prod.cantidad})
+                            </option>
+                        `);
+                    });
+
+                    select.prop('disabled', false);
+                    $('#cbo_impuesto').prop('disabled', false);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Productos cargados!',
+                        text: `${productosSolicitud.length} productos disponibles. Ahora asigne precios.`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire('Error', data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar productos:', error);
+                Swal.fire('Error', 'No se pudieron cargar los productos', 'error');
+            });
+        });
+    }
+
+    // ========== SELECCIONAR PRODUCTO ==========
+    function eventoSeleccionarProducto() {
+        $('#cbo_producto').on('change', function() {
+            const selectedOption = $(this).find('option:selected');
+            const cantidad = selectedOption.data('cantidad');
+            const precioCompra = selectedOption.data('precio');
+
+            if (cantidad !== undefined) {
+                $('#txt_cantidad').val(cantidad);
+                $('#txt_precio').val(precioCompra || 0);
+                $('#txt_precio').focus();
+            }
+        });
+    }
+
+    // ========== AGREGAR PRODUCTO ==========
+    function eventoAgregarProducto() {
+        $('#btn_agregar_producto').on('click', function() {
+            console.log('DEBUG: Agregando producto a presupuesto...');
+            
+            const idProducto = parseInt($('#cbo_producto').val());
+            const nombreProducto = $('#cbo_producto option:selected').data('nombre');
+            const cantidad = parseInt($('#txt_cantidad').val());
+            const precioUnitario = parseFloat($('#txt_precio').val());
+            const idImpuesto = parseInt($('#cbo_impuesto').val());
+            const tasaIVA = parseFloat($('#cbo_impuesto option:selected').data('tasa'));
+
+            // Validaciones
+            if (!idProducto) {
+                Swal.fire('Error', 'Debe seleccionar un producto', 'error');
+                return;
+            }
+            if (!cantidad || cantidad <= 0) {
+                Swal.fire('Error', 'La cantidad debe ser mayor a 0', 'error');
+                return;
+            }
+            if (precioUnitario < 0) {
+                Swal.fire('Error', 'El precio no puede ser negativo', 'error');
+                return;
+            }
+            if (!idImpuesto) {
+                Swal.fire('Error', 'Debe seleccionar un IVA', 'error');
+                return;
+            }
+
+            // Verificar si ya está en la lista
+            if (productosPresupuesto.find(p => p.id_producto === idProducto)) {
+                Swal.fire('Error', 'Este producto ya está en el presupuesto', 'warning');
+                return;
+            }
+
+            // Calcular totales
+            const subtotal = cantidad * precioUnitario;
+            const iva = subtotal * (tasaIVA / 100);
+            const total = subtotal + iva;
+
+            // Agregar a la lista
+            productosPresupuesto.push({
+                id_producto: idProducto,
+                nombre: nombreProducto,
+                cantidad: cantidad,
+                precio_unitario: precioUnitario,
+                id_impuesto: idImpuesto,
+                tasa_iva: tasaIVA,
+                subtotal: subtotal,
+                iva: iva,
+                total: total
+            });
+
+            console.log('DEBUG: Producto agregado:', productosPresupuesto);
+
+            // Actualizar tabla
+            actualizarTablaProductos();
+
+            // Limpiar campos
+            $('#cbo_producto').val('');
+            $('#txt_cantidad').val(1);
+            $('#txt_precio').val(0);
+            $('#cbo_impuesto').val('');
+        });
+    }
+
+    // ========== ACTUALIZAR TABLA ==========
+    function actualizarTablaProductos() {
+        const tbody = $('#productos_table_body');
+        tbody.empty();
+
+        if (productosPresupuesto.length === 0) {
+            tbody.html(`
+                <tr>
+                    <td colspan="8" class="text-center text-muted">
+                        No hay productos agregados
+                    </td>
+                </tr>
+            `);
+            $('#total_subtotal').text('0');
+            $('#total_iva').text('0');
+            $('#total_general').text('0');
+            return;
+        }
+
+        let totalSubtotal = 0;
+        let totalIVA = 0;
+        let totalGeneral = 0;
+
+        productosPresupuesto.forEach((prod, index) => {
+            totalSubtotal += prod.subtotal;
+            totalIVA += prod.iva;
+            totalGeneral += prod.total;
+
+            const fila = `
+                <tr>
+                    <td>${prod.nombre}</td>
+                    <td>${prod.cantidad}</td>
+                    <td>${formatearNumero(prod.precio_unitario)}</td>
+                    <td>${prod.tasa_iva}%</td>
+                    <td>${formatearNumero(prod.subtotal)}</td>
+                    <td>${formatearNumero(prod.iva)}</td>
+                    <td>${formatearNumero(prod.total)}</td>
+                    <td class="text-center">
+                        <button class="btn btn-danger btn-sm" onclick="eliminarProducto(${index})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            tbody.append(fila);
+        });
+
+        $('#total_subtotal').text(formatearNumero(totalSubtotal));
+        $('#total_iva').text(formatearNumero(totalIVA));
+        $('#total_general').text(formatearNumero(totalGeneral));
+    }
+
+    // ========== ELIMINAR PRODUCTO ==========
+    function eliminarProducto(index) {
+        console.log('DEBUG: Eliminando producto index:', index);
+        productosPresupuesto.splice(index, 1);
+        actualizarTablaProductos();
+    }
+
+    // ========== VALIDAR FORMULARIO ==========
+    function validarFormulario() {
+        console.log('========== VALIDANDO FORMULARIO ==========');
+        
+        const idSolicitud = $('#cbo_solicitud').val();
+        const idEmpleado = $('#cbo_empleado').val();
+        const nroPresupuesto = $('#txt_nro_presupuesto').val();
+        const fechaPresupuesto = $('#txt_fecha_presupuesto').val();
+        const fechaValidez = $('#txt_fecha_validez').val();
+
+        if (!idSolicitud) {
+            Swal.fire('Error', 'Debe seleccionar una solicitud', 'error');
+            return false;
+        }
+        if (!idEmpleado) {
+            Swal.fire('Error', 'Debe seleccionar un empleado', 'error');
+            return false;
+        }
+        if (!nroPresupuesto) {
+            Swal.fire('Error', 'Debe ingresar el número de presupuesto', 'error');
+            return false;
+        }
+        if (!/^[A-Z]+-\d{4}-\d{3,6}$/.test(nroPresupuesto)) {
+            Swal.fire('Error', 'El formato del número debe ser PSERV-YYYY-XXX (ej: PSERV-2025-001)', 'error');
+            return false;
+        }
+        if (!fechaPresupuesto) {
+            Swal.fire('Error', 'Debe ingresar la fecha del presupuesto', 'error');
+            return false;
+        }
+        if (!fechaValidez) {
+            Swal.fire('Error', 'Debe ingresar la fecha de validez', 'error');
+            return false;
+        }
+        if (productosPresupuesto.length === 0) {
+            Swal.fire('Error', 'Debe agregar al menos un producto/servicio', 'error');
+            return false;
+        }
+
+        console.log('DEBUG: Validación exitosa');
+        return true;
+    }
+
+    // ========== REGISTRAR PRESUPUESTO ==========
+    function eventoRegistrar() {
+        $('#btn_registrar').on('click', function() {
+            console.log('========== REGISTRAR PRESUPUESTO ==========');
+            
+            if (!validarFormulario()) {
+                return;
+            }
+
+            // Preparar detalle
+            const detallePresupuesto = productosPresupuesto.map(prod => ({
+                id_producto: prod.id_producto,
+                cantidad: prod.cantidad,
+                precio_unitario: prod.precio_unitario,
+                id_impuesto: prod.id_impuesto
+            }));
+
+            const payload = {
+                id_solicitud: parseInt($('#cbo_solicitud').val()),
+                id_cliente: idClienteSeleccionado,
+                id_empleado: parseInt($('#cbo_empleado').val()),
+                nro_presupuesto: $('#txt_nro_presupuesto').val(),
+                fecha_presupuesto: $('#txt_fecha_presupuesto').val(),
+                fecha_validez: $('#txt_fecha_validez').val(),
+                observaciones: $('#txt_observaciones').val() || null,
+                detalle_presupuesto: detallePresupuesto
+            };
+
+            console.log('DEBUG: Payload a enviar:', payload);
+
+            // Confirmación
+            Swal.fire({
+                title: '¿Registrar este presupuesto?',
+                html: `
+                    <p>Solicitud: <strong>${$('#cbo_solicitud option:selected').text()}</strong></p>
+                    <p>Productos: <strong>${productosPresupuesto.length}</strong></p>
+                    <p>Total: <strong>${$('#total_general').text()}</strong></p>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, registrar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Loading
+                    Swal.fire({
+                        title: 'Registrando presupuesto...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Request
+                    fetch('/api/v1/gestionar-servicios/presupuesto-servicio/presupuestos', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(payload)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('DEBUG: Response:', data);
+                        
+                        if (data.success) {
+                            Swal.fire({
+                                title: '¡Presupuesto registrado!',
+                                text: data.mensaje,
+                                icon: 'success',
+                                confirmButtonText: 'Ir al listado'
+                            }).then(() => {
+                                location.replace("{{ url_for('presupuestomod.presupuestos_index') }}");
+                            });
+                        } else {
+                            Swal.fire('Error', data.error, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al registrar:', error);
+                        Swal.fire('Error', 'No se pudo registrar el presupuesto', 'error');
+                    });
+                }
+            });
+        });
+    }
+
+    // ========== VOLVER ==========
+    function eventoVolver() {
+        $('#btn_volver').on('click', function() {
+            console.log('DEBUG: Volviendo al listado');
+            location.replace("{{ url_for('presupuestomod.presupuestos_index') }}");
+        });
+    }
+</script>
+{% endblock %}
