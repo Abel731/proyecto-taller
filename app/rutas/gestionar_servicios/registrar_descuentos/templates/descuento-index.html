@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Gestión de Descuentos
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center bg-info text-white">
+            <h6 class="m-0 font-weight-bold">Listado de Descuentos</h6>
+            <a href="{{ url_for('descuentomod.descuentos_gestion') }}" class="btn btn-light btn-sm">
+                <i class="fas fa-plus"></i> Registrar Descuento
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="tbl_descuentos" width="100%" cellspacing="0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre Descuento</th>
+                            <th>Tipo</th>
+                            <th>Fecha Inicio</th>
+                            <th>Fecha Fin</th>
+                            <th>Productos</th>
+                            <th>Estado</th>
+                            <th>Vigencia</th>
+                            <th>Activo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Cargado por DataTables -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    $(document).ready(function() {
+        console.log('========== INICIO DE CARGA INDEX DESCUENTOS ==========');
+        cargarDescuentos();
+    });
+
+    // ========== CARGAR DESCUENTOS ==========
+    function cargarDescuentos() {
+        const tabla = $('#tbl_descuentos').DataTable({
+            ajax: {
+                url: '/api/v1/gestionar-servicios/descuento/descuentos',
+                dataSrc: function(json) {
+                    console.log('DEBUG: Data recibida:', json);
+                    if (json.success) {
+                        return json.data;
+                    } else {
+                        Swal.fire('Error', json.error, 'error');
+                        return [];
+                    }
+                },
+                error: function(xhr, error, thrown) {
+                    console.error('Error en cargarDescuentos:', error);
+                    Swal.fire('Error', 'No se pudieron cargar los descuentos', 'error');
+                }
+            },
+            columns: [
+                { data: 'id_descuento' },
+                { data: 'nombre_descuento' },
+                { data: 'tipo_descuento' },
+                { data: 'fecha_inicio' },
+                { 
+                    data: 'fecha_fin',
+                    render: function(data) {
+                        return data ? data : '<span class="badge badge-info">Permanente</span>';
+                    }
+                },
+                { data: 'cantidad_productos' },
+                { 
+                    data: 'estado_vigencia',
+                    render: function(data, type, row) {
+                        const estados = {
+                            'Vigente': '<span class="badge badge-success">Vigente</span>',
+                            'Permanente': '<span class="badge badge-primary">Permanente</span>',
+                            'Próximo': '<span class="badge badge-info">Próximo</span>',
+                            'Vencido': '<span class="badge badge-secondary">Vencido</span>',
+                            'Inactivo': '<span class="badge badge-warning">Inactivo</span>'
+                        };
+                        return estados[data] || data;
+                    }
+                },
+                { 
+                    data: 'activo',
+                    render: function(data) {
+                        return data ? 
+                            '<span class="badge badge-success"><i class="fas fa-check"></i> Sí</span>' : 
+                            '<span class="badge badge-danger"><i class="fas fa-times"></i> No</span>';
+                    }
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        let botones = `
+                            <button class="btn btn-info btn-sm" onclick="verDescuento(${row.id_descuento})" title="Ver detalle">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        `;
+                        
+                        // Botón de activar/desactivar
+                        if (row.activo) {
+                            botones += `
+                                <button class="btn btn-warning btn-sm" onclick="cambiarEstado(${row.id_descuento}, false)" title="Desactivar">
+                                    <i class="fas fa-toggle-off"></i>
+                                </button>
+                            `;
+                        } else {
+                            botones += `
+                                <button class="btn btn-success btn-sm" onclick="cambiarEstado(${row.id_descuento}, true)" title="Activar">
+                                    <i class="fas fa-toggle-on"></i>
+                                </button>
+                            `;
+                        }
+                        
+                        return botones;
+                    }
+                }
+            ],
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+            },
+            order: [[0, 'desc']]
+        });
+    }
+
+    // ========== VER DETALLE ==========
+    function verDescuento(idDescuento) {
+        console.log('DEBUG: Ver descuento:', idDescuento);
+        window.location.href = `/gestionar-servicios/descuento/descuentos-ver/${idDescuento}`;
+    }
+
+    // ========== CAMBIAR ESTADO ==========
+    function cambiarEstado(idDescuento, activo) {
+        console.log('DEBUG: Cambiar estado descuento:', idDescuento, 'a:', activo);
+        
+        const accion = activo ? 'activar' : 'desactivar';
+        const color = activo ? '#28a745' : '#ffc107';
+        
+        Swal.fire({
+            title: `¿${accion.charAt(0).toUpperCase() + accion.slice(1)} este descuento?`,
+            html: `<p>El descuento será ${activo ? 'activado' : 'desactivado'}</p>`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: color,
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: `Sí, ${accion}`,
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Loading
+                Swal.fire({
+                    title: 'Cambiando estado...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Request
+                fetch(`/api/v1/gestionar-servicios/descuento/descuentos/${idDescuento}/estado`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ activo: activo })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('DEBUG: Response cambiar estado:', data);
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: '¡Estado cambiado!',
+                            text: data.mensaje,
+                            icon: 'success'
+                        }).then(() => {
+                            $('#tbl_descuentos').DataTable().ajax.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al cambiar estado:', error);
+                    Swal.fire('Error', 'No se pudo cambiar el estado', 'error');
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}

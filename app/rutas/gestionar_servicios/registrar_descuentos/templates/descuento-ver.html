@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Ver Descuento N° {{ descuento.id_descuento }}
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-info text-white">
+            <h6 class="m-0 font-weight-bold">Detalle de Descuento N° {{ descuento.id_descuento }}</h6>
+        </div>
+        <div class="card-body">
+            <!-- ========== INFORMACIÓN GENERAL ========== -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card border-left-info py-2">
+                        <div class="card-body">
+                            <h6 class="text-info font-weight-bold mb-3">Información del Descuento</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Nombre:</strong> {{ descuento.nombre_descuento }}</p>
+                                    <p><strong>Tipo:</strong> {{ descuento.tipo_descuento }}</p>
+                                    <p><strong>Fecha Inicio:</strong> {{ descuento.fecha_inicio }}</p>
+                                    <p><strong>Fecha Fin:</strong> 
+                                        {% if descuento.fecha_fin %}
+                                            {{ descuento.fecha_fin }}
+                                        {% else %}
+                                            <span class="badge badge-primary">Permanente</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Fecha Registro:</strong> {{ descuento.fecha_registro }}</p>
+                                    <p><strong>Estado Vigencia:</strong> 
+                                        {% if descuento.estado_vigencia == 'Vigente' %}
+                                            <span class="badge badge-success">Vigente</span>
+                                        {% elif descuento.estado_vigencia == 'Permanente' %}
+                                            <span class="badge badge-primary">Permanente</span>
+                                        {% elif descuento.estado_vigencia == 'Próximo' %}
+                                            <span class="badge badge-info">Próximo</span>
+                                        {% elif descuento.estado_vigencia == 'Vencido' %}
+                                            <span class="badge badge-secondary">Vencido</span>
+                                        {% else %}
+                                            <span class="badge badge-warning">Inactivo</span>
+                                        {% endif %}
+                                    </p>
+                                    <p><strong>Activo:</strong> 
+                                        {% if descuento.activo %}
+                                            <span class="badge badge-success"><i class="fas fa-check"></i> Sí</span>
+                                        {% else %}
+                                            <span class="badge badge-danger"><i class="fas fa-times"></i> No</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            {% if descuento.descripcion %}
+                            <div class="row">
+                                <div class="col-12">
+                                    <p><strong>Descripción:</strong></p>
+                                    <p>{{ descuento.descripcion }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== DETALLE DE PRODUCTOS CON DESCUENTO ========== -->
+            <h5 class="mb-3">Productos con Descuento</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Producto</th>
+                            <th>Precio Original</th>
+                            <th>% Descuento</th>
+                            <th>Descuento Gs.</th>
+                            <th>Precio Final</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in descuento.detalle %}
+                        <tr>
+                            <td>{{ item.id_producto }}</td>
+                            <td>{{ item.producto }}</td>
+                            <td>{{ "{:,.0f}".format(item.precio_original).replace(',', '.') }}</td>
+                            <td>{{ item.porcentaje_descuento }}%</td>
+                            <td>{{ "{:,.0f}".format(item.descuento).replace(',', '.') }}</td>
+                            <td><strong>{{ "{:,.0f}".format(item.precio_final).replace(',', '.') }}</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ========== ACCIONES DISPONIBLES ========== -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card border-left-primary py-2">
+                        <div class="card-body">
+                            <h6 class="text-primary font-weight-bold mb-3">Acciones Disponibles</h6>
+                            
+                            {% if descuento.activo %}
+                            <p class="mb-0">
+                                <button class="btn btn-warning btn-sm" onclick="cambiarEstado({{ descuento.id_descuento }}, false)">
+                                    <i class="fas fa-toggle-off"></i> Desactivar Descuento
+                                </button>
+                                <span class="ml-2 text-muted">Desactiva el descuento sin eliminarlo.</span>
+                            </p>
+                            {% else %}
+                            <p class="mb-0">
+                                <button class="btn btn-success btn-sm" onclick="cambiarEstado({{ descuento.id_descuento }}, true)">
+                                    <i class="fas fa-toggle-on"></i> Activar Descuento
+                                </button>
+                                <span class="ml-2 text-muted">Activa nuevamente el descuento.</span>
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== FOOTER CON BOTONES ========== -->
+        <div class="card-footer">
+            <button type="button" class="btn btn-secondary btn-icon-split" id="btn_volver">
+                <span class="icon text-white-50">
+                    <i class="fas fa-arrow-left"></i>
+                </span>
+                <span class="text">Volver al Listado</span>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    $(document).ready(function() {
+        console.log('========== INICIO VER DESCUENTO ==========');
+        eventoVolver();
+    });
+
+    // ========== CAMBIAR ESTADO ==========
+    function cambiarEstado(idDescuento, activo) {
+        console.log('DEBUG: Cambiar estado descuento:', idDescuento, 'a:', activo);
+        
+        const accion = activo ? 'activar' : 'desactivar';
+        const color = activo ? '#28a745' : '#ffc107';
+        
+        Swal.fire({
+            title: `¿${accion.charAt(0).toUpperCase() + accion.slice(1)} este descuento?`,
+            html: `<p>El descuento será ${activo ? 'activado' : 'desactivado'}</p>`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: color,
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: `Sí, ${accion}`,
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Loading
+                Swal.fire({
+                    title: 'Cambiando estado...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Request
+                fetch(`/api/v1/gestionar-servicios/descuento/descuentos/${idDescuento}/estado`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ activo: activo })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('DEBUG: Response cambiar estado:', data);
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: '¡Estado cambiado!',
+                            text: data.mensaje,
+                            icon: 'success',
+                            confirmButtonText: 'Ir al listado'
+                        }).then(() => {
+                            location.replace("{{ url_for('descuentomod.descuentos_index') }}");
+                        });
+                    } else {
+                        Swal.fire('Error', data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al cambiar estado:', error);
+                    Swal.fire('Error', 'No se pudo cambiar el estado', 'error');
+                });
+            }
+        });
+    }
+
+    // ========== VOLVER ==========
+    function eventoVolver() {
+        $('#btn_volver').on('click', function() {
+            console.log('DEBUG: Volviendo al listado');
+            location.replace("{{ url_for('descuentomod.descuentos_index') }}");
+        });
+    }
+</script>
+{% endblock %}
