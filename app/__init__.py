@@ -54,6 +54,9 @@ from app.rutas.gestionar_compras.gestionar_la_compra.gestionar_la_compra_routes 
 
 from app.rutas.gestionar_compras.registrar_ajustes.registrar_ajustes_routes import ajustemod
 
+from app.rutas.gestionar_compras.registrar_nota_compra.registrar_nota_compra_routes import notasmod
+
+
 
 # ============================================================
 # REGISTRAR REFERENCIALES 
@@ -87,7 +90,7 @@ app.register_blueprint(compramod, url_prefix=f'{modulo1}/gestionar-compra')
 
 app.register_blueprint(ajustemod, url_prefix=f'{modulo1}/registrar-ajustes')
 
-
+app.register_blueprint(notasmod, url_prefix=f'{modulo1}/registrar-notas')
 
 
 # ============================================================
@@ -125,6 +128,9 @@ from app.rutas.gestionar_compras.gestionar_la_compra.gestionar_la_compra_api imp
 
 from app.rutas.gestionar_compras.registrar_ajustes.registrar_ajustes_api import ajusteapi
 
+from app.rutas.gestionar_compras.registrar_nota_compra.registrar_nota_compra_api import notasapi
+
+
 # ============================================================
 # REGISTRAR APIS v1 - REFERENCIALES
 # ============================================================
@@ -155,6 +161,9 @@ app.register_blueprint(ocapi, url_prefix=f'{version1}{modulo1}/generar-orden-com
 app.register_blueprint(compraapi, url_prefix=f'{version1}{modulo1}/gestionar-compra')
 
 app.register_blueprint(ajusteapi, url_prefix=f'{version1}{modulo1}/registrar-ajustes')
+
+app.register_blueprint(notasapi, url_prefix=f'{version1}{modulo1}/registrar-notas')
+
 
 
 
