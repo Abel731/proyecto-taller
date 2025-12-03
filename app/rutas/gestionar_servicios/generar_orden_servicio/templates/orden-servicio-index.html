@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Gestión de Órdenes de Servicio
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center bg-primary text-white">
+            <h6 class="m-0 font-weight-bold">Listado de Órdenes de Servicio</h6>
+            <a href="{{ url_for('ordenmod.ordenes_servicio_gestion') }}" class="btn btn-light btn-sm">
+                <i class="fas fa-plus"></i> Generar Orden de Servicio
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="tbl_ordenes" width="100%" cellspacing="0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>N° Orden</th>
+                            <th>Fecha Orden</th>
+                            <th>Presupuesto Origen</th>
+                            <th>Cliente</th>
+                            <th>CI/RUC</th>
+                            <th>Inicio Estimado</th>
+                            <th>Fin Estimado</th>
+                            <th>Empleado</th>
+                            <th>Productos</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Cargado por DataTables -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    $(document).ready(function() {
+        console.log('========== INICIO DE CARGA INDEX ÓRDENES DE SERVICIO ==========');
+        cargarOrdenes();
+    });
+
+    // Función para formatear números al estilo paraguayo
+    function formatearNumero(numero) {
+        return new Intl.NumberFormat('es-PY', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(numero);
+    }
+
+    // ========== CARGAR ÓRDENES ==========
+    function cargarOrdenes() {
+        const tabla = $('#tbl_ordenes').DataTable({
+            ajax: {
+                url: '/api/v1/gestionar-servicios/orden-servicio/ordenes',
+                dataSrc: function(json) {
+                    console.log('DEBUG: Data recibida:', json);
+                    if (json.success) {
+                        return json.data;
+                    } else {
+                        Swal.fire('Error', json.error, 'error');
+                        return [];
+                    }
+                },
+                error: function(xhr, error, thrown) {
+                    console.error('Error en cargarOrdenes:', error);
+                    Swal.fire('Error', 'No se pudieron cargar las órdenes', 'error');
+                }
+            },
+            columns: [
+                { data: 'id_orden_servicio' },
+                { data: 'nro_orden_servicio' },
+                { data: 'fecha_orden' },
+                { data: 'nro_presupuesto' },
+                { data: 'cliente' },
+                { 
+                    data: null,
+                    render: function(data, type, row) {
+                        let ciRuc = row.cliente_ci || '';
+                        if (row.cliente_ruc) {
+                            ciRuc += (ciRuc ? ' / ' : '') + row.cliente_ruc;
+                        }
+                        return ciRuc || 'N/A';
+                    }
+                },
+                { data: 'fecha_inicio_estimada' },
+                { data: 'fecha_fin_estimada' },
+                { data: 'empleado' },
+                { data: 'cantidad_productos' },
+                { 
+                    data: 'total_general',
+                    render: function(data) {
+                        return formatearNumero(data);
+                    }
+                },
+                { 
+                    data: 'estado',
+                    render: function(data, type, row) {
+                        const estados = {
+                            1: '<span class="badge badge-warning">Borrador</span>',
+                            2: '<span class="badge badge-success">Autorizada</span>',
+                            3: '<span class="badge badge-secondary">Anulada</span>'
+                        };
+                        return estados[row.id_estado_orden] || data;
+                    }
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        let botones = `
+                            <button class="btn btn-info btn-sm" onclick="verOrden(${row.id_orden_servicio})" title="Ver detalle">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        `;
+                        
+                        // Botones según el estado actual
+                        if (row.id_estado_orden === 1) { // Borrador
+                            botones += `
+                                <button class="btn btn-success btn-sm" onclick="cambiarEstado(${row.id_orden_servicio}, 2)" title="Autorizar">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="cambiarEstado(${row.id_orden_servicio}, 3)" title="Anular">
+                                    <i class="fas fa-ban"></i>
+                                </button>
+                            `;
+                        } else if (row.id_estado_orden === 2) { // Autorizada
+                            botones += `
+                                <button class="btn btn-danger btn-sm" onclick="cambiarEstado(${row.id_orden_servicio}, 3)" title="Anular">
+                                    <i class="fas fa-ban"></i>
+                                </button>
+                            `;
+                        }
+                        
+                        return botones;
+                    }
+                }
+            ],
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+            },
+            order: [[0, 'desc']]
+        });
+    }
+
+    // ========== VER DETALLE ==========
+    function verOrden(idOrden) {
+        console.log('DEBUG: Ver orden:', idOrden);
+        window.location.href = `/gestionar-servicios/orden-servicio/ordenes-servicio-ver/${idOrden}`;
+    }
+
+    // ========== CAMBIAR ESTADO ==========
+    function cambiarEstado(idOrden, idEstado) {
+        console.log('DEBUG: Cambiar estado orden:', idOrden, 'a estado:', idEstado);
+        
+        const estados = {
+            2: { nombre: 'Autorizada', icono: 'check', color: '#28a745', texto: 'Se autorizará la ejecución del servicio' },
+            3: { nombre: 'Anulada', icono: 'ban', color: '#dc3545', texto: 'Esta acción no se puede deshacer' }
+        };
+        
+        const estado = estados[idEstado];
+        
+        Swal.fire({
+            title: `¿Cambiar a estado "${estado.nombre}"?`,
+            html: `<p>${estado.texto}</p>`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: estado.color,
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: `Sí, cambiar a ${estado.nombre}`,
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Loading
+                Swal.fire({
+                    title: 'Cambiando estado...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Request
+                fetch(`/api/v1/gestionar-servicios/orden-servicio/ordenes/${idOrden}/estado`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ id_estado: idEstado })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('DEBUG: Response cambiar estado:', data);
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: '¡Estado cambiado!',
+                            text: data.mensaje,
+                            icon: 'success'
+                        }).then(() => {
+                            $('#tbl_ordenes').DataTable().ajax.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al cambiar estado:', error);
+                    Swal.fire('Error', 'No se pudo cambiar el estado', 'error');
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}

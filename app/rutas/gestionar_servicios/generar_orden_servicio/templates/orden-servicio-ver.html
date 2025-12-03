@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Ver Orden de Servicio N° {{ orden.id_orden_servicio }}
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-primary text-white">
+            <h6 class="m-0 font-weight-bold">Detalle de Orden de Servicio N° {{ orden.id_orden_servicio }}</h6>
+        </div>
+        <div class="card-body">
+            <!-- ========== INFORMACIÓN GENERAL ========== -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card border-left-primary h-100 py-2">
+                        <div class="card-body">
+                            <h6 class="text-primary font-weight-bold mb-3">Información de la Orden</h6>
+                            <p><strong>N° Orden:</strong> {{ orden.nro_orden_servicio }}</p>
+                            <p><strong>Fecha Orden:</strong> {{ orden.fecha_orden }}</p>
+                            <p><strong>Fecha Inicio Estimada:</strong> {{ orden.fecha_inicio_estimada }}</p>
+                            <p><strong>Fecha Fin Estimada:</strong> {{ orden.fecha_fin_estimada }}</p>
+                            <p><strong>Presupuesto Origen:</strong> {{ orden.nro_presupuesto }}</p>
+                            <p><strong>Empleado:</strong> {{ orden.empleado }}</p>
+                            <p><strong>Estado:</strong> 
+                                {% if orden.id_estado_orden == 1 %}
+                                    <span class="badge badge-warning">Borrador</span>
+                                {% elif orden.id_estado_orden == 2 %}
+                                    <span class="badge badge-success">Autorizada</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">Anulada</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-left-info h-100 py-2">
+                        <div class="card-body">
+                            <h6 class="text-info font-weight-bold mb-3">Datos del Cliente</h6>
+                            <p><strong>Cliente:</strong> {{ orden.cliente }}</p>
+                            <p><strong>CI:</strong> {{ orden.cliente_ci }}</p>
+                            <p><strong>RUC:</strong> {{ orden.cliente_ruc if orden.cliente_ruc else 'N/A' }}</p>
+                            <p><strong>Teléfono:</strong> {{ orden.cliente_telefono if orden.cliente_telefono else 'N/A' }}</p>
+                            <p><strong>Dirección:</strong> {{ orden.cliente_direccion if orden.cliente_direccion else 'N/A' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== OBSERVACIONES ========== -->
+            {% if orden.observaciones %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-left-warning py-2">
+                        <div class="card-body">
+                            <h6 class="text-warning font-weight-bold mb-2">Observaciones</h6>
+                            <p class="mb-0">{{ orden.observaciones }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ========== DETALLE DE PRODUCTOS/SERVICIOS ========== -->
+            <h5 class="mb-3">Detalle de Productos/Servicios</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Producto/Servicio</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unit.</th>
+                            <th>IVA (%)</th>
+                            <th>Subtotal</th>
+                            <th>IVA Gs.</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in orden.detalle %}
+                        <tr>
+                            <td>{{ item.id_producto }}</td>
+                            <td>{{ item.producto }}</td>
+                            <td>{{ item.cantidad }}</td>
+                            <td>{{ "{:,.0f}".format(item.precio_unitario).replace(',', '.') }}</td>
+                            <td>{{ item.tasa_iva }}%</td>
+                            <td>{{ "{:,.0f}".format(item.subtotal).replace(',', '.') }}</td>
+                            <td>{{ "{:,.0f}".format(item.iva).replace(',', '.') }}</td>
+                            <td>{{ "{:,.0f}".format(item.total).replace(',', '.') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="font-weight-bold bg-light">
+                        <tr>
+                            <td colspan="5" class="text-right">SUBTOTAL:</td>
+                            <td>{{ "{:,.0f}".format(orden.total_sin_iva).replace(',', '.') }}</td>
+                            <td colspan="2"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="5" class="text-right">IVA:</td>
+                            <td colspan="2">{{ "{:,.0f}".format(orden.total_iva).replace(',', '.') }}</td>
+                            <td></td>
+                        </tr>
+                        <tr class="bg-primary text-white">
+                            <td colspan="5" class="text-right">TOTAL:</td>
+                            <td colspan="2">{{ "{:,.0f}".format(orden.total_general).replace(',', '.') }}</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- ========== ACCIONES DISPONIBLES ========== -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card border-left-success py-2">
+                        <div class="card-body">
+                            <h6 class="text-success font-weight-bold mb-3">Acciones Disponibles</h6>
+                            
+                            {% if orden.id_estado_orden == 1 %}
+                            <!-- Borrador -->
+                            <p class="mb-2">
+                                <button class="btn btn-success btn-sm" onclick="cambiarEstado({{ orden.id_orden_servicio }}, 2)">
+                                    <i class="fas fa-check"></i> Autorizar Orden
+                                </button>
+                                <span class="ml-2 text-muted">Autoriza la ejecución del servicio.</span>
+                            </p>
+                            <p class="mb-0">
+                                <button class="btn btn-danger btn-sm" onclick="cambiarEstado({{ orden.id_orden_servicio }}, 3)">
+                                    <i class="fas fa-ban"></i> Anular Orden
+                                </button>
+                                <span class="ml-2 text-muted">Cancelar esta orden.</span>
+                            </p>
+                            
+                            {% elif orden.id_estado_orden == 2 %}
+                            <!-- Autorizada -->
+                            <p class="mb-2 text-success">
+                                <i class="fas fa-check-circle"></i> <strong>Esta orden ha sido autorizada. El servicio puede ejecutarse.</strong>
+                            </p>
+                            <p class="mb-0">
+                                <button class="btn btn-danger btn-sm" onclick="cambiarEstado({{ orden.id_orden_servicio }}, 3)">
+                                    <i class="fas fa-ban"></i> Anular Orden
+                                </button>
+                                <span class="ml-2 text-muted">Solo puede ser anulada.</span>
+                            </p>
+                            
+                            {% else %}
+                            <!-- Anulada -->
+                            <p class="mb-0 text-muted">
+                                <i class="fas fa-info-circle"></i> Esta orden está anulada. No se pueden realizar más acciones.
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== FOOTER CON BOTONES ========== -->
+        <div class="card-footer">
+            <button type="button" class="btn btn-secondary btn-icon-split" id="btn_volver">
+                <span class="icon text-white-50">
+                    <i class="fas fa-arrow-left"></i>
+                </span>
+                <span class="text">Volver al Listado</span>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    $(document).ready(function() {
+        console.log('========== INICIO VER ORDEN ==========');
+        eventoVolver();
+    });
+
+    // ========== CAMBIAR ESTADO ==========
+    function cambiarEstado(idOrden, idEstado) {
+        console.log('DEBUG: Cambiar estado orden:', idOrden, 'a estado:', idEstado);
+        
+        const estados = {
+            2: { nombre: 'Autorizada', icono: 'check', color: '#28a745', texto: 'Se autorizará la ejecución del servicio' },
+            3: { nombre: 'Anulada', icono: 'ban', color: '#dc3545', texto: 'Esta acción no se puede deshacer' }
+        };
+        
+        const estado = estados[idEstado];
+        
+        Swal.fire({
+            title: `¿Cambiar a estado "${estado.nombre}"?`,
+            html: `<p>${estado.texto}</p>`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: estado.color,
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: `Sí, cambiar a ${estado.nombre}`,
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Loading
+                Swal.fire({
+                    title: 'Cambiando estado...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Request
+                fetch(`/api/v1/gestionar-servicios/orden-servicio/ordenes/${idOrden}/estado`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ id_estado: idEstado })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('DEBUG: Response cambiar estado:', data);
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: '¡Estado cambiado!',
+                            text: data.mensaje,
+                            icon: 'success',
+                            confirmButtonText: 'Ir al listado'
+                        }).then(() => {
+                            location.replace("{{ url_for('ordenmod.ordenes_servicio_index') }}");
+                        });
+                    } else {
+                        Swal.fire('Error', data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al cambiar estado:', error);
+                    Swal.fire('Error', 'No se pudo cambiar el estado', 'error');
+                });
+            }
+        });
+    }
+
+    // ========== VOLVER ==========
+    function eventoVolver() {
+        $('#btn_volver').on('click', function() {
+            console.log('DEBUG: Volviendo al listado');
+            location.replace("{{ url_for('ordenmod.ordenes_servicio_index') }}");
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,502 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Generar Orden de Servicio
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-primary text-white">
+            <h6 class="m-0 font-weight-bold">Generar Orden de Servicio</h6>
+        </div>
+        <div class="card-body">
+            <!-- ========== SECCIÓN 1: PRESUPUESTO ORIGEN ========== -->
+            <h5 class="text-primary">1. Presupuesto Aprobado</h5>
+            <hr>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="cbo_presupuesto">Presupuesto Aprobado: <span class="text-danger">*</span></label>
+                        <select id="cbo_presupuesto" class="form-control">
+                            <option value="">Seleccione un presupuesto...</option>
+                            {% for pres in presupuestos_disponibles %}
+                            <option value="{{ pres['id_presupuesto'] }}" 
+                                    data-cliente="{{ pres['cliente'] }}"
+                                    data-id-cliente="{{ pres['id_cliente'] }}"
+                                    data-fecha-presupuesto="{{ pres['fecha_presupuesto'] }}"
+                                    data-fecha-validez="{{ pres['fecha_validez'] }}">
+                                {{ pres['nro_presupuesto'] }} - {{ pres['cliente'] }} ({{ pres['fecha_presupuesto'] }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="cbo_empleado">Empleado que autoriza: <span class="text-danger">*</span></label>
+                        <select id="cbo_empleado" class="form-control">
+                            <option value="">Seleccione un empleado...</option>
+                            {% for emp in empleados %}
+                            <option value="{{ emp['id_empleado'] }}">
+                                {{ emp['empleado'] }} - CI: {{ emp['ci'] }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información del Presupuesto (se llena automáticamente) -->
+            <div class="row" id="info_presupuesto" style="display: none;">
+                <div class="col-12">
+                    <div class="card border-left-info py-2 mb-3">
+                        <div class="card-body">
+                            <h6 class="text-info font-weight-bold">Información del Presupuesto</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <p class="mb-1"><strong>Cliente:</strong> <span id="info_cliente">-</span></p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p class="mb-1"><strong>Fecha Presupuesto:</strong> <span id="info_fecha_presupuesto">-</span></p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p class="mb-1"><strong>Validez:</strong> <span id="info_fecha_validez">-</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== SECCIÓN 2: DATOS DE LA ORDEN ========== -->
+            <h5 class="text-primary mt-4">2. Datos de la Orden de Servicio</h5>
+            <hr>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="txt_nro_orden">N° Orden: <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="txt_nro_orden" 
+                               placeholder="OSERV-2025-001" maxlength="20">
+                        <small class="form-text text-muted">Formato: OSERV-YYYY-XXX</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="txt_fecha_orden">Fecha Orden: <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="txt_fecha_orden">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="txt_fecha_inicio">Inicio Estimado: <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="txt_fecha_inicio">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="txt_fecha_fin">Fin Estimado: <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="txt_fecha_fin">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label for="txt_observaciones">Observaciones:</label>
+                        <textarea class="form-control" id="txt_observaciones" rows="3" 
+                                  placeholder="Instrucciones especiales, horarios preferidos, contactos, etc."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== SECCIÓN 3: PRODUCTOS/SERVICIOS DEL PRESUPUESTO ========== -->
+            <h5 class="text-primary mt-4">3. Productos/Servicios</h5>
+            <hr>
+
+            <!-- Botón para cargar productos del presupuesto -->
+            <div class="mb-3">
+                <button type="button" class="btn btn-primary btn-sm" id="btn_cargar_productos">
+                    <i class="fas fa-download"></i> Cargar productos del presupuesto
+                </button>
+                <span class="text-muted ml-2">
+                    <small><i class="fas fa-info-circle"></i> Los productos se cargarán automáticamente del presupuesto seleccionado</small>
+                </span>
+            </div>
+
+            <!-- Tabla de Productos -->
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Producto/Servicio</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unit.</th>
+                            <th>IVA (%)</th>
+                            <th>Subtotal</th>
+                            <th>IVA Gs.</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productos_table_body">
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">
+                                Seleccione un presupuesto y cargue sus productos
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="font-weight-bold bg-light">
+                            <td colspan="4" class="text-right">TOTALES:</td>
+                            <td id="total_subtotal">0</td>
+                            <td id="total_iva">0</td>
+                            <td id="total_general">0</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== FOOTER CON BOTONES ========== -->
+        <div class="card-footer">
+            <button type="button" class="btn btn-primary btn-icon-split" id="btn_registrar">
+                <span class="icon text-white-50">
+                    <i class="fas fa-save"></i>
+                </span>
+                <span class="text">Generar Orden de Servicio</span>
+            </button>
+            <button type="button" class="btn btn-secondary btn-icon-split" id="btn_volver">
+                <span class="icon text-white-50">
+                    <i class="fas fa-arrow-left"></i>
+                </span>
+                <span class="text">Volver al Listado</span>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    // ========== VARIABLES GLOBALES ==========
+    let productosOrden = [];
+    let idClienteSeleccionado = null;
+
+    // Función para formatear números al estilo paraguayo
+    function formatearNumero(numero) {
+        return new Intl.NumberFormat('es-PY', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(numero);
+    }
+
+    // ========== INICIALIZACIÓN ==========
+    $(document).ready(function() {
+        console.log('========== INICIO ORDEN GESTIÓN ==========');
+        
+        establecerFechaActual();
+        eventoSeleccionarPresupuesto();
+        eventoCargarProductos();
+        eventoRegistrar();
+        eventoVolver();
+    });
+
+    // ========== ESTABLECER FECHA ACTUAL ==========
+    function establecerFechaActual() {
+        const hoy = new Date().toISOString().split('T')[0];
+        $('#txt_fecha_orden').val(hoy);
+        
+        // Fecha inicio: 2 días después
+        const inicio = new Date();
+        inicio.setDate(inicio.getDate() + 2);
+        $('#txt_fecha_inicio').val(inicio.toISOString().split('T')[0]);
+        
+        // Fecha fin: 7 días después del inicio
+        const fin = new Date(inicio);
+        fin.setDate(fin.getDate() + 7);
+        $('#txt_fecha_fin').val(fin.toISOString().split('T')[0]);
+        
+        console.log('DEBUG: Fechas establecidas - Orden:', hoy, 'Inicio:', inicio.toISOString().split('T')[0], 'Fin:', fin.toISOString().split('T')[0]);
+    }
+
+    // ========== SELECCIONAR PRESUPUESTO ==========
+    function eventoSeleccionarPresupuesto() {
+        $('#cbo_presupuesto').on('change', function() {
+            const selectedOption = $(this).find('option:selected');
+            
+            if ($(this).val()) {
+                const cliente = selectedOption.data('cliente');
+                const fechaPresupuesto = selectedOption.data('fecha-presupuesto');
+                const fechaValidez = selectedOption.data('fecha-validez');
+                idClienteSeleccionado = selectedOption.data('id-cliente');
+                
+                $('#info_cliente').text(cliente);
+                $('#info_fecha_presupuesto').text(fechaPresupuesto);
+                $('#info_fecha_validez').text(fechaValidez);
+                
+                $('#info_presupuesto').slideDown();
+                
+                // Limpiar productos cargados
+                productosOrden = [];
+                actualizarTablaProductos();
+            } else {
+                $('#info_presupuesto').slideUp();
+                idClienteSeleccionado = null;
+            }
+        });
+    }
+
+    // ========== CARGAR PRODUCTOS DEL PRESUPUESTO ==========
+    function eventoCargarProductos() {
+        $('#btn_cargar_productos').on('click', function() {
+            const idPresupuesto = $('#cbo_presupuesto').val();
+            
+            if (!idPresupuesto) {
+                Swal.fire('Error', 'Primero debe seleccionar un presupuesto', 'warning');
+                return;
+            }
+
+            console.log('DEBUG: Cargando productos de presupuesto:', idPresupuesto);
+
+            // Loading
+            Swal.fire({
+                title: 'Cargando productos...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Request
+            fetch(`/api/v1/gestionar-servicios/orden-servicio/presupuestos/${idPresupuesto}/productos`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('DEBUG: Productos recibidos:', data);
+                
+                if (data.success) {
+                    productosOrden = data.data;
+                    
+                    if (productosOrden.length === 0) {
+                        Swal.fire('Aviso', 'Este presupuesto no tiene productos', 'info');
+                        return;
+                    }
+
+                    actualizarTablaProductos();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Productos cargados!',
+                        text: `${productosOrden.length} productos cargados del presupuesto.`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire('Error', data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar productos:', error);
+                Swal.fire('Error', 'No se pudieron cargar los productos', 'error');
+            });
+        });
+    }
+
+    // ========== ACTUALIZAR TABLA ==========
+    function actualizarTablaProductos() {
+        const tbody = $('#productos_table_body');
+        tbody.empty();
+
+        if (productosOrden.length === 0) {
+            tbody.html(`
+                <tr>
+                    <td colspan="7" class="text-center text-muted">
+                        Seleccione un presupuesto y cargue sus productos
+                    </td>
+                </tr>
+            `);
+            $('#total_subtotal').text('0');
+            $('#total_iva').text('0');
+            $('#total_general').text('0');
+            return;
+        }
+
+        let totalSubtotal = 0;
+        let totalIVA = 0;
+        let totalGeneral = 0;
+
+        productosOrden.forEach(prod => {
+            const subtotal = prod.cantidad * prod.precio_unitario;
+            const iva = subtotal * (prod.tasa_iva / 100);
+            const total = subtotal + iva;
+
+            totalSubtotal += subtotal;
+            totalIVA += iva;
+            totalGeneral += total;
+
+            const fila = `
+                <tr>
+                    <td>${prod.producto}</td>
+                    <td>${prod.cantidad}</td>
+                    <td>${formatearNumero(prod.precio_unitario)}</td>
+                    <td>${prod.tasa_iva}%</td>
+                    <td>${formatearNumero(subtotal)}</td>
+                    <td>${formatearNumero(iva)}</td>
+                    <td>${formatearNumero(total)}</td>
+                </tr>
+            `;
+            tbody.append(fila);
+        });
+
+        $('#total_subtotal').text(formatearNumero(totalSubtotal));
+        $('#total_iva').text(formatearNumero(totalIVA));
+        $('#total_general').text(formatearNumero(totalGeneral));
+    }
+
+    // ========== VALIDAR FORMULARIO ==========
+    function validarFormulario() {
+        console.log('========== VALIDANDO FORMULARIO ==========');
+        
+        const idPresupuesto = $('#cbo_presupuesto').val();
+        const idEmpleado = $('#cbo_empleado').val();
+        const nroOrden = $('#txt_nro_orden').val();
+        const fechaOrden = $('#txt_fecha_orden').val();
+        const fechaInicio = $('#txt_fecha_inicio').val();
+        const fechaFin = $('#txt_fecha_fin').val();
+
+        if (!idPresupuesto) {
+            Swal.fire('Error', 'Debe seleccionar un presupuesto', 'error');
+            return false;
+        }
+        if (!idEmpleado) {
+            Swal.fire('Error', 'Debe seleccionar un empleado', 'error');
+            return false;
+        }
+        if (!nroOrden) {
+            Swal.fire('Error', 'Debe ingresar el número de orden', 'error');
+            return false;
+        }
+        if (!/^[A-Z]+-\d{4}-\d{3,6}$/.test(nroOrden)) {
+            Swal.fire('Error', 'El formato del número debe ser OSERV-YYYY-XXX (ej: OSERV-2025-001)', 'error');
+            return false;
+        }
+        if (!fechaOrden) {
+            Swal.fire('Error', 'Debe ingresar la fecha de orden', 'error');
+            return false;
+        }
+        if (!fechaInicio) {
+            Swal.fire('Error', 'Debe ingresar la fecha de inicio estimada', 'error');
+            return false;
+        }
+        if (!fechaFin) {
+            Swal.fire('Error', 'Debe ingresar la fecha de fin estimada', 'error');
+            return false;
+        }
+        if (fechaInicio > fechaFin) {
+            Swal.fire('Error', 'La fecha de inicio no puede ser posterior a la fecha de fin', 'error');
+            return false;
+        }
+        if (productosOrden.length === 0) {
+            Swal.fire('Error', 'Debe cargar los productos del presupuesto', 'error');
+            return false;
+        }
+
+        console.log('DEBUG: Validación exitosa');
+        return true;
+    }
+
+    // ========== REGISTRAR ORDEN ==========
+    function eventoRegistrar() {
+        $('#btn_registrar').on('click', function() {
+            console.log('========== REGISTRAR ORDEN ==========');
+            
+            if (!validarFormulario()) {
+                return;
+            }
+
+            // Preparar detalle
+            const detalleOrden = productosOrden.map(prod => ({
+                id_producto: prod.id_producto,
+                cantidad: prod.cantidad,
+                precio_unitario: prod.precio_unitario,
+                id_impuesto: prod.id_impuesto
+            }));
+
+            const payload = {
+                id_presupuesto: parseInt($('#cbo_presupuesto').val()),
+                id_cliente: idClienteSeleccionado,
+                id_empleado: parseInt($('#cbo_empleado').val()),
+                nro_orden_servicio: $('#txt_nro_orden').val(),
+                fecha_orden: $('#txt_fecha_orden').val(),
+                fecha_inicio_estimada: $('#txt_fecha_inicio').val(),
+                fecha_fin_estimada: $('#txt_fecha_fin').val(),
+                observaciones: $('#txt_observaciones').val() || null,
+                detalle_orden: detalleOrden
+            };
+
+            console.log('DEBUG: Payload a enviar:', payload);
+
+            // Confirmación
+            Swal.fire({
+                title: '¿Generar esta orden de servicio?',
+                html: `
+                    <p>Presupuesto: <strong>${$('#cbo_presupuesto option:selected').text()}</strong></p>
+                    <p>Productos: <strong>${productosOrden.length}</strong></p>
+                    <p>Total: <strong>${$('#total_general').text()}</strong></p>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, generar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Loading
+                    Swal.fire({
+                        title: 'Generando orden...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Request
+                    fetch('/api/v1/gestionar-servicios/orden-servicio/ordenes', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(payload)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('DEBUG: Response:', data);
+                        
+                        if (data.success) {
+                            Swal.fire({
+                                title: '¡Orden generada!',
+                                text: data.mensaje,
+                                icon: 'success',
+                                confirmButtonText: 'Ir al listado'
+                            }).then(() => {
+                                location.replace("{{ url_for('ordenmod.ordenes_servicio_index') }}");
+                            });
+                        } else {
+                            Swal.fire('Error', data.error, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al registrar:', error);
+                        Swal.fire('Error', 'No se pudo generar la orden', 'error');
+                    });
+                }
+            });
+        });
+    }
+
+    // ========== VOLVER ==========
+    function eventoVolver() {
+        $('#btn_volver').on('click', function() {
+            console.log('DEBUG: Volviendo al listado');
+            location.replace("{{ url_for('ordenmod.ordenes_servicio_index') }}");
+        });
+    }
+</script>
+{% endblock %}
