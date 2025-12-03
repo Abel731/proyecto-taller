@@ -57,6 +57,11 @@ from app.rutas.gestionar_compras.registrar_ajustes.registrar_ajustes_routes impo
 from app.rutas.gestionar_compras.registrar_nota_compra.registrar_nota_compra_routes import notasmod
 
 
+# ============================================================
+# IMPORTAR GESTIONAR SERVICIOS (ROUTES)
+# ============================================================
+from app.rutas.gestionar_servicios.registrar_solicitud_servicio.registrar_solicitud_servicio_routes import solicitudmod
+
 
 # ============================================================
 # REGISTRAR REFERENCIALES 
@@ -87,10 +92,15 @@ app.register_blueprint(pdcmod, url_prefix=f'{modulo1}/registrar-pedido-compras')
 app.register_blueprint(pdpmod, url_prefix=f'{modulo1}/registrar-presupuesto-proveedor')
 app.register_blueprint(ocmod, url_prefix=f'{modulo1}/generar-orden-compra')
 app.register_blueprint(compramod, url_prefix=f'{modulo1}/gestionar-compra')
-
 app.register_blueprint(ajustemod, url_prefix=f'{modulo1}/registrar-ajustes')
-
 app.register_blueprint(notasmod, url_prefix=f'{modulo1}/registrar-notas')
+
+
+# ============================================================
+# REGISTRAR MÓDULOS - GESTIONAR SERVICIOS (ROUTES)
+# ============================================================
+modulo2 = '/gestionar-servicios'
+app.register_blueprint(solicitudmod, url_prefix=f'{modulo2}/solicitud-servicio')
 
 
 # ============================================================
@@ -132,6 +142,12 @@ from app.rutas.gestionar_compras.registrar_nota_compra.registrar_nota_compra_api
 
 
 # ============================================================
+# IMPORTAR APIS v1 - GESTIONAR SERVICIOS
+# ============================================================
+from app.rutas.gestionar_servicios.registrar_solicitud_servicio.registrar_solicitud_servicio_api import solicitudapi
+
+
+# ============================================================
 # REGISTRAR APIS v1 - REFERENCIALES
 # ============================================================
 version1 = '/api/v1'
@@ -159,12 +175,14 @@ app.register_blueprint(pdcapi, url_prefix=f'{version1}/{modulo1}/registrar-pedid
 app.register_blueprint(pdpapi, url_prefix=f'{version1}/{modulo1}/registrar-presupuesto-proveedor')
 app.register_blueprint(ocapi, url_prefix=f'{version1}{modulo1}/generar-orden-compra')
 app.register_blueprint(compraapi, url_prefix=f'{version1}{modulo1}/gestionar-compra')
-
 app.register_blueprint(ajusteapi, url_prefix=f'{version1}{modulo1}/registrar-ajustes')
-
 app.register_blueprint(notasapi, url_prefix=f'{version1}{modulo1}/registrar-notas')
 
 
+# ============================================================
+# REGISTRAR APIS v1 - GESTIONAR SERVICIOS
+# ============================================================
+app.register_blueprint(solicitudapi, url_prefix=f'{version1}{modulo2}/solicitud-servicio')
 
 
 print("\n========== RUTAS REGISTRADAS ==========")
