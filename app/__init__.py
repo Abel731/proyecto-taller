@@ -61,6 +61,7 @@ from app.rutas.gestionar_compras.registrar_nota_compra.registrar_nota_compra_rou
 # IMPORTAR GESTIONAR SERVICIOS (ROUTES)
 # ============================================================
 from app.rutas.gestionar_servicios.registrar_solicitud_servicio.registrar_solicitud_servicio_routes import solicitudmod
+from app.rutas.gestionar_servicios.registrar_presupuesto_servicio.registrar_presupuesto_servicio_routes import presupuestomod
 
 
 # ============================================================
@@ -101,6 +102,8 @@ app.register_blueprint(notasmod, url_prefix=f'{modulo1}/registrar-notas')
 # ============================================================
 modulo2 = '/gestionar-servicios'
 app.register_blueprint(solicitudmod, url_prefix=f'{modulo2}/solicitud-servicio')
+app.register_blueprint(presupuestomod, url_prefix=f'{modulo2}/presupuesto-servicio')
+
 
 
 # ============================================================
@@ -146,6 +149,7 @@ from app.rutas.gestionar_compras.registrar_nota_compra.registrar_nota_compra_api
 # ============================================================
 from app.rutas.gestionar_servicios.registrar_solicitud_servicio.registrar_solicitud_servicio_api import solicitudapi
 
+from app.rutas.gestionar_servicios.registrar_presupuesto_servicio.registrar_presupuesto_servicio_api import presupuestoapi
 
 # ============================================================
 # REGISTRAR APIS v1 - REFERENCIALES
@@ -183,6 +187,7 @@ app.register_blueprint(notasapi, url_prefix=f'{version1}{modulo1}/registrar-nota
 # REGISTRAR APIS v1 - GESTIONAR SERVICIOS
 # ============================================================
 app.register_blueprint(solicitudapi, url_prefix=f'{version1}{modulo2}/solicitud-servicio')
+app.register_blueprint(presupuestoapi, url_prefix=f'{version1}{modulo2}/presupuesto-servicio')
 
 
 print("\n========== RUTAS REGISTRADAS ==========")
