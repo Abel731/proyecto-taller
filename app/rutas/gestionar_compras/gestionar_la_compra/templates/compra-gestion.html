@@ -507,26 +507,51 @@ Registrar Compra
 
     // ========== CALCULAR TOTALES GENERALES ==========
     function calcularTotales() {
-        let totalSubtotal = 0;
-        let totalIva = 0;
-        let totalGeneral = 0;
+    let totalSubtotal = 0;
+    let totalIva = 0;
+    let totalGeneral = 0;
 
-        $('#productos_table_body tr').each(function() {
-            const subtotal = parseFloat($(this).find('.subtotal-cell').text().replace(/,/g, '')) || 0;
-            const iva = parseFloat($(this).find('.iva-cell').text().replace(/,/g, '')) || 0;
-            const total = parseFloat($(this).find('.total-cell').text().replace(/,/g, '')) || 0;
+    console.log('========== DEBUG calcularTotales ==========');
 
-            totalSubtotal += subtotal;
-            totalIva += iva;
-            totalGeneral += total;
-        });
-
-        $('#total_subtotal').text(formatearNumero(totalSubtotal));
-        $('#total_iva').text(formatearNumero(totalIva));
-        $('#total_general').text(formatearNumero(totalGeneral));
+    $('#productos_table_body tr').each(function(index) {
+        const subtotalTexto = $(this).find('.subtotal-cell').text();
+        const ivaTexto = $(this).find('.iva-cell').text();
+        const totalTexto = $(this).find('.total-cell').text();
         
-        console.log(`DEBUG calcularTotales: Subtotal: ${totalSubtotal}, IVA: ${totalIva}, Total: ${totalGeneral}`);
-    }
+        // ✅ LOGS DE DEBUG
+        console.log(`DEBUG Fila ${index + 1}:`);
+        console.log(`  - subtotalTexto: "${subtotalTexto}"`);
+        console.log(`  - ivaTexto: "${ivaTexto}"`);
+        console.log(`  - totalTexto: "${totalTexto}"`);
+        
+        // Remover puntos de miles y reemplazar coma decimal por punto
+        const subtotal = parseFloat(subtotalTexto.replace(/\./g, '').replace(',', '.')) || 0;
+        const iva = parseFloat(ivaTexto.replace(/\./g, '').replace(',', '.')) || 0;
+        const total = parseFloat(totalTexto.replace(/\./g, '').replace(',', '.')) || 0;
+        
+        console.log(`  - subtotal parseado: ${subtotal}`);
+        console.log(`  - iva parseado: ${iva}`);
+        console.log(`  - total parseado: ${total}`);
+
+        totalSubtotal += subtotal;
+        totalIva += iva;
+        totalGeneral += total;
+    });
+
+    console.log('DEBUG Totales finales:');
+    console.log(`  - totalSubtotal: ${totalSubtotal}`);
+    console.log(`  - totalIva: ${totalIva}`);
+    console.log(`  - totalGeneral: ${totalGeneral}`);
+
+    $('#total_subtotal').text(formatearNumero(totalSubtotal));
+    $('#total_iva').text(formatearNumero(totalIva));
+    $('#total_general').text(formatearNumero(totalGeneral));
+    
+    console.log(`DEBUG Totales formateados:`);
+    console.log(`  - Subtotal: ${formatearNumero(totalSubtotal)}`);
+    console.log(`  - IVA: ${formatearNumero(totalIva)}`);
+    console.log(`  - Total: ${formatearNumero(totalGeneral)}`);
+}
 
     // ========== FORMATEAR NÚMERO ==========
     function formatearNumero(numero) {
