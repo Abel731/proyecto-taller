@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Gestión de Promociones
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center bg-success text-white">
+            <h6 class="m-0 font-weight-bold">Listado de Promociones</h6>
+            <a href="{{ url_for('promocionmod.promociones_gestion') }}" class="btn btn-light btn-sm">
+                <i class="fas fa-plus"></i> Registrar Promoción
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="tbl_promociones" width="100%" cellspacing="0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre Promoción</th>
+                            <th>Tipo</th>
+                            <th>Fecha Inicio</th>
+                            <th>Fecha Fin</th>
+                            <th>Productos</th>
+                            <th>Estado</th>
+                            <th>Vigencia</th>
+                            <th>Activa</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Cargado por DataTables -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    $(document).ready(function() {
+        console.log('========== INICIO DE CARGA INDEX PROMOCIONES ==========');
+        cargarPromociones();
+    });
+
+    // ========== CARGAR PROMOCIONES ==========
+    function cargarPromociones() {
+        const tabla = $('#tbl_promociones').DataTable({
+            ajax: {
+                url: '/api/v1/gestionar-servicios/promocion/promociones',
+                dataSrc: function(json) {
+                    console.log('DEBUG: Data recibida:', json);
+                    if (json.success) {
+                        return json.data;
+                    } else {
+                        Swal.fire('Error', json.error, 'error');
+                        return [];
+                    }
+                },
+                error: function(xhr, error, thrown) {
+                    console.error('Error en cargarPromociones:', error);
+                    Swal.fire('Error', 'No se pudieron cargar las promociones', 'error');
+                }
+            },
+            columns: [
+                { data: 'id_promocion' },
+                { data: 'nombre_promocion' },
+                { data: 'tipo_promocion' },
+                { data: 'fecha_inicio' },
+                { data: 'fecha_fin' },
+                { data: 'cantidad_productos' },
+                { 
+                    data: 'estado_vigencia',
+                    render: function(data, type, row) {
+                        const estados = {
+                            'Vigente': '<span class="badge badge-success">Vigente</span>',
+                            'Próxima': '<span class="badge badge-info">Próxima</span>',
+                            'Vencida': '<span class="badge badge-secondary">Vencida</span>',
+                            'Inactiva': '<span class="badge badge-warning">Inactiva</span>'
+                        };
+                        return estados[data] || data;
+                    }
+                },
+                { 
+                    data: 'activa',
+                    render: function(data) {
+                        return data ? 
+                            '<span class="badge badge-success"><i class="fas fa-check"></i> Sí</span>' : 
+                            '<span class="badge badge-danger"><i class="fas fa-times"></i> No</span>';
+                    }
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        let botones = `
+                            <button class="btn btn-info btn-sm" onclick="verPromocion(${row.id_promocion})" title="Ver detalle">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        `;
+                        
+                        // Botón de activar/desactivar
+                        if (row.activa) {
+                            botones += `
+                                <button class="btn btn-warning btn-sm" onclick="cambiarEstado(${row.id_promocion}, false)" title="Desactivar">
+                                    <i class="fas fa-toggle-off"></i>
+                                </button>
+                            `;
+                        } else {
+                            botones += `
+                                <button class="btn btn-success btn-sm" onclick="cambiarEstado(${row.id_promocion}, true)" title="Activar">
+                                    <i class="fas fa-toggle-on"></i>
+                                </button>
+                            `;
+                        }
+                        
+                        return botones;
+                    }
+                }
+            ],
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+            },
+            order: [[0, 'desc']]
+        });
+    }
+
+    // ========== VER DETALLE ==========
+    function verPromocion(idPromocion) {
+        console.log('DEBUG: Ver promoción:', idPromocion);
+        window.location.href = `/gestionar-servicios/promocion/promociones-ver/${idPromocion}`;
+    }
+
+    // ========== CAMBIAR ESTADO ==========
+    function cambiarEstado(idPromocion, activa) {
+        console.log('DEBUG: Cambiar estado promoción:', idPromocion, 'a:', activa);
+        
+        const accion = activa ? 'activar' : 'desactivar';
+        const color = activa ? '#28a745' : '#ffc107';
+        
+        Swal.fire({
+            title: `¿${accion.charAt(0).toUpperCase() + accion.slice(1)} esta promoción?`,
+            html: `<p>La promoción será ${activa ? 'activada' : 'desactivada'}</p>`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: color,
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: `Sí, ${accion}`,
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Loading
+                Swal.fire({
+                    title: 'Cambiando estado...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Request
+                fetch(`/api/v1/gestionar-servicios/promocion/promociones/${idPromocion}/estado`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ activa: activa })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('DEBUG: Response cambiar estado:', data);
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: '¡Estado cambiado!',
+                            text: data.mensaje,
+                            icon: 'success'
+                        }).then(() => {
+                            $('#tbl_promociones').DataTable().ajax.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al cambiar estado:', error);
+                    Swal.fire('Error', 'No se pudo cambiar el estado', 'error');
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}

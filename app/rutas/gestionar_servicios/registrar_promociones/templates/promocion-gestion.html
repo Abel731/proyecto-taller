@@ -1,0 +1,415 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Registrar Promoción
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-success text-white">
+            <h6 class="m-0 font-weight-bold">Registrar Nueva Promoción</h6>
+        </div>
+        <div class="card-body">
+            <!-- ========== SECCIÓN 1: DATOS DE LA PROMOCIÓN ========== -->
+            <h5 class="text-success">1. Datos de la Promoción</h5>
+            <hr>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="cbo_tipo_promocion">Tipo de Promoción: <span class="text-danger">*</span></label>
+                        <select id="cbo_tipo_promocion" class="form-control">
+                            <option value="">Seleccione un tipo...</option>
+                            {% for tipo in tipos_promocion %}
+                            <option value="{{ tipo['id_tipo_promocion'] }}">
+                                {{ tipo['descripcion'] }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="txt_nombre_promocion">Nombre de la Promoción: <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="txt_nombre_promocion" 
+                               placeholder="Ej: Black Friday 2025" maxlength="200">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label for="txt_descripcion">Descripción:</label>
+                        <textarea class="form-control" id="txt_descripcion" rows="3" 
+                                  placeholder="Descripción detallada de la promoción..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="txt_fecha_inicio">Fecha Inicio: <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="txt_fecha_inicio">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="txt_fecha_fin">Fecha Fin: <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="txt_fecha_fin">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== SECCIÓN 2: PRODUCTOS CON DESCUENTO ========== -->
+            <h5 class="text-success mt-4">2. Productos con Descuento</h5>
+            <hr>
+
+            <!-- Formulario para agregar producto -->
+            <div class="card border-left-success py-2 mb-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="cbo_producto">Producto:</label>
+                                <select id="cbo_producto" class="form-control">
+                                    <option value="">Seleccione un producto...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="txt_porcentaje_descuento">% Descuento (1-100):</label>
+                                <input type="number" class="form-control" id="txt_porcentaje_descuento" 
+                                       min="1" max="100" step="0.01" placeholder="Ej: 25">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label>&nbsp;</label>
+                            <button type="button" class="btn btn-success btn-block" id="btn_agregar_producto">
+                                <i class="fas fa-plus"></i> Agregar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Productos -->
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Producto</th>
+                            <th>Precio Original</th>
+                            <th>% Descuento</th>
+                            <th>Descuento Gs.</th>
+                            <th>Precio Final</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productos_table_body">
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">
+                                No hay productos agregados
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== FOOTER CON BOTONES ========== -->
+        <div class="card-footer">
+            <button type="button" class="btn btn-success btn-icon-split" id="btn_registrar">
+                <span class="icon text-white-50">
+                    <i class="fas fa-save"></i>
+                </span>
+                <span class="text">Registrar Promoción</span>
+            </button>
+            <button type="button" class="btn btn-secondary btn-icon-split" id="btn_volver">
+                <span class="icon text-white-50">
+                    <i class="fas fa-arrow-left"></i>
+                </span>
+                <span class="text">Volver al Listado</span>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    // ========== VARIABLES GLOBALES ==========
+    let productosPromocion = [];
+    let todosLosProductos = {{ productos_json | safe }};
+
+    // Función para formatear números al estilo paraguayo
+    function formatearNumero(numero) {
+        return new Intl.NumberFormat('es-PY', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(numero);
+    }
+
+    // ========== INICIALIZACIÓN ==========
+    $(document).ready(function() {
+        console.log('========== INICIO PROMOCIÓN GESTIÓN ==========');
+        console.log('DEBUG: Productos disponibles:', todosLosProductos.length);
+        
+        cargarProductosSelect();
+        establecerFechaActual();
+        eventoAgregarProducto();
+        eventoRegistrar();
+        eventoVolver();
+    });
+
+    // ========== CARGAR PRODUCTOS EN SELECT ==========
+    function cargarProductosSelect() {
+        const select = $('#cbo_producto');
+        select.empty();
+        select.append('<option value="">Seleccione un producto...</option>');
+        
+        todosLosProductos.forEach(prod => {
+            select.append(`
+                <option value="${prod.id_producto}" 
+                        data-precio="${prod.precio_compra}">
+                    ${prod.nombre} - Gs. ${formatearNumero(prod.precio_compra)}
+                </option>
+            `);
+        });
+    }
+
+    // ========== ESTABLECER FECHA ACTUAL ==========
+    function establecerFechaActual() {
+        const hoy = new Date().toISOString().split('T')[0];
+        $('#txt_fecha_inicio').val(hoy);
+        
+        // Fecha fin: 7 días después
+        const fin = new Date();
+        fin.setDate(fin.getDate() + 7);
+        $('#txt_fecha_fin').val(fin.toISOString().split('T')[0]);
+    }
+
+    // ========== AGREGAR PRODUCTO ==========
+    function eventoAgregarProducto() {
+        $('#btn_agregar_producto').on('click', function() {
+            const idProducto = parseInt($('#cbo_producto').val());
+            const porcentajeDescuento = parseFloat($('#txt_porcentaje_descuento').val());
+            
+            if (!idProducto) {
+                Swal.fire('Error', 'Debe seleccionar un producto', 'warning');
+                return;
+            }
+            
+            if (!porcentajeDescuento || porcentajeDescuento <= 0 || porcentajeDescuento > 100) {
+                Swal.fire('Error', 'El porcentaje debe estar entre 1 y 100', 'warning');
+                return;
+            }
+            
+            // Verificar si el producto ya está agregado
+            if (productosPromocion.find(p => p.id_producto === idProducto)) {
+                Swal.fire('Error', 'Este producto ya está agregado a la promoción', 'warning');
+                return;
+            }
+            
+            // Obtener datos del producto
+            const productoSeleccionado = todosLosProductos.find(p => p.id_producto === idProducto);
+            
+            if (!productoSeleccionado) {
+                Swal.fire('Error', 'Producto no encontrado', 'error');
+                return;
+            }
+            
+            // Agregar a la lista
+            productosPromocion.push({
+                id_producto: idProducto,
+                nombre: productoSeleccionado.nombre,
+                precio_original: productoSeleccionado.precio_compra,
+                porcentaje_descuento: porcentajeDescuento
+            });
+            
+            // Actualizar tabla
+            actualizarTablaProductos();
+            
+            // Limpiar formulario
+            $('#cbo_producto').val('');
+            $('#txt_porcentaje_descuento').val('');
+            
+            console.log('DEBUG: Producto agregado. Total productos:', productosPromocion.length);
+        });
+    }
+
+    // ========== ACTUALIZAR TABLA ==========
+    function actualizarTablaProductos() {
+        const tbody = $('#productos_table_body');
+        tbody.empty();
+
+        if (productosPromocion.length === 0) {
+            tbody.html(`
+                <tr>
+                    <td colspan="6" class="text-center text-muted">
+                        No hay productos agregados
+                    </td>
+                </tr>
+            `);
+            return;
+        }
+
+        productosPromocion.forEach((prod, index) => {
+            const descuento = prod.precio_original * (prod.porcentaje_descuento / 100);
+            const precioFinal = prod.precio_original - descuento;
+
+            const fila = `
+                <tr>
+                    <td>${prod.nombre}</td>
+                    <td>${formatearNumero(prod.precio_original)}</td>
+                    <td>${prod.porcentaje_descuento}%</td>
+                    <td>${formatearNumero(descuento)}</td>
+                    <td><strong>${formatearNumero(precioFinal)}</strong></td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="eliminarProducto(${index})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            tbody.append(fila);
+        });
+    }
+
+    // ========== ELIMINAR PRODUCTO ==========
+    function eliminarProducto(index) {
+        console.log('DEBUG: Eliminando producto en índice:', index);
+        productosPromocion.splice(index, 1);
+        actualizarTablaProductos();
+    }
+
+    // ========== VALIDAR FORMULARIO ==========
+    function validarFormulario() {
+        console.log('========== VALIDANDO FORMULARIO ==========');
+        
+        const idTipoPromocion = $('#cbo_tipo_promocion').val();
+        const nombrePromocion = $('#txt_nombre_promocion').val();
+        const fechaInicio = $('#txt_fecha_inicio').val();
+        const fechaFin = $('#txt_fecha_fin').val();
+
+        if (!idTipoPromocion) {
+            Swal.fire('Error', 'Debe seleccionar un tipo de promoción', 'error');
+            return false;
+        }
+        if (!nombrePromocion) {
+            Swal.fire('Error', 'Debe ingresar el nombre de la promoción', 'error');
+            return false;
+        }
+        if (!fechaInicio) {
+            Swal.fire('Error', 'Debe ingresar la fecha de inicio', 'error');
+            return false;
+        }
+        if (!fechaFin) {
+            Swal.fire('Error', 'Debe ingresar la fecha de fin', 'error');
+            return false;
+        }
+        if (fechaInicio > fechaFin) {
+            Swal.fire('Error', 'La fecha de inicio no puede ser posterior a la fecha de fin', 'error');
+            return false;
+        }
+        if (productosPromocion.length === 0) {
+            Swal.fire('Error', 'Debe agregar al menos un producto a la promoción', 'error');
+            return false;
+        }
+
+        console.log('DEBUG: Validación exitosa');
+        return true;
+    }
+
+    // ========== REGISTRAR PROMOCIÓN ==========
+    function eventoRegistrar() {
+        $('#btn_registrar').on('click', function() {
+            console.log('========== REGISTRAR PROMOCIÓN ==========');
+            
+            if (!validarFormulario()) {
+                return;
+            }
+
+            // Preparar detalle
+            const detallePromocion = productosPromocion.map(prod => ({
+                id_producto: prod.id_producto,
+                porcentaje_descuento: prod.porcentaje_descuento
+            }));
+
+            const payload = {
+                id_tipo_promocion: parseInt($('#cbo_tipo_promocion').val()),
+                nombre_promocion: $('#txt_nombre_promocion').val(),
+                descripcion: $('#txt_descripcion').val() || null,
+                fecha_inicio: $('#txt_fecha_inicio').val(),
+                fecha_fin: $('#txt_fecha_fin').val(),
+                detalle_promocion: detallePromocion
+            };
+
+            console.log('DEBUG: Payload a enviar:', payload);
+
+            // Confirmación
+            Swal.fire({
+                title: '¿Registrar esta promoción?',
+                html: `
+                    <p>Nombre: <strong>${payload.nombre_promocion}</strong></p>
+                    <p>Productos: <strong>${productosPromocion.length}</strong></p>
+                    <p>Vigencia: <strong>${payload.fecha_inicio} al ${payload.fecha_fin}</strong></p>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, registrar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Loading
+                    Swal.fire({
+                        title: 'Registrando promoción...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Request
+                    fetch('/api/v1/gestionar-servicios/promocion/promociones', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(payload)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('DEBUG: Response:', data);
+                        
+                        if (data.success) {
+                            Swal.fire({
+                                title: '¡Promoción registrada!',
+                                text: data.mensaje,
+                                icon: 'success',
+                                confirmButtonText: 'Ir al listado'
+                            }).then(() => {
+                                location.replace("{{ url_for('promocionmod.promociones_index') }}");
+                            });
+                        } else {
+                            Swal.fire('Error', data.error, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al registrar:', error);
+                        Swal.fire('Error', 'No se pudo registrar la promoción', 'error');
+                    });
+                }
+            });
+        });
+    }
+
+    // ========== VOLVER ==========
+    function eventoVolver() {
+        $('#btn_volver').on('click', function() {
+            console.log('DEBUG: Volviendo al listado');
+            location.replace("{{ url_for('promocionmod.promociones_index') }}");
+        });
+    }
+</script>
+{% endblock %}

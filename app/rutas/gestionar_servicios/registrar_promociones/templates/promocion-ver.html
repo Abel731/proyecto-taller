@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Ver Promoción N° {{ promocion.id_promocion }}
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-success text-white">
+            <h6 class="m-0 font-weight-bold">Detalle de Promoción N° {{ promocion.id_promocion }}</h6>
+        </div>
+        <div class="card-body">
+            <!-- ========== INFORMACIÓN GENERAL ========== -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card border-left-success py-2">
+                        <div class="card-body">
+                            <h6 class="text-success font-weight-bold mb-3">Información de la Promoción</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Nombre:</strong> {{ promocion.nombre_promocion }}</p>
+                                    <p><strong>Tipo:</strong> {{ promocion.tipo_promocion }}</p>
+                                    <p><strong>Fecha Inicio:</strong> {{ promocion.fecha_inicio }}</p>
+                                    <p><strong>Fecha Fin:</strong> {{ promocion.fecha_fin }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Fecha Registro:</strong> {{ promocion.fecha_registro }}</p>
+                                    <p><strong>Estado Vigencia:</strong> 
+                                        {% if promocion.estado_vigencia == 'Vigente' %}
+                                            <span class="badge badge-success">Vigente</span>
+                                        {% elif promocion.estado_vigencia == 'Próxima' %}
+                                            <span class="badge badge-info">Próxima</span>
+                                        {% elif promocion.estado_vigencia == 'Vencida' %}
+                                            <span class="badge badge-secondary">Vencida</span>
+                                        {% else %}
+                                            <span class="badge badge-warning">Inactiva</span>
+                                        {% endif %}
+                                    </p>
+                                    <p><strong>Activa:</strong> 
+                                        {% if promocion.activa %}
+                                            <span class="badge badge-success"><i class="fas fa-check"></i> Sí</span>
+                                        {% else %}
+                                            <span class="badge badge-danger"><i class="fas fa-times"></i> No</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            {% if promocion.descripcion %}
+                            <div class="row">
+                                <div class="col-12">
+                                    <p><strong>Descripción:</strong></p>
+                                    <p>{{ promocion.descripcion }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== DETALLE DE PRODUCTOS CON DESCUENTO ========== -->
+            <h5 class="mb-3">Productos con Descuento</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Producto</th>
+                            <th>Precio Original</th>
+                            <th>% Descuento</th>
+                            <th>Descuento Gs.</th>
+                            <th>Precio Final</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in promocion.detalle %}
+                        <tr>
+                            <td>{{ item.id_producto }}</td>
+                            <td>{{ item.producto }}</td>
+                            <td>{{ "{:,.0f}".format(item.precio_original).replace(',', '.') }}</td>
+                            <td>{{ item.porcentaje_descuento }}%</td>
+                            <td>{{ "{:,.0f}".format(item.descuento).replace(',', '.') }}</td>
+                            <td><strong>{{ "{:,.0f}".format(item.precio_final).replace(',', '.') }}</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ========== ACCIONES DISPONIBLES ========== -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card border-left-primary py-2">
+                        <div class="card-body">
+                            <h6 class="text-primary font-weight-bold mb-3">Acciones Disponibles</h6>
+                            
+                            {% if promocion.activa %}
+                            <p class="mb-0">
+                                <button class="btn btn-warning btn-sm" onclick="cambiarEstado({{ promocion.id_promocion }}, false)">
+                                    <i class="fas fa-toggle-off"></i> Desactivar Promoción
+                                </button>
+                                <span class="ml-2 text-muted">Desactiva la promoción sin eliminarla.</span>
+                            </p>
+                            {% else %}
+                            <p class="mb-0">
+                                <button class="btn btn-success btn-sm" onclick="cambiarEstado({{ promocion.id_promocion }}, true)">
+                                    <i class="fas fa-toggle-on"></i> Activar Promoción
+                                </button>
+                                <span class="ml-2 text-muted">Activa nuevamente la promoción.</span>
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== FOOTER CON BOTONES ========== -->
+        <div class="card-footer">
+            <button type="button" class="btn btn-secondary btn-icon-split" id="btn_volver">
+                <span class="icon text-white-50">
+                    <i class="fas fa-arrow-left"></i>
+                </span>
+                <span class="text">Volver al Listado</span>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    $(document).ready(function() {
+        console.log('========== INICIO VER PROMOCIÓN ==========');
+        eventoVolver();
+    });
+
+    // ========== CAMBIAR ESTADO ==========
+    function cambiarEstado(idPromocion, activa) {
+        console.log('DEBUG: Cambiar estado promoción:', idPromocion, 'a:', activa);
+        
+        const accion = activa ? 'activar' : 'desactivar';
+        const color = activa ? '#28a745' : '#ffc107';
+        
+        Swal.fire({
+            title: `¿${accion.charAt(0).toUpperCase() + accion.slice(1)} esta promoción?`,
+            html: `<p>La promoción será ${activa ? 'activada' : 'desactivada'}</p>`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: color,
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: `Sí, ${accion}`,
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Loading
+                Swal.fire({
+                    title: 'Cambiando estado...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Request
+                fetch(`/api/v1/gestionar-servicios/promocion/promociones/${idPromocion}/estado`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ activa: activa })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('DEBUG: Response cambiar estado:', data);
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: '¡Estado cambiado!',
+                            text: data.mensaje,
+                            icon: 'success',
+                            confirmButtonText: 'Ir al listado'
+                        }).then(() => {
+                            location.replace("{{ url_for('promocionmod.promociones_index') }}");
+                        });
+                    } else {
+                        Swal.fire('Error', data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al cambiar estado:', error);
+                    Swal.fire('Error', 'No se pudo cambiar el estado', 'error');
+                });
+            }
+        });
+    }
+
+    // ========== VOLVER ==========
+    function eventoVolver() {
+        $('#btn_volver').on('click', function() {
+            console.log('DEBUG: Volviendo al listado');
+            location.replace("{{ url_for('promocionmod.promociones_index') }}");
+        });
+    }
+</script>
+{% endblock %}
