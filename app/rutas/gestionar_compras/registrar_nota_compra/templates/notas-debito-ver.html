@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Ver Nota de Débito N° {{ nota.id_nota_debito }}
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-warning text-white">
+            <h6 class="m-0 font-weight-bold">Detalle de Nota de Débito N° {{ nota.id_nota_debito }}</h6>
+        </div>
+        <div class="card-body">
+            <!-- ========== INFORMACIÓN GENERAL ========== -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card border-left-warning h-100 py-2">
+                        <div class="card-body">
+                            <h6 class="text-warning font-weight-bold mb-3">Información General</h6>
+                            <p><strong>N° Nota de Débito:</strong> {{ nota.nro_nota_debito }}</p>
+                            <p><strong>Fecha Emisión:</strong> {{ nota.fecha_emision }}</p>
+                            <p><strong>Timbrado:</strong> {{ nota.timbrado }}</p>
+                            <p><strong>Venc. Timbrado:</strong> {{ nota.fecha_vencimiento_timbrado }}</p>
+                            <p><strong>Estado:</strong> 
+                                {% if nota.id_estado_nota == 1 %}
+                                    <span class="badge badge-info">Registrada</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">Anulada</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-left-primary h-100 py-2">
+                        <div class="card-body">
+                            <h6 class="text-primary font-weight-bold mb-3">Datos de la Operación</h6>
+                            <p><strong>Compra Origen:</strong> {{ nota.factura_origen }}</p>
+                            <p><strong>Proveedor:</strong> {{ nota.proveedor }}</p>
+                            <p><strong>Empleado:</strong> {{ nota.empleado }}</p>
+                            <p><strong>Depósito:</strong> {{ nota.deposito }}</p>
+                            <p><strong>Motivo:</strong> {{ nota.motivo }}</p>
+                            <p><strong>Afecta Stock:</strong> 
+                                {% if nota.afecta_stock %}
+                                    <span class="badge badge-success"><i class="fas fa-check"></i> SÍ</span>
+                                {% else %}
+                                    <span class="badge badge-secondary"><i class="fas fa-times"></i> NO</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== OBSERVACIONES ========== -->
+            {% if nota.observacion %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-left-info py-2">
+                        <div class="card-body">
+                            <h6 class="text-info font-weight-bold mb-2">Observaciones</h6>
+                            <p class="mb-0">{{ nota.observacion }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ========== DETALLE DE PRODUCTOS/CARGOS ========== -->
+            <h5 class="mb-3">Detalle de Productos / Cargos</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Producto/Cargo</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unit.</th>
+                            <th>IVA</th>
+                            <th>Subtotal</th>
+                            <th>IVA Gs.</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in nota.detalle %}
+                        <tr>
+                            <td>{{ item.id_producto }}</td>
+                            <td>{{ item.producto }}</td>
+                            <td>{{ item.cantidad }}</td>
+                            <td>{{ "{:,.0f}".format(item.precio_unitario).replace(',', '.') }}</td>
+                            <td>{{ item.tasa_iva }}%</td>
+                            <td>{{ "{:,.0f}".format(item.subtotal).replace(',', '.') }}</td>
+                            <td>{{ "{:,.0f}".format(item.iva).replace(',', '.') }}</td>
+                            <td>{{ "{:,.0f}".format(item.total).replace(',', '.') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="font-weight-bold bg-light">
+                        <tr>
+                            <td colspan="5" class="text-right">SUBTOTAL:</td>
+                            <td>{{ "{:,.0f}".format(nota.total_subtotal).replace(',', '.') }}</td>
+                            <td colspan="2"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="5" class="text-right">IVA:</td>
+                            <td colspan="2">{{ "{:,.0f}".format(nota.total_iva).replace(',', '.') }}</td>
+                            <td></td>
+                        </tr>
+                        <tr class="bg-warning text-white">
+                            <td colspan="5" class="text-right">TOTAL:</td>
+                            <td colspan="2">{{ "{:,.0f}".format(nota.total_general).replace(',', '.') }}</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- ========== IMPACTO DE LA NOTA ========== -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="alert alert-warning" role="alert">
+                        <h6 class="alert-heading"><i class="fas fa-info-circle"></i> Impacto de esta Nota de Débito</h6>
+                        <hr>
+                        <ul class="mb-0">
+                            {% if nota.afecta_stock %}
+                            <li><strong>Stock:</strong> Se sumaron {{ nota.detalle|length }} producto(s) al depósito <em>{{ nota.deposito }}</em></li>
+                            {% else %}
+                            <li><strong>Stock:</strong> No afecta el stock (solo cargos administrativos)</li>
+                            {% endif %}
+                            <li><strong>Cuenta por Pagar:</strong> Se aumentó el saldo en <strong>{{ "{:,.0f}".format(nota.total_general).replace(',', '.') }} Gs.</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== FOOTER CON BOTONES ========== -->
+        <div class="card-footer">
+            {% if nota.id_estado_nota == 1 %}
+            <button type="button" class="btn btn-danger btn-icon-split" id="btn_anular">
+                <span class="icon text-white-50">
+                    <i class="fas fa-ban"></i>
+                </span>
+                <span class="text">Anular Nota de Débito</span>
+            </button>
+            {% endif %}
+            <button type="button" class="btn btn-secondary btn-icon-split" id="btn_volver">
+                <span class="icon text-white-50">
+                    <i class="fas fa-arrow-left"></i>
+                </span>
+                <span class="text">Volver al Listado</span>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    $(document).ready(function() {
+        console.log('========== INICIO VER ND ==========');
+        eventoAnular();
+        eventoVolver();
+    });
+
+    // ========== ANULAR ND ==========
+    function eventoAnular() {
+        $('#btn_anular').on('click', function() {
+            console.log('DEBUG: Anulando ND...');
+            
+            const afectaStock = {{ 'true' if nota.afecta_stock else 'false' }};
+            
+            let mensajeReversiones = '<ul>';
+            if (afectaStock) {
+                mensajeReversiones += '<li>Se <strong>restará</strong> el stock que se había sumado</li>';
+            } else {
+                mensajeReversiones += '<li>No afecta stock (solo cargos)</li>';
+            }
+            mensajeReversiones += '<li>Se <strong>reducirá</strong> la cuenta por pagar</li>';
+            mensajeReversiones += '</ul>';
+            
+            Swal.fire({
+                title: '¿Anular esta Nota de Débito?',
+                html: `
+                    <p>Se revertirán los cambios en ${afectaStock ? 'stock y ' : ''}cuenta por pagar.</p>
+                    <p class="text-danger"><strong>Esta acción no se puede deshacer.</strong></p>
+                    <hr>
+                    <div class="text-left">
+                        <p class="mb-1"><strong>Reversiones que se aplicarán:</strong></p>
+                        ${mensajeReversiones}
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, anular',
+                cancelButtonText: 'Cancelar',
+                width: '600px'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Loading
+                    Swal.fire({
+                        title: 'Anulando Nota de Débito...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Request
+                    fetch(`/api/v1/gestionar-compras/registrar-notas/notas-debito/{{ nota.id_nota_debito }}/anular`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'}
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('DEBUG: Response:', data);
+                        
+                        if (data.success) {
+                            Swal.fire({
+                                title: '¡Nota de Débito anulada!',
+                                text: data.mensaje,
+                                icon: 'success',
+                                confirmButtonText: 'Ir al listado'
+                            }).then(() => {
+                                location.replace("{{ url_for('notasmod.notas_debito_index') }}");
+                            });
+                        } else {
+                            Swal.fire('Error', data.error, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al anular:', error);
+                        Swal.fire('Error', 'No se pudo anular la Nota de Débito', 'error');
+                    });
+                }
+            });
+        });
+    }
+
+    // ========== VOLVER ==========
+    function eventoVolver() {
+        $('#btn_volver').on('click', function() {
+            console.log('DEBUG: Volviendo al listado');
+            location.replace("{{ url_for('notasmod.notas_debito_index') }}");
+        });
+    }
+</script>
+{% endblock %}

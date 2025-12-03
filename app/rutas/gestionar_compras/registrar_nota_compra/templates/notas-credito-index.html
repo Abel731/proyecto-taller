@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Gestión de Notas de Crédito
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center bg-success text-white">
+            <h6 class="m-0 font-weight-bold">Listado de Notas de Crédito de Compras</h6>
+            <a href="{{ url_for('notasmod.notas_credito_gestion') }}" class="btn btn-light btn-sm">
+                <i class="fas fa-plus"></i> Registrar Nota de Crédito
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="tbl_notas_credito" width="100%" cellspacing="0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>N° Nota</th>
+                            <th>Fecha</th>
+                            <th>Factura Origen</th>
+                            <th>Proveedor</th>
+                            <th>Empleado</th>
+                            <th>Depósito</th>
+                            <th>Motivo</th>
+                            <th>Productos</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Cargado por DataTables -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    $(document).ready(function() {
+        console.log('========== INICIO DE CARGA INDEX NC ==========');
+        cargarNotasCredito();
+    });
+
+    // ========== CARGAR NOTAS DE CRÉDITO ==========
+    function cargarNotasCredito() {
+        const tabla = $('#tbl_notas_credito').DataTable({
+            ajax: {
+                url: '/api/v1/gestionar-compras/registrar-notas/notas-credito',
+                dataSrc: function(json) {
+                    console.log('DEBUG: Data recibida:', json);
+                    if (json.success) {
+                        return json.data;
+                    } else {
+                        Swal.fire('Error', json.error, 'error');
+                        return [];
+                    }
+                },
+                error: function(xhr, error, thrown) {
+                    console.error('Error en cargarNotasCredito:', error);
+                    Swal.fire('Error', 'No se pudieron cargar las notas de crédito', 'error');
+                }
+            },
+            columns: [
+                { data: 'id_nota_credito' },
+                { data: 'nro_nota_credito' },
+                { data: 'fecha_emision' },
+                { data: 'factura_origen' },
+                { data: 'proveedor' },
+                { data: 'empleado' },
+                { data: 'deposito' },
+                { data: 'motivo' },
+                { data: 'cantidad_productos' },
+                { 
+                    data: 'estado',
+                    render: function(data, type, row) {
+                        if (row.id_estado_nota === 1) {
+                            return '<span class="badge badge-info">Registrada</span>';
+                        } else {
+                            return '<span class="badge badge-secondary">Anulada</span>';
+                        }
+                    }
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        let botones = `
+                            <button class="btn btn-info btn-sm" onclick="verNC(${row.id_nota_credito})" title="Ver detalle">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        `;
+                        
+                        // Solo mostrar botón anular si está Registrada
+                        if (row.id_estado_nota === 1) {
+                            botones += `
+                                <button class="btn btn-danger btn-sm" onclick="anularNC(${row.id_nota_credito})" title="Anular">
+                                    <i class="fas fa-ban"></i>
+                                </button>
+                            `;
+                        }
+                        
+                        return botones;
+                    }
+                }
+            ],
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+            },
+            order: [[0, 'desc']]
+        });
+    }
+
+    // ========== VER DETALLE ==========
+    function verNC(idNC) {
+        console.log('DEBUG: Ver NC:', idNC);
+        window.location.href = `/gestionar-compras/registrar-notas/notas-credito-ver/${idNC}`;
+    }
+
+    // ========== ANULAR NC ==========
+    function anularNC(idNC) {
+        console.log('DEBUG: Anular NC:', idNC);
+        
+        Swal.fire({
+            title: '¿Anular esta Nota de Crédito?',
+            html: `
+                <p>Se revertirán los cambios en stock y cuenta por pagar.</p>
+                <p class="text-danger"><strong>Esta acción no se puede deshacer.</strong></p>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, anular',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Loading
+                Swal.fire({
+                    title: 'Anulando Nota de Crédito...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Request
+                fetch(`/api/v1/gestionar-compras/registrar-notas/notas-credito/${idNC}/anular`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'}
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('DEBUG: Response anular:', data);
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: '¡Nota de Crédito anulada!',
+                            text: data.mensaje,
+                            icon: 'success'
+                        }).then(() => {
+                            $('#tbl_notas_credito').DataTable().ajax.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al anular:', error);
+                    Swal.fire('Error', 'No se pudo anular la Nota de Crédito', 'error');
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}
