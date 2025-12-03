@@ -64,7 +64,7 @@ from app.rutas.gestionar_servicios.registrar_solicitud_servicio.registrar_solici
 from app.rutas.gestionar_servicios.registrar_presupuesto_servicio.registrar_presupuesto_servicio_routes import presupuestomod
 from app.rutas.gestionar_servicios.generar_orden_servicio.generar_orden_servicio_routes import ordenmod
 from app.rutas.gestionar_servicios.registrar_promociones.registrar_promociones_routes import promocionmod
-
+from app.rutas.gestionar_servicios.registrar_descuentos.registrar_descuentos_routes import descuentomod
 
 # ============================================================
 # REGISTRAR REFERENCIALES 
@@ -107,6 +107,7 @@ app.register_blueprint(solicitudmod, url_prefix=f'{modulo2}/solicitud-servicio')
 app.register_blueprint(presupuestomod, url_prefix=f'{modulo2}/presupuesto-servicio')
 app.register_blueprint(ordenmod, url_prefix=f'{modulo2}/orden-servicio')
 app.register_blueprint(promocionmod, url_prefix=f'{modulo2}/promocion')
+app.register_blueprint(descuentomod, url_prefix=f'{modulo2}/descuento')
 
 
 
@@ -160,6 +161,7 @@ from app.rutas.gestionar_servicios.generar_orden_servicio.generar_orden_servicio
 
 from app.rutas.gestionar_servicios.registrar_promociones.registrar_promociones_api import promocionapi
 
+from app.rutas.gestionar_servicios.registrar_descuentos.registrar_descuentos_api import descuentoapi
 
 
 
@@ -202,6 +204,7 @@ app.register_blueprint(solicitudapi, url_prefix=f'{version1}{modulo2}/solicitud-
 app.register_blueprint(presupuestoapi, url_prefix=f'{version1}{modulo2}/presupuesto-servicio')
 app.register_blueprint(ordenapi, url_prefix=f'{version1}{modulo2}/orden-servicio')
 app.register_blueprint(promocionapi, url_prefix=f'{version1}{modulo2}/promocion')
+app.register_blueprint(descuentoapi, url_prefix=f'{version1}{modulo2}/descuento')
 
 
 
