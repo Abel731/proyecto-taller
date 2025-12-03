@@ -103,17 +103,22 @@
                         <a class="collapse-item text-wrap" href="{{ url_for('ajustemod.ajustes_index') }}">Registrar Ajustes</a>
                         <a class="collapse-item text-wrap" href="{{ url_for('notasmod.notas_credito_index') }}">Notas de Crédito</a>
                         <a class="collapse-item text-wrap" href="{{ url_for('notasmod.notas_debito_index') }}">Notas de Débito</a>
-                    </div>
-                
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUtilities"
-                    aria-expanded="true" aria-controls="collapseUtilities">
-                    <i class="fas fa-fw fa-wrench"></i>
-                    <span class="text-wrap">Gestionar Servicios</span>
-                </a>
-                 <div class="bg-white py-2 collapse-inner rounded">
-
                     </div>   
                 </div>
+            </li>
+
+            <li class="nav-item">
+    <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseServicios"
+        aria-expanded="true" aria-controls="collapseServicios">
+        <i class="fas fa-wrench"></i>
+        <span>Gestionar Servicios</span>
+    </a>
+        <div id="collapseServicios" class="collapse" aria-labelledby="headingServicios" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Movimientos:</h6>
+                    <a class="collapse-item text-wrap" href="{{ url_for('solicitudmod.solicitudes_index') }}">Solicitud de Servicio</a>
+            </div>
+            </div>
             </li>
 
             <!-- Divider -->

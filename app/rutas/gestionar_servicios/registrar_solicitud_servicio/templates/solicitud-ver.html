@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Ver Solicitud de Servicio N° {{ solicitud.id_solicitud }}
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-primary text-white">
+            <h6 class="m-0 font-weight-bold">Detalle de Solicitud N° {{ solicitud.id_solicitud }}</h6>
+        </div>
+        <div class="card-body">
+            <!-- ========== INFORMACIÓN GENERAL ========== -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card border-left-primary h-100 py-2">
+                        <div class="card-body">
+                            <h6 class="text-primary font-weight-bold mb-3">Información General</h6>
+                            <p><strong>Fecha:</strong> {{ solicitud.fecha_solicitud }}</p>
+                            <p><strong>Hora:</strong> {{ solicitud.hora_solicitud }}</p>
+                            <p><strong>Tipo de Servicio:</strong> {{ solicitud.tipo_servicio }}</p>
+                            <p><strong>Empleado:</strong> {{ solicitud.empleado }}</p>
+                            <p><strong>Estado:</strong> 
+                                {% if solicitud.id_estado_solicitud == 1 %}
+                                    <span class="badge badge-warning">Pendiente</span>
+                                {% elif solicitud.id_estado_solicitud == 2 %}
+                                    <span class="badge badge-info">En Proceso</span>
+                                {% elif solicitud.id_estado_solicitud == 3 %}
+                                    <span class="badge badge-success">Finalizada</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">Anulada</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-left-info h-100 py-2">
+                        <div class="card-body">
+                            <h6 class="text-info font-weight-bold mb-3">Datos del Cliente</h6>
+                            <p><strong>Cliente:</strong> {{ solicitud.cliente }}</p>
+                            <p><strong>CI:</strong> {{ solicitud.cliente_ci }}</p>
+                            <p><strong>RUC:</strong> {{ solicitud.cliente_ruc if solicitud.cliente_ruc else 'N/A' }}</p>
+                            <p><strong>Teléfono:</strong> {{ solicitud.cliente_telefono if solicitud.cliente_telefono else 'N/A' }}</p>
+                            <p><strong>Dirección:</strong> {{ solicitud.cliente_direccion if solicitud.cliente_direccion else 'N/A' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== DESCRIPCIÓN Y OBSERVACIONES ========== -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card border-left-warning py-2">
+                        <div class="card-body">
+                            <h6 class="text-warning font-weight-bold mb-2">Descripción del Pedido/Problema</h6>
+                            <p class="mb-0">{{ solicitud.descripcion_problema }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-left-secondary py-2">
+                        <div class="card-body">
+                            <h6 class="text-secondary font-weight-bold mb-2">Observaciones</h6>
+                            <p class="mb-0">{{ solicitud.observaciones if solicitud.observaciones else 'Sin observaciones' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== DETALLE DE PRODUCTOS ========== -->
+            <h5 class="mb-3">Productos Incluidos</h5>
+            {% if solicitud.detalle and solicitud.detalle|length > 0 %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Observación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in solicitud.detalle %}
+                        <tr>
+                            <td>{{ item.id_producto }}</td>
+                            <td>{{ item.producto }}</td>
+                            <td>{{ item.cantidad }}</td>
+                            <td>{{ item.observacion if item.observacion else '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info" role="alert">
+                <i class="fas fa-info-circle"></i> Esta solicitud no incluye productos específicos.
+            </div>
+            {% endif %}
+
+            <!-- ========== ACCIONES DISPONIBLES ========== -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card border-left-success py-2">
+                        <div class="card-body">
+                            <h6 class="text-success font-weight-bold mb-3">Acciones Disponibles</h6>
+                            
+                            {% if solicitud.id_estado_solicitud == 1 %}
+                            <!-- Pendiente -->
+                            <p class="mb-2">
+                                <button class="btn btn-primary btn-sm" onclick="cambiarEstado({{ solicitud.id_solicitud }}, 2)">
+                                    <i class="fas fa-play"></i> Iniciar Proceso
+                                </button>
+                                <span class="ml-2 text-muted">Marcar como "En Proceso" cuando se comience a trabajar.</span>
+                            </p>
+                            <p class="mb-0">
+                                <button class="btn btn-danger btn-sm" onclick="cambiarEstado({{ solicitud.id_solicitud }}, 4)">
+                                    <i class="fas fa-ban"></i> Anular Solicitud
+                                </button>
+                                <span class="ml-2 text-muted">Cancelar esta solicitud.</span>
+                            </p>
+                            
+                            {% elif solicitud.id_estado_solicitud == 2 %}
+                            <!-- En Proceso -->
+                            <p class="mb-2">
+                                <button class="btn btn-success btn-sm" onclick="cambiarEstado({{ solicitud.id_solicitud }}, 3)">
+                                    <i class="fas fa-check"></i> Finalizar Servicio
+                                </button>
+                                <span class="ml-2 text-muted">Marcar como "Finalizada" cuando se complete el servicio.</span>
+                            </p>
+                            <p class="mb-0">
+                                <button class="btn btn-danger btn-sm" onclick="cambiarEstado({{ solicitud.id_solicitud }}, 4)">
+                                    <i class="fas fa-ban"></i> Anular Solicitud
+                                </button>
+                                <span class="ml-2 text-muted">Cancelar esta solicitud.</span>
+                            </p>
+                            
+                            {% elif solicitud.id_estado_solicitud == 3 %}
+                            <!-- Finalizada -->
+                            <p class="mb-0">
+                                <button class="btn btn-danger btn-sm" onclick="cambiarEstado({{ solicitud.id_solicitud }}, 4)">
+                                    <i class="fas fa-ban"></i> Anular Solicitud
+                                </button>
+                                <span class="ml-2 text-muted">Esta solicitud está finalizada. Solo puede ser anulada.</span>
+                            </p>
+                            
+                            {% else %}
+                            <!-- Anulada -->
+                            <p class="mb-0 text-muted">
+                                <i class="fas fa-info-circle"></i> Esta solicitud está anulada. No se pueden realizar más acciones.
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== FOOTER CON BOTONES ========== -->
+        <div class="card-footer">
+            <button type="button" class="btn btn-secondary btn-icon-split" id="btn_volver">
+                <span class="icon text-white-50">
+                    <i class="fas fa-arrow-left"></i>
+                </span>
+                <span class="text">Volver al Listado</span>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    $(document).ready(function() {
+        console.log('========== INICIO VER SOLICITUD ==========');
+        eventoVolver();
+    });
+
+    // ========== CAMBIAR ESTADO ==========
+    function cambiarEstado(idSolicitud, idEstado) {
+        console.log('DEBUG: Cambiar estado solicitud:', idSolicitud, 'a estado:', idEstado);
+        
+        const estados = {
+            2: { nombre: 'En Proceso', icono: 'play', color: '#3085d6', texto: 'Se marcará la solicitud como "En Proceso"' },
+            3: { nombre: 'Finalizada', icono: 'check', color: '#28a745', texto: 'Se marcará el servicio como completado' },
+            4: { nombre: 'Anulada', icono: 'ban', color: '#dc3545', texto: 'Esta acción no se puede deshacer' }
+        };
+        
+        const estado = estados[idEstado];
+        
+        Swal.fire({
+            title: `¿Cambiar a estado "${estado.nombre}"?`,
+            html: `<p>${estado.texto}</p>`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: estado.color,
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: `Sí, cambiar a ${estado.nombre}`,
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Loading
+                Swal.fire({
+                    title: 'Cambiando estado...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Request
+                fetch(`/api/v1/gestionar-servicios/solicitud-servicio/solicitudes/${idSolicitud}/estado`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ id_estado: idEstado })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('DEBUG: Response cambiar estado:', data);
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: '¡Estado cambiado!',
+                            text: data.mensaje,
+                            icon: 'success',
+                            confirmButtonText: 'Ir al listado'
+                        }).then(() => {
+                            location.replace("{{ url_for('solicitudmod.solicitudes_index') }}");
+                        });
+                    } else {
+                        Swal.fire('Error', data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al cambiar estado:', error);
+                    Swal.fire('Error', 'No se pudo cambiar el estado', 'error');
+                });
+            }
+        });
+    }
+
+    // ========== VOLVER ==========
+    function eventoVolver() {
+        $('#btn_volver').on('click', function() {
+            console.log('DEBUG: Volviendo al listado');
+            location.replace("{{ url_for('solicitudmod.solicitudes_index') }}");
+        });
+    }
+</script>
+{% endblock %}

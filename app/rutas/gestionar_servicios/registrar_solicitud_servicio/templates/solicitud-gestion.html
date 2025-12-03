@@ -1,0 +1,460 @@
+{% extends 'base.html' %}
+
+{% block titulo %}
+Registrar Solicitud de Servicio
+{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-primary text-white">
+            <h6 class="m-0 font-weight-bold">Registrar Solicitud de Servicio</h6>
+        </div>
+        <div class="card-body">
+            <!-- ========== SECCIÓN 1: DATOS DEL CLIENTE ========== -->
+            <h5 class="text-primary">1. Datos del Cliente</h5>
+            <hr>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="cbo_cliente">Cliente: <span class="text-danger">*</span></label>
+                        <select id="cbo_cliente" class="form-control">
+                            <option value="">Seleccione un cliente...</option>
+                            {% for cli in clientes %}
+                            <option value="{{ cli['id_cliente'] }}" 
+                                    data-ci="{{ cli['ci'] }}"
+                                    data-ruc="{{ cli['ruc'] if cli['ruc'] else '' }}"
+                                    data-telefono="{{ cli['telefono'] if cli['telefono'] else '' }}"
+                                    data-direccion="{{ cli['direccion'] if cli['direccion'] else '' }}">
+                                {{ cli['cliente'] }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="cbo_empleado">Empleado que registra: <span class="text-danger">*</span></label>
+                        <select id="cbo_empleado" class="form-control">
+                            <option value="">Seleccione un empleado...</option>
+                            {% for emp in empleados %}
+                            <option value="{{ emp['id_empleado'] }}">
+                                {{ emp['empleado'] }} - CI: {{ emp['ci'] }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información del Cliente (se llena automáticamente) -->
+            <div class="row" id="info_cliente" style="display: none;">
+                <div class="col-12">
+                    <div class="card border-left-info py-2 mb-3">
+                        <div class="card-body">
+                            <h6 class="text-info font-weight-bold">Información del Cliente</h6>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <p class="mb-1"><strong>CI:</strong> <span id="info_ci">-</span></p>
+                                </div>
+                                <div class="col-md-3">
+                                    <p class="mb-1"><strong>RUC:</strong> <span id="info_ruc">-</span></p>
+                                </div>
+                                <div class="col-md-3">
+                                    <p class="mb-1"><strong>Teléfono:</strong> <span id="info_telefono">-</span></p>
+                                </div>
+                                <div class="col-md-3">
+                                    <p class="mb-1"><strong>Dirección:</strong> <span id="info_direccion">-</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== SECCIÓN 2: DATOS DEL SERVICIO ========== -->
+            <h5 class="text-primary mt-4">2. Datos del Servicio</h5>
+            <hr>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="cbo_tipo_servicio">Tipo de Servicio: <span class="text-danger">*</span></label>
+                        <select id="cbo_tipo_servicio" class="form-control">
+                            <option value="">Seleccione un tipo...</option>
+                            {% for tipo in tipos_servicio %}
+                            <option value="{{ tipo['id_tipo_servicio'] }}">{{ tipo['descripcion'] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="txt_fecha">Fecha de Solicitud: <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="txt_fecha">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="txt_hora">Hora de Solicitud: <span class="text-danger">*</span></label>
+                        <input type="time" class="form-control" id="txt_hora">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="txt_descripcion">Descripción del Pedido/Problema: <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="txt_descripcion" rows="4" 
+                                  placeholder="Ej: Entrega de 50 cajas en depósito central, contactar al Sr. González al llegar"></textarea>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="txt_observaciones">Observaciones:</label>
+                        <textarea class="form-control" id="txt_observaciones" rows="4" 
+                                  placeholder="Observaciones adicionales (horarios preferidos, contacto alternativo, etc.)"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== SECCIÓN 3: PRODUCTOS (OPCIONAL) ========== -->
+            <h5 class="text-primary mt-4">3. Productos a Entregar (Opcional)</h5>
+            <hr>
+            <p class="text-muted">
+                <i class="fas fa-info-circle"></i> Si el servicio incluye entrega de productos específicos, puede agregarlos aquí.
+            </p>
+
+            <!-- Agregar Producto -->
+            <div class="row mb-3">
+                <div class="col-md-5">
+                    <label>Producto:</label>
+                    <select id="cbo_producto" class="form-control">
+                        <option value="">Seleccione un producto...</option>
+                        {% for prod in productos %}
+                        <option value="{{ prod['id_producto'] }}">{{ prod['nombre'] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label>Cantidad:</label>
+                    <input type="number" id="txt_cantidad" class="form-control" min="1" value="1">
+                </div>
+                <div class="col-md-4">
+                    <label>Observación:</label>
+                    <input type="text" id="txt_obs_producto" class="form-control" 
+                           placeholder="Ej: Frágil, Refrigerado, etc.">
+                </div>
+                <div class="col-md-1">
+                    <label>&nbsp;</label>
+                    <button type="button" class="btn btn-success btn-block" id="btn_agregar_producto">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabla de Productos -->
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Observación</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productos_table_body">
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">
+                                No hay productos agregados
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== FOOTER CON BOTONES ========== -->
+        <div class="card-footer">
+            <button type="button" class="btn btn-primary btn-icon-split" id="btn_registrar">
+                <span class="icon text-white-50">
+                    <i class="fas fa-save"></i>
+                </span>
+                <span class="text">Registrar Solicitud</span>
+            </button>
+            <button type="button" class="btn btn-secondary btn-icon-split" id="btn_volver">
+                <span class="icon text-white-50">
+                    <i class="fas fa-arrow-left"></i>
+                </span>
+                <span class="text">Volver al Listado</span>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    // ========== VARIABLES GLOBALES ==========
+    let productosSolicitud = [];
+
+    // ========== INICIALIZACIÓN ==========
+    $(document).ready(function() {
+        console.log('========== INICIO SOLICITUD GESTIÓN ==========');
+        
+        establecerFechaHoraActual();
+        eventoSeleccionarCliente();
+        eventoAgregarProducto();
+        eventoRegistrar();
+        eventoVolver();
+    });
+
+    // ========== ESTABLECER FECHA Y HORA ACTUAL ==========
+    function establecerFechaHoraActual() {
+        const ahora = new Date();
+        const fecha = ahora.toISOString().split('T')[0];
+        const hora = ahora.toTimeString().split(' ')[0].substring(0, 5);
+        
+        $('#txt_fecha').val(fecha);
+        $('#txt_hora').val(hora);
+        console.log('DEBUG: Fecha y hora establecidas:', fecha, hora);
+    }
+
+    // ========== SELECCIONAR CLIENTE ==========
+    function eventoSeleccionarCliente() {
+        $('#cbo_cliente').on('change', function() {
+            const selectedOption = $(this).find('option:selected');
+            
+            if ($(this).val()) {
+                const ci = selectedOption.data('ci');
+                const ruc = selectedOption.data('ruc');
+                const telefono = selectedOption.data('telefono');
+                const direccion = selectedOption.data('direccion');
+                
+                $('#info_ci').text(ci || 'N/A');
+                $('#info_ruc').text(ruc || 'N/A');
+                $('#info_telefono').text(telefono || 'N/A');
+                $('#info_direccion').text(direccion || 'N/A');
+                
+                $('#info_cliente').slideDown();
+            } else {
+                $('#info_cliente').slideUp();
+            }
+        });
+    }
+
+    // ========== AGREGAR PRODUCTO ==========
+    function eventoAgregarProducto() {
+        $('#btn_agregar_producto').on('click', function() {
+            console.log('DEBUG: Agregando producto...');
+            
+            const idProducto = parseInt($('#cbo_producto').val());
+            const nombreProducto = $('#cbo_producto option:selected').text();
+            const cantidad = parseInt($('#txt_cantidad').val());
+            const observacion = $('#txt_obs_producto').val();
+
+            // Validaciones
+            if (!idProducto) {
+                Swal.fire('Error', 'Debe seleccionar un producto', 'error');
+                return;
+            }
+            if (!cantidad || cantidad <= 0) {
+                Swal.fire('Error', 'La cantidad debe ser mayor a 0', 'error');
+                return;
+            }
+
+            // Verificar si ya está en la lista
+            if (productosSolicitud.find(p => p.id_producto === idProducto)) {
+                Swal.fire('Error', 'Este producto ya está en la lista', 'warning');
+                return;
+            }
+
+            // Agregar a la lista
+            productosSolicitud.push({
+                id_producto: idProducto,
+                nombre: nombreProducto,
+                cantidad: cantidad,
+                observacion: observacion || null
+            });
+
+            console.log('DEBUG: Producto agregado:', productosSolicitud);
+
+            // Actualizar tabla
+            actualizarTablaProductos();
+
+            // Limpiar campos
+            $('#cbo_producto').val('');
+            $('#txt_cantidad').val(1);
+            $('#txt_obs_producto').val('');
+        });
+    }
+
+    // ========== ACTUALIZAR TABLA ==========
+    function actualizarTablaProductos() {
+        const tbody = $('#productos_table_body');
+        tbody.empty();
+
+        if (productosSolicitud.length === 0) {
+            tbody.html(`
+                <tr>
+                    <td colspan="5" class="text-center text-muted">
+                        No hay productos agregados
+                    </td>
+                </tr>
+            `);
+            return;
+        }
+
+        productosSolicitud.forEach(prod => {
+            const fila = `
+                <tr>
+                    <td>${prod.id_producto}</td>
+                    <td>${prod.nombre}</td>
+                    <td>${prod.cantidad}</td>
+                    <td>${prod.observacion || '-'}</td>
+                    <td class="text-center">
+                        <button class="btn btn-danger btn-sm" onclick="eliminarProducto(${prod.id_producto})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            tbody.append(fila);
+        });
+    }
+
+    // ========== ELIMINAR PRODUCTO ==========
+    function eliminarProducto(idProducto) {
+        console.log('DEBUG: Eliminando producto:', idProducto);
+        productosSolicitud = productosSolicitud.filter(p => p.id_producto !== idProducto);
+        actualizarTablaProductos();
+    }
+
+    // ========== VALIDAR FORMULARIO ==========
+    function validarFormulario() {
+        console.log('========== VALIDANDO FORMULARIO ==========');
+        
+        const idCliente = $('#cbo_cliente').val();
+        const idEmpleado = $('#cbo_empleado').val();
+        const idTipoServicio = $('#cbo_tipo_servicio').val();
+        const fecha = $('#txt_fecha').val();
+        const hora = $('#txt_hora').val();
+        const descripcion = $('#txt_descripcion').val();
+
+        if (!idCliente) {
+            Swal.fire('Error', 'Debe seleccionar un cliente', 'error');
+            return false;
+        }
+        if (!idEmpleado) {
+            Swal.fire('Error', 'Debe seleccionar un empleado', 'error');
+            return false;
+        }
+        if (!idTipoServicio) {
+            Swal.fire('Error', 'Debe seleccionar un tipo de servicio', 'error');
+            return false;
+        }
+        if (!fecha) {
+            Swal.fire('Error', 'Debe ingresar la fecha', 'error');
+            return false;
+        }
+        if (!hora) {
+            Swal.fire('Error', 'Debe ingresar la hora', 'error');
+            return false;
+        }
+        if (!descripcion || descripcion.trim() === '') {
+            Swal.fire('Error', 'Debe ingresar la descripción del pedido/problema', 'error');
+            return false;
+        }
+
+        console.log('DEBUG: Validación exitosa');
+        return true;
+    }
+
+    // ========== REGISTRAR SOLICITUD ==========
+    function eventoRegistrar() {
+        $('#btn_registrar').on('click', function() {
+            console.log('========== REGISTRAR SOLICITUD ==========');
+            
+            if (!validarFormulario()) {
+                return;
+            }
+
+            const payload = {
+                id_cliente: parseInt($('#cbo_cliente').val()),
+                id_tipo_servicio: parseInt($('#cbo_tipo_servicio').val()),
+                id_empleado: parseInt($('#cbo_empleado').val()),
+                fecha_solicitud: $('#txt_fecha').val(),
+                hora_solicitud: $('#txt_hora').val(),
+                descripcion_problema: $('#txt_descripcion').val(),
+                observaciones: $('#txt_observaciones').val() || null,
+                detalle_solicitud: productosSolicitud
+            };
+
+            console.log('DEBUG: Payload a enviar:', payload);
+
+            // Confirmación
+            Swal.fire({
+                title: '¿Registrar esta solicitud?',
+                html: `
+                    <p>Cliente: <strong>${$('#cbo_cliente option:selected').text()}</strong></p>
+                    <p>Tipo: <strong>${$('#cbo_tipo_servicio option:selected').text()}</strong></p>
+                    <p>Productos: <strong>${productosSolicitud.length}</strong></p>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, registrar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Loading
+                    Swal.fire({
+                        title: 'Registrando solicitud...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Request
+                    fetch('/api/v1/gestionar-servicios/solicitud-servicio/solicitudes', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(payload)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('DEBUG: Response:', data);
+                        
+                        if (data.success) {
+                            Swal.fire({
+                                title: '¡Solicitud registrada!',
+                                text: data.mensaje,
+                                icon: 'success',
+                                confirmButtonText: 'Ir al listado'
+                            }).then(() => {
+                                location.replace("{{ url_for('solicitudmod.solicitudes_index') }}");
+                            });
+                        } else {
+                            Swal.fire('Error', data.error, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al registrar:', error);
+                        Swal.fire('Error', 'No se pudo registrar la solicitud', 'error');
+                    });
+                }
+            });
+        });
+    }
+
+    // ========== VOLVER ==========
+    function eventoVolver() {
+        $('#btn_volver').on('click', function() {
+            console.log('DEBUG: Volviendo al listado');
+            location.replace("{{ url_for('solicitudmod.solicitudes_index') }}");
+        });
+    }
+</script>
+{% endblock %}
